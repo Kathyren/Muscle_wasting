@@ -2,7 +2,22 @@ import os
 
 from eutils import Client
 
+
+def _override_esearch(self, db, term, retmax):
+    """query the esearch endpoint
+    """
+    esr = ESearchResult(self._qs.esearch({"db": db, "term": term, "retmax": retmax}))
+    if esr.count > esr.retmax:
+        print("NCBI found {esr.count} results, but we truncated the reply at {esr.retmax}"
+              " results; see https://github.com/biocommons/eutils/issues/124/".format(esr=esr))
+    return esr
+
+
+Client.esearch = _override_esearch
+
 import enum
+
+from eutils._internal.xmlfacades.esearchresult import ESearchResult
 
 
 class NCBIDatabases(enum.Enum):
@@ -50,10 +65,11 @@ class EutilsConnection():
         if get_first:
             retmax = 1
         else:
-            retmax = 0
+            retmax = 100000
         if not db:
             db = self.db
-        esr = self.ec.esearch(db=db, term=term)
+
+        esr = self.ec.esearch(db=db, term=term, retmax=retmax)
         return esr.ids
 
     def get_paper(self, id_pubmed):
