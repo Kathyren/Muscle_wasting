@@ -25,12 +25,6 @@ def write_dictionary_to_csv(file_name="x.csv", dic=None):
         writer = csv.writer(outfile)
         mydict = {rows[0]: rows[1] for rows in dic}
 
-def write_dictionary_to_tsv(file_name="x.csv", dic=None):
-    if dic is None:
-        dic = {}
-    with open(file_name, mode='w') as outfile:
-        writer = csv.writer(outfile, delimiter='\t')
-        mydict = {rows[0]: rows[1] for rows in dic}
 
 def yml_to_dict(
         file_name=r"C:\Users\crtuser\Documents\PhD\Project\repos\miRNA_small_tools\paper_helper\resources\data\db_categories.yml"):
