@@ -3,6 +3,8 @@
 
 import argparse
 import sys, getopt
+import common_tools as ct
+from ncbi.main import get_papers_from_NCBI
 
 default_output = "paper_miner_output.csv"
 
@@ -15,9 +17,18 @@ def paper_miner(regular_exp, min_papers, max_papers, output, print_diagram):
     :param max_papers: INT The max amount of papers expected from the output
     :param output: STRING Where to save the output
     :param print_diagram: BOOL If you want to see the pareto diagram
-    :return:
+    :return: 0 if not papers where found and 1 if papers where saved
     """
-    get_papers()
+    papers_dictionary = get_papers_from_NCBI(search=regular_exp)
+    if len(papers_dictionary) > 0:
+        save_papers("pre_process_" + output, papers_dictionary)
+        return 1
+    else:
+        return 0
+
+
+def save_papers(output_file, papers_info):
+    ct.write_dictionary_to_tsv(output_file, keys=papers_info[0].keys(), list_dic=papers_info)
 
 
 def main(argv):

@@ -94,23 +94,32 @@ class EutilsConnection():
         return information[0]
 
     def parse_pubmed_data(self, egs, pid):
-        root = egs._xml_root
-        pubmed_info = root.find("PubmedArticle")
-        citation = pubmed_info.find("MedlineCitation")
-        article = citation.find("Article")
-        year = article.find("Journal")
-        year = year.find("JournalIssue")
-        year = year.find("PubDate")
-        year = year.find("Year").text
-        title = article.find("ArticleTitle").text
-        key_words_xml = citation.find("KeywordList")
-        key_words = []
-        if key_words_xml is not None:
-            for c in key_words_xml:
-                key_words.append(c.text)
-                print(c)
-        article_data = {'Pubmed_id': pid,
-                        'Year': year,
-                        'Title': title,
-                        'Key_words': key_words}
+        try:
+            root = egs._xml_root
+            pubmed_info = root.find("PubmedArticle")
+            citation = pubmed_info.find("MedlineCitation")
+            article = citation.find("Article")
+            year = article.find("Journal")
+            year = year.find("JournalIssue")
+            year = year.find("PubDate")
+            year_c = year.find("Year")
+            if year_c is not None:
+                year = year_c.text
+            else:
+                year_c = year.find("MedlineDate")
+                year = year_c.text.split(" ")[0]
+
+            title = article.find("ArticleTitle").text
+            key_words_xml = citation.find("KeywordList")
+            key_words = []
+            if key_words_xml is not None:
+                for c in key_words_xml:
+                    key_words.append(c.text)
+                    print(c)
+            article_data = {'Pubmed_id': pid,
+                            'Year': year,
+                            'Title': title,
+                            'Key_words': key_words}
+        except Exception as e:
+            print(":c")
         return article_data

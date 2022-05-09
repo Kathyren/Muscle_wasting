@@ -5,6 +5,7 @@
 import ncbi.eutilities as eutilities
 
 
+
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
@@ -18,9 +19,8 @@ def get_papers_from_NCBI(search, get_first=False):
     :return:
     """
     connection = eutilities.EutilsConnection(eutilities.NCBIDatabases.Pubmed)
-    id = connection.fetch_queries_ids(term=search, get_first=get_first,db="pubmed")
-    result = connection.get_ids_information(db_id=id,db="pubmed")
-
+    id = connection.fetch_queries_ids(term=search, get_first=get_first, db="pubmed")
+    result = connection.get_ids_information(db_id=id, db="pubmed")
     return result
     pass
 
