@@ -23,6 +23,7 @@ class NCBIDatabases(enum.Enum):
 
     Nucleotides = 'nuccore', 'gbseqs'
     Genes = 'gene', ''
+    Pubmed = 'pubmed', '_xml_root'
 
 
 class EutilsConnection():
@@ -52,8 +53,32 @@ class EutilsConnection():
             retmax = 0
         if not db:
             db = self.db
-        esr = self.ec.esearch(db=db, term=term, retmax=retmax)
+        esr = self.ec.esearch(db=db, term=term)
         return esr.ids
+
+    def get_paper(self, id_pubmed):
+        txt = f"efetch.fcgi?db=pubmed&id={id_pubmed}&rettype=xml.xml"
+        base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+
+    def get_ids_information(self, db_id, db=None):
+        """
+        This function will take  and look for the complete information of that
+        for multiples Ids
+        :param db: The database where we are going to look
+        :param db_id: The id of the element in that database (maybe table???)
+        :return:
+        """
+        information = []
+        if not db:
+            db = self.db
+        for db_aid in db_id:
+            egs = self.ec.efetch(db=db, id=db_aid)
+            if db == 'pubmed':
+                data = self.parse_pubmed_data(egs, db_aid)
+                information.append(data)
+            else:
+                information = getattr(egs, self.table)
+        return information
 
     def get_id_information(self, db_id, db=None):
         """
@@ -65,5 +90,27 @@ class EutilsConnection():
         if not db:
             db = self.db
         egs = self.ec.efetch(db=db, id=db_id)
-        information = getattr(egs, self.table)  #
+        information = getattr(egs, self.table)
         return information[0]
+
+    def parse_pubmed_data(self, egs, pid):
+        root = egs._xml_root
+        pubmed_info = root.find("PubmedArticle")
+        citation = pubmed_info.find("MedlineCitation")
+        article = citation.find("Article")
+        year = article.find("Journal")
+        year = year.find("JournalIssue")
+        year = year.find("PubDate")
+        year = year.find("Year").text
+        title = article.find("ArticleTitle").text
+        key_words_xml = citation.find("KeywordList")
+        key_words = []
+        if key_words_xml is not None:
+            for c in key_words_xml:
+                key_words.append(c.text)
+                print(c)
+        article_data = {'Pubmed_id': pid,
+                        'Year': year,
+                        'Title': title,
+                        'Key_words': key_words}
+        return article_data
