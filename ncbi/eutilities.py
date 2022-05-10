@@ -1,6 +1,7 @@
 import os
 
 from eutils import Client
+from eutils._internal.xmlfacades.pubmedarticleset import PubmedArticleSet
 
 
 def _override_esearch(self, db, term, retmax):
@@ -11,10 +12,18 @@ def _override_esearch(self, db, term, retmax):
         print("NCBI found {esr.count} results, but we truncated the reply at {esr.retmax}"
               " results; see https://github.com/biocommons/eutils/issues/124/".format(esr=esr))
     return esr
-
-
+import lxml.etree as le
+def _elink(self, db, id):
+        """query the elink endpoint
+        """
+        db = db.lower()
+        xml = self._qs.elink({"db": db, "dbfrom": "pubmed", "linkname": "pubmed_pmc_refs", "id":str(id)})
+        import xml.etree.ElementTree as ET
+        xml = xml.decode('latin')
+        root = ET.fromstring(xml)
+        return root
 Client.esearch = _override_esearch
-
+Client.elink = _elink
 import enum
 
 from eutils._internal.xmlfacades.esearchresult import ESearchResult
@@ -89,8 +98,9 @@ class EutilsConnection():
             db = self.db
         for db_aid in db_id:
             egs = self.ec.efetch(db=db, id=db_aid)
+            cites = self.ec.elink(db=db, id=db_aid)
             if db == 'pubmed':
-                data = self.parse_pubmed_data(egs, db_aid)
+                data = self.parse_pubmed_data(egs, db_aid, cites)
                 information.append(data)
             else:
                 information = getattr(egs, self.table)
@@ -109,7 +119,7 @@ class EutilsConnection():
         information = getattr(egs, self.table)
         return information[0]
 
-    def parse_pubmed_data(self, egs, pid):
+    def parse_pubmed_data(self, egs, pid, cites):
         try:
             root = egs._xml_root
             pubmed_info = root.find("PubmedArticle")
@@ -131,11 +141,16 @@ class EutilsConnection():
             if key_words_xml is not None:
                 for c in key_words_xml:
                     key_words.append(c.text)
-                    print(c)
+
+            root = cites
+            count = 0
+            for each in root.findall('.//LinkSet/LinkSetDb/Link'):
+                count = count + 1
             article_data = {'Pubmed_id': pid,
                             'Year': year,
                             'Title': title,
-                            'Key_words': key_words}
+                            'Key_words': key_words,
+                            'Cite_by': count}
         except Exception as e:
             print(":c")
         return article_data

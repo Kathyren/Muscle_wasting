@@ -21,7 +21,7 @@ def test_efetch_manula():
     pass
 
 def test_paper_miner():
-    miner.paper_miner(regular_exp="(((mirna[Title]) AND (network[Title])))",
+    miner.paper_miner(regular_exp="(mirna) AND (sarcopenia[Title])",
                       min_papers=1,
                       max_papers=1,
                       output="test.tsv",

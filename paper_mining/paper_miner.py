@@ -3,8 +3,10 @@
 
 import argparse
 import sys, getopt
+
 import common_tools as ct
 from ncbi.main import get_papers_from_NCBI
+from paper_mining.paper_optimization import EvaluatePapers
 
 default_output = "paper_miner_output.csv"
 
@@ -20,11 +22,12 @@ def paper_miner(regular_exp, min_papers, max_papers, output, print_diagram):
     :return: 0 if not papers where found and 1 if papers where saved
     """
     papers_dictionary = get_papers_from_NCBI(search=regular_exp)
-    if len(papers_dictionary) > 0:
-        save_papers("pre_process_" + output, papers_dictionary)
-        return 1
-    else:
+    if len(papers_dictionary) == 0:
         return 0
+    save_papers("pre_process_" + output, papers_dictionary)
+    ep = EvaluatePapers(papers_info=papers_dictionary)
+    pareto = ep.get_pareto_cites_year(plot=True)
+    ct.write_list_of_dict(pareto, file_name=output)
 
 
 def save_papers(output_file, papers_info):
@@ -76,5 +79,16 @@ def main(argv):
                        output=output, print_diagram=print_diagram)
 
 
+def fake_main():
+    regular_exp = '(mirna) AND (sarcopenia[Title])'
+    min_papers = 1
+    max_papers = 0
+    output = 'test_commandline.tsv'
+    print_diagram = True
+    return paper_miner(regular_exp=regular_exp, min_papers=min_papers, max_papers=max_papers,
+                       output=output, print_diagram=print_diagram)
+
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    # main(sys.argv[1:])
+    fake_main()

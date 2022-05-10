@@ -240,5 +240,4 @@ def test_pruebita():
 
 def test_get_ids_information():
     eutilcito = eut.EutilsConnection(database=eut.NCBIDatabases.Pubmed)
-    eutilcito.get_ids_information(db_id=[  # 35521437,
-        35524416], db='pubmed')
+    eutilcito.get_ids_information(db_id=[ 35521437, 35524416, 21876726], db='pubmed')
