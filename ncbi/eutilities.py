@@ -12,16 +12,22 @@ def _override_esearch(self, db, term, retmax):
         print("NCBI found {esr.count} results, but we truncated the reply at {esr.retmax}"
               " results; see https://github.com/biocommons/eutils/issues/124/".format(esr=esr))
     return esr
+
+
 import lxml.etree as le
+
+
 def _elink(self, db, id):
-        """query the elink endpoint
+    """query the elink endpoint
         """
-        db = db.lower()
-        xml = self._qs.elink({"db": db, "dbfrom": "pubmed", "linkname": "pubmed_pmc_refs", "id":str(id)})
-        import xml.etree.ElementTree as ET
-        xml = xml.decode('latin')
-        root = ET.fromstring(xml)
-        return root
+    db = db.lower()
+    xml = self._qs.elink({"db": db, "dbfrom": "pubmed", "linkname": "pubmed_pmc_refs", "id": str(id)})
+    import xml.etree.ElementTree as ET
+    xml = xml.decode('latin')
+    root = ET.fromstring(xml)
+    return root
+
+
 Client.esearch = _override_esearch
 Client.elink = _elink
 import enum
@@ -60,7 +66,7 @@ class EutilsConnection():
         self.table = database.main_attribute
         self.ec = Client(api_key=os.environ.get("NCBI_API_KEY", None))
 
-    def fetch_queries_ids(self, term: str, db=None, get_first=True) -> list:
+    def fetch_queries_ids(self, term: str, db=None, retmax=100000) -> list:
         """
         This function will call the NCBI database "db" and look for the query specified on
         'term'. It could be as simple as "XM_537211". It will retrieve the query information
@@ -71,13 +77,9 @@ class EutilsConnection():
         :param get_first:
         :return: a list of ids that match the search in given database
         """
-        if get_first:
-            retmax = 1
-        else:
-            retmax = 100000
         if not db:
             db = self.db
-
+        self.ec._qs.api_key = "8fa634394aad95b85063646ab64bef2c2408"
         esr = self.ec.esearch(db=db, term=term, retmax=retmax)
         return esr.ids
 
@@ -96,14 +98,30 @@ class EutilsConnection():
         information = []
         if not db:
             db = self.db
+        print(f"{len(db_id)} papers found")
+        count = 0
+        total = len(db_id)
+        jump = total / 100
+        finished = 0
         for db_aid in db_id:
-            egs = self.ec.efetch(db=db, id=db_aid)
-            cites = self.ec.elink(db=db, id=db_aid)
-            if db == 'pubmed':
-                data = self.parse_pubmed_data(egs, db_aid, cites)
-                information.append(data)
+            count = count + 1
+
+            if count >= jump:
+                percent = finished/total
+                print(f"Found info of {percent}%")
+                count = 0
+
+            if False:
+                pass
             else:
-                information = getattr(egs, self.table)
+                egs = self.ec.efetch(db=db, id=db_aid)
+                cites = self.ec.elink(db=db, id=db_aid)
+                if db == 'pubmed':
+                    data = self.parse_pubmed_data(egs, db_aid, cites)
+                    information.append(data)
+                else:
+                    information = getattr(egs, self.table)
+            finished = finished + 1
         return information
 
     def get_id_information(self, db_id, db=None):
@@ -121,27 +139,73 @@ class EutilsConnection():
 
     def parse_pubmed_data(self, egs, pid, cites):
         try:
+            article_data = {'Pubmed_id': pid,
+                            'Year': '0000',
+                            'Title': 'NA',
+                            'Key_words': [],
+                            'Cite_by': '0'}
             root = egs._xml_root
-            pubmed_info = root.find("PubmedArticle")
-            citation = pubmed_info.find("MedlineCitation")
-            article = citation.find("Article")
-            year = article.find("Journal")
-            year = year.find("JournalIssue")
-            year = year.find("PubDate")
-            year_c = year.find("Year")
-            if year_c is not None:
-                year = year_c.text
+            document = root.find('.//PubmedArticle/MedlineCitation/Article')
+            is_article = True
+            if document is None:
+                document = root.find('.//PubmedBookArticle/BookDocument')
+                is_article = False
+            if is_article:
+                year = root.find('.//PubmedArticle/MedlineCitation/Article/Journal/JournalIssue/PubDate/Year')
+                if year is None:
+                    year_c = root.find('.//PubmedArticle/MedlineCitation/Article/Journal/JournalIssue/PubDate/MedlineDate')
+                    if year_c is not None:
+                        year = year_c.text.split(" ")[0]
+                    else:
+                        print(f"Failed to find year for {pid}")
+                        year = '0000'
+                else:
+                    year = year.text
             else:
-                year_c = year.find("MedlineDate")
-                year = year_c.text.split(" ")[0]
+                year = document.find('.//Book/PubDate/Year')
+                if year is not None:
+                    year = year.text
+                else:
+                    print(f"Failed to find year for {pid}")
+                    year = '0000'
 
-            title = article.find("ArticleTitle").text
-            key_words_xml = citation.find("KeywordList")
+            # pubmed_info = root.find("PubmedArticle")
+
+            # citation = pubmed_info.find("MedlineCitation")
+            # article = citation.find("Article")
+            # year = article.find("Journal")
+            # year = year.find("JournalIssue")
+            # year = year.find("PubDate")
+            # year_c = year.find("Year")
+            # if year_c is not None:
+            #     year = year_c.text
+            # else:
+            #     year_c = year.find("MedlineDate")
+            #     year = year_c.text.split(" ")[0]
+            # title = article.find("ArticleTitle").text
+            if is_article:
+                title = document.find('ArticleTitle')
+            else:
+                title = document.find('Book/BookTitle')
+            if title is None:
+                print(f"Failed to find title for {pid}")
+                title = 'NA'
+            else:
+                title = title.text
             key_words = []
-            if key_words_xml is not None:
-                for c in key_words_xml:
-                    key_words.append(c.text)
-
+            if is_article:
+                citation = root.find('.//PubmedArticle/MedlineCitation/Article/')
+                if citation is None:
+                    print(f"Failed to find key words for {pid}")
+                    citation = 0
+                else:
+                    key_words_xml = citation.find("KeywordList")
+                    if key_words_xml is not None:
+                        for c in key_words_xml:
+                            key_words.append(c.text)
+            else:
+                #todo Add key_words for books too
+                print("Key words not supported for Books yet")
             root = cites
             count = 0
             for each in root.findall('.//LinkSet/LinkSetDb/Link'):
@@ -152,5 +216,7 @@ class EutilsConnection():
                             'Key_words': key_words,
                             'Cite_by': count}
         except Exception as e:
-            print(":c")
+            print(e)
+            print(article_data)
+
         return article_data

@@ -241,3 +241,82 @@ def test_pruebita():
 def test_get_ids_information():
     eutilcito = eut.EutilsConnection(database=eut.NCBIDatabases.Pubmed)
     eutilcito.get_ids_information(db_id=[ 35521437, 35524416, 21876726], db='pubmed')
+
+
+def test_parse_pubmed_data():
+       eutilcito = eut.EutilsConnection(database=eut.NCBIDatabases.Pubmed)
+       eutilcito.get_ids_information(db_id=[35521437, 35524416, 21876726], db='pubmed')
+
+
+def test_parse_pubmed_no_year():
+       eutilicito = eut.EutilsConnection(database=eut.NCBIDatabases.Pubmed)
+       eutilicito.get_ids_information(db_id=[35528540, 34662018], db='pubmed')
+       bad_xml = b'<?xml version="1.0" ?>\n<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January ' \
+                 b'2019//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd">\n<PubmedArticleSet' \
+                 b'><PubmedBookArticle><BookDocument><PMID Version="1">34662018</PMID><ArticleIdList><ArticleId ' \
+                 b'IdType="bookaccession">NBK574504</ArticleId></ArticleIdList><Book><Publisher><PublisherName' \
+                 b'>StatPearls Publishing</PublisherName><PublisherLocation>Treasure Island (' \
+                 b'FL)</PublisherLocation></Publisher><BookTitle ' \
+                 b'book="statpearls">StatPearls</BookTitle><PubDate><Year>2022</Year><Month>01</Month></PubDate' \
+                 b'><BeginningDate><Year>2022</Year><Month>01</Month></BeginningDate><Medium>Internet</Medium></Book' \
+                 b'><ArticleTitle book="statpearls" part="article-139270">Fertility Sparing Management In Uterine ' \
+                 b'Fibroids</ArticleTitle><Language>eng</Language><AuthorList ' \
+                 b'Type="authors"><Author><LastName>Rezk</LastName><ForeName>Andrew</ForeName><Initials>A</Initials' \
+                 b'><AffiliationInfo><Affiliation>University of Miami Leonard M. Miller School of Medicine,' \
+                 b'</Affiliation></AffiliationInfo></Author><Author><LastName>Kahn</LastName><ForeName>Jenna' \
+                 b'</ForeName><Initials>J</Initials><AffiliationInfo><Affiliation>Montefiore Medical Center/ Albert ' \
+                 b'Einstein College of Medicine</Affiliation></AffiliationInfo></Author><Author><LastName>Singh' \
+                 b'</LastName><ForeName>Manvinder</ForeName><Initials>M</Initials><AffiliationInfo><Affiliation' \
+                 b'>Montefiore/Einstein</Affiliation></AffiliationInfo></Author></AuthorList><PublicationType ' \
+                 b'UI="D000072643">Study Guide</PublicationType><Abstract><AbstractText>Uterine leiomyoma (fibroids) ' \
+                 b'are the most common benign gynecologic tumors, occurring in up to 70% of women by menopause.[' \
+                 b'1]\xc2\xa0While many fibroids are asymptomatic and are only discovered incidentally, 25 to 30 % of ' \
+                 b'women experience a spectrum of symptoms that increase morbidity and adversely affect their quality ' \
+                 b'of life.[2]\xc2\xa0 The most common symptoms include abnormal uterine bleeding (AUB), ' \
+                 b'heavy menstrual bleeding (HMB), pelvic pain and pressure, anemia, and bladder and/or bowel ' \
+                 b'dysfunction. Importantly, the presence of one or multiple fibroids may affect fertility, ' \
+                 b'as the distortion of the uterus can prevent successful implantation and/or continued survival of ' \
+                 b'an intrauterine pregnancy.\xc2\xa0 The presence of fibroids can introduce obstetrical ' \
+                 b'complications, such as recurrent pregnancy loss (RPL), preterm labor (PTL), abnormal placentation, ' \
+                 b'increased rates of cesarean section, and postpartum hemorrhage.\xc2\xa0 With the current trend of ' \
+                 b'increased childbearing age, fertility-sparing management of uterine fibroids is critical.\xc2\xa0 ' \
+                 b'In this review, we discuss the clinical presentation of fibroids in women of reproductive age and ' \
+                 b'the medical and surgical management options available for women with fibroids who wish to become ' \
+                 b'pregnant in the future.\xc2\xa0</AbstractText><CopyrightInformation>Copyright \xc2\xa9 2022, ' \
+                 b'StatPearls Publishing LLC.</CopyrightInformation></Abstract><Sections><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" sec="article-139270.s1">Continuing Education ' \
+                 b'Activity</SectionTitle></Section><Section><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s2">Introduction</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s3">Etiology</SectionTitle></Section><Section><SectionTitle book="statpearls" ' \
+                 b'part="article-139270" sec="article-139270.s4">Epidemiology</SectionTitle></Section><Section' \
+                 b'><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s5">Pathophysiology</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s6">Histopathology</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" sec="article-139270.s7">History and ' \
+                 b'Physical</SectionTitle></Section><Section><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s8">Evaluation</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" sec="article-139270.s9">Treatment / ' \
+                 b'Management</SectionTitle></Section><Section><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s10">Differential Diagnosis</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s11">Prognosis</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s12">Complications</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" sec="article-139270.s13">Deterrence and Patient ' \
+                 b'Education</SectionTitle></Section><Section><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s14">Enhancing Healthcare Team Outcomes ' \
+                 b'</SectionTitle></Section><Section><SectionTitle book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s15">Review Questions</SectionTitle></Section><Section><SectionTitle ' \
+                 b'book="statpearls" part="article-139270" ' \
+                 b'sec="article-139270.s21">References</SectionTitle></Section></Sections><ContributionDate><Year' \
+                 b'>2021</Year><Month>11</Month><Day>4</Day></ContributionDate></BookDocument><PubmedBookData' \
+                 b'><History><PubMedPubDate PubStatus="pubmed"><Year>2021</Year><Month>10</Month><Day>19</Day><Hour>6' \
+                 b'</Hour><Minute>1</Minute></PubMedPubDate><PubMedPubDate ' \
+                 b'PubStatus="medline"><Year>2021</Year><Month>10</Month><Day>19</Day><Hour>6</Hour><Minute>1</Minute' \
+                 b'></PubMedPubDate><PubMedPubDate ' \
+                 b'PubStatus="entrez"><Year>2021</Year><Month>10</Month><Day>19</Day><Hour>6</Hour><Minute>1</Minute' \
+                 b'></PubMedPubDate></History><PublicationStatus>ppublish</PublicationStatus><ArticleIdList' \
+                 b'><ArticleId IdType="pubmed">34662018</ArticleId></ArticleIdList></PubmedBookData' \
+                 b'></PubmedBookArticle></PubmedArticleSet> '

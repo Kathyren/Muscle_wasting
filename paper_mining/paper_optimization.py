@@ -13,8 +13,8 @@ version_str = f'This run is running with versions:\n' \
               f'\t - numpy {np.__version__}' \
               f'\t - logging {logging.__version__}' \
               f'Starting the {datetime.datetime.now()}'
-logging.basicConfig(filename="../paper_mining/paper_mining.log", level=logging.INFO)
-logging.basicConfig(filename="../paper_mining/paper_mining_errors.log", level=logging.ERROR)
+logging.basicConfig(filename="paper_mining.log", level=logging.INFO)
+logging.basicConfig(filename="paper_mining_errors.log", level=logging.ERROR)
 
 
 class RecollectPapers:
@@ -247,11 +247,12 @@ class EvaluatePapers:
         """
         self.papers_info = papers_info
 
-    def get_pareto_cites_year(self, plot=False):
+    def get_pareto_cites_year(self, plot=False, min_papers=1):
         """
         This function will retrieve the pareto set of the
         max year
         max cites
+        :param min_papers:
         :param plot: If we should plot the pareto
         :return:
         """
@@ -265,7 +266,7 @@ class EvaluatePapers:
                               f" year {paper['Year']} and {paper['Cite_by']} cites")
 
         npArray = np.array(cite_years)
-        pareto = self.is_pareto_efficient(npArray)
+        pareto = self.is_pareto_efficient(npArray, min_paper=min_papers)
         pareto_bool = pareto.tolist()
         pareto_values = []
         for count, paper in enumerate(self.papers_info):
@@ -275,7 +276,7 @@ class EvaluatePapers:
             self.plot_pareto(npArray, pareto)
         return pareto_values
 
-    def is_pareto_efficient(self, costs, return_mask=True):
+    def is_pareto_efficient(self, costs, return_mask=True, min_paper=1):
         """
         Find the pareto-efficient points
         Obtainded from https://github.com/QUVA-Lab/artemis/blob/peter/artemis/general/pareto_efficiency.py
@@ -292,7 +293,10 @@ class EvaluatePapers:
         while next_point_index < len(costs):
             nondominated_point_mask = np.any(costs < costs[next_point_index], axis=1)
             nondominated_point_mask[next_point_index] = True
-            is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points
+            if len(is_efficient[nondominated_point_mask]) > min_paper:
+                is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points
+            else:
+                break
             costs = costs[nondominated_point_mask]
             logging.info(f"Pareto front {costs}")
             next_point_index = np.sum(nondominated_point_mask[:next_point_index]) + 1
@@ -312,11 +316,12 @@ class EvaluatePapers:
 
 
 def main():
-    ep = EvaluatePapers(papers_info=papers)
-    pareto = ep.get_pareto_cites_year(plot=True)
-    write_list_of_dict(pareto, file_name="resources/pareto_fronts_databases/" + dataset)
-    logging.info(f"The pareto front for this database was {pareto}")
-
+    pass
+    # ep = EvaluatePapers(papers_info=papers)
+    # pareto = ep.get_pareto_cites_year(plot=True)
+    # write_list_of_dict(pareto, file_name="resources/pareto_fronts_databases/" + dataset)
+    # logging.info(f"The pareto front for this database was {pareto}")
+    print("This python script is out of function ")
 
 if __name__ == "__main__":
     main()

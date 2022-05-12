@@ -20,8 +20,15 @@ def get_list_from_file(file_name="resources/data/human_only_databases_list.txt")
     return file_list
 
 
-def get_csv_into_dictionary(file_name="resources/data/human_only_databases_list.txt"):
+def get_tsv_into_dictionary(file_name="resources/data/human_only_databases_list.txt"):
     with open(file_name, 'r') as f:
+        dic = [{k: str(v) for k, v in row.items()}
+               for row in csv.DictReader(f, skipinitialspace=True, delimiter='\t')]
+    return dic
+
+
+def get_csv_into_dictionary(file_name="resources/data/human_only_databases_list.txt"):
+    with open(file_name, 'r', encoding="utf8") as f:
         dic = [{k: str(v) for k, v in row.items()}
                for row in csv.DictReader(f, skipinitialspace=True)]
     return dic
@@ -48,7 +55,6 @@ def get_soup_from_html(url):
 
 
 def write_list_of_dict(list_dict, file_name="datasets_pareto_front.csv"):
-
     with open(file_name, 'w') as f:
         header = []
         for key in list_dict[0]:
@@ -58,7 +64,7 @@ def write_list_of_dict(list_dict, file_name="datasets_pareto_front.csv"):
         for element in list_dict:
             line = []
             for key, value in element.items():
-                if isinstance(value,str):
+                if isinstance(value, str):
                     line.append(value.replace(",", "-"))
                 else:
                     line.append(str(value))
