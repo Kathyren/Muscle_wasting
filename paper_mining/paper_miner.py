@@ -38,9 +38,12 @@ def paper_miner(regular_exp, min_papers, max_papers=None, output="output.txt", p
         print(f"No sufficient papers were found to satisfy the min "
               f"articles desired or they are the exact number. Nothing else to do.")
         return 0
+    print("Evaluating best articles")
     ep = EvaluatePapers(papers_info=papers_dictionary)
     pareto = ep.get_pareto_cites_year(plot=True, min_papers=min_papers)
+    print(f"{len(pareto)} articles were selected!, saving output in {output}")
     ct.write_list_of_dict(pareto, file_name=output)
+    print(f"Successfully saved!!")
 
 
 def save_papers(output_file, papers_info):

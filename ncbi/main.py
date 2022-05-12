@@ -25,7 +25,7 @@ def get_papers_from_NCBI(search, retmax=100000):
     """
     connection = eutilities.EutilsConnection(eutilities.NCBIDatabases.Pubmed)
     id = connection.fetch_queries_ids(term=search, retmax=retmax, db="pubmed")
-    result = connection.get_ids_information(db_id=id, db="pubmed")
+    result = connection.get_papers_information(db_id=id, db="pubmed")
     return result
     pass
 
