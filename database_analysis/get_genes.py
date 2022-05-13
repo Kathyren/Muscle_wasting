@@ -2,7 +2,7 @@
 # ### to unify the names.
 import time
 
-from ncbi import eutilities
+from paper_mining import eutilities
 from database_analysis import sql_operations as sql
 from logs import logger
 

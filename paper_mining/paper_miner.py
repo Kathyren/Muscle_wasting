@@ -1,11 +1,10 @@
 # ### Main function for paper_miner
 
 
-import argparse
 import sys, getopt
 
 import common_tools as ct
-from ncbi.main import get_papers_from_NCBI
+from paper_info import get_papers_from_NCBI
 from paper_optimization import EvaluatePapers
 
 default_output = "paper_miner_output.csv"

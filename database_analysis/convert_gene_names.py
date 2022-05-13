@@ -1,6 +1,6 @@
 # ###This class is going to rename the columns of gene in the new binding table ### #
 # ### to unify the names.
-from ncbi import eutilities
+from paper_mining import eutilities
 from database_analysis import sql_operations as sql
 from logs import logger
 ncbi_connection = eutilities.EutilsConnection(eutilities.NCBIDatabases.Nucleotides)
