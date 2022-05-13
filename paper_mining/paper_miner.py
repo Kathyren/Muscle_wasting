@@ -53,7 +53,7 @@ def save_papers(output_file, papers_info):
 def main(argv):
     regular_exp = ''
     min_papers = 1
-    max_papers = 0
+    max_papers = 100000
     output = ''
     print_diagram = False
     help = f'The format for Paper miner is: \n ' \
@@ -92,16 +92,18 @@ def main(argv):
         print(f"There was not input for the output, will use the default {default_output}")
         output = default_output
     # print(regular_exp, min_papers, max_papers, output, print_diagram)
-    return paper_miner(regular_exp=regular_exp, min_papers=min_papers, max_papers=max_papers,
+    return paper_miner(regular_exp=regular_exp, min_papers=int(min_papers), max_papers=int(max_papers),
                        output=output, print_diagram=print_diagram)
 
 
 def fake_main():
     regular_exp = '(mirna) AND (sarcopenia[Title])'
     regular_exp = 'HMB'
-    min_papers = 7
-    max_papers = 5000
-    output = 'HMB.tsv'
+    regular_exp = 'Network mirna'
+
+    min_papers = 1
+    max_papers = 100
+    output = 'Prueba_100.tsv'
     print_diagram = True
     input = None # "pre_process_test_commandline.tsv"
     return paper_miner(regular_exp=regular_exp, min_papers=min_papers, max_papers=max_papers,
@@ -109,6 +111,6 @@ def fake_main():
 
 
 if __name__ == "__main__":
-    # main(sys.argv[1:])
+    main(sys.argv[1:])
     # print("Holi")
-    fake_main()
+    # fake_main()

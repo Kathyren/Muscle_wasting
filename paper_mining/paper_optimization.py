@@ -280,6 +280,7 @@ class EvaluatePapers:
         """
         Find the pareto-efficient points
         Obtainded from https://github.com/QUVA-Lab/artemis/blob/peter/artemis/general/pareto_efficiency.py
+        :param min_paper:
         :param costs: An (n_points, n_costs) array
         :param return_mask: True to return a mask
         :return: An array of indices of pareto-efficient points.
@@ -293,9 +294,11 @@ class EvaluatePapers:
         while next_point_index < len(costs):
             nondominated_point_mask = np.any(costs < costs[next_point_index], axis=1)
             nondominated_point_mask[next_point_index] = True
-            if len(is_efficient[nondominated_point_mask]) > min_paper:
+            if len(is_efficient[nondominated_point_mask]) >= min_paper:
                 is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points
             else:
+                # below minimum
+                # is_efficient = is_efficient[nondominated_point_mask]  # Remove dominated points
                 break
             costs = costs[nondominated_point_mask]
             logging.info(f"Pareto front {costs}")
