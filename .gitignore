@@ -1,3 +1,5 @@
 
 Tests/x.tsv
 Tests/pre_process_test.tsv
+*.cpython-39.pyc
+*\paper_mining.log
