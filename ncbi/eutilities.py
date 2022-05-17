@@ -1,7 +1,6 @@
 import os
 
 from eutils import Client
-from eutils._internal.xmlfacades.pubmedarticleset import PubmedArticleSet
 
 
 def _override_esearch(self, db, term, retmax):
