@@ -376,8 +376,8 @@ class EutilsConnection():
         if not db:
             db = self.db
         print(f"{len(db_id)} papers found")
-        # divide the list in groups of 100
-        split_lists = [db_id[x:x + 100] for x in range(0, len(db_id), 100)]
+        # divide the list in groups of 1000
+        split_lists = [db_id[x:x + 1000] for x in range(0, len(db_id), 1000)]
         for subset_ids in split_lists:
             egs = self.ec._multiple_efetch(db=db, ids=subset_ids)
             cites = self.ec._multiple_elink(db=db, ids=subset_ids)
