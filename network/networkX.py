@@ -5,13 +5,16 @@ import numpy as np
 import warnings
 import numpy as np
 
-from database_analysis import sql_operations as sql
+#from database_analysis import sql_operations as sql
+from cytoscape import format_cytoscape_json
 
 
 def create_graph(mirnas, genes, relationsip):
     """
     This function will receive a list of genes and mirnas and create the network of them
     :param mirnas: List of string with the mirna names
+    :param genes: List of string with the gene names
+    :param relationsip: List of tuple of string with the node names
     """
     G = nx.Graph()
     G.add_nodes_from(mirnas, size=10, type="mirna")
@@ -20,6 +23,25 @@ def create_graph(mirnas, genes, relationsip):
     is_bipartite(G)
     return G
 
+
+def create_graph_from_dictionaries(nodes, relationship, edges):
+    """
+    This function will receive a list of genes and mirnas and create the network of them
+    :param edges: List of dictionaries with the metadata of each relationship
+    :param mirnas: List of dictionary with the mirna names
+    :param genes: List of string with the gene names
+    :param relationsip: List of tuple of string with the node names
+    """
+    G = nx.Graph()
+    for element in nodes:
+
+        node = element['data']['display_name']
+        G.add_node(node, **element)
+    for index, edge in enumerate(edges):
+        G.add_edge(relationship[index][0], relationship[index][1],**edge)
+    #is_bipartite(G)
+
+    return G
 
 def draw_graph(G):
     color_map = []
@@ -43,6 +65,7 @@ def is_bipartite(G):
         assert count == 1, 'There is a mirna_mirna interaction or a gene- gene interaction'
     return True
 
+
 def filter_by_degree(G):
     graph = G.copy()
     centrality = nx.degree(G)
@@ -57,15 +80,17 @@ def filter_by_degree(G):
             delete_nodes.append(node[0])
     graph.remove_nodes_from(delete_nodes)
     save_graph(graph, "high_degree.pkl")
-    return  graph
+    return graph
+
+
 def calculate_centralities(G):
     graph = load_graph("high_degree.pkl")
 
-    #dc = list(nx.degree_centrality(graph).values())
+    # dc = list(nx.degree_centrality(graph).values())
     # idc = nx.in_degree_centrality(G)
     # odc = nx.out_degree_centrality(G)
-    #bc = list(nx.betweenness_centrality(graph).values())
-    #lc = list(nx.load_centrality(graph).values())
+    # bc = list(nx.betweenness_centrality(graph).values())
+    # lc = list(nx.load_centrality(graph).values())
     #    ec = list(nx.eigenvector_centrality(G).values())
     cc_t = nx.closeness_centrality(graph)
     cc = list(cc_t.values())
@@ -79,8 +104,9 @@ def calculate_centralities(G):
     draw_graph(graph)
     pass
 
+
 def calculate_data(dc, bc, lc, cc):
-    centralities = [dc,bc,lc, cc]
+    centralities = [dc, bc, lc, cc]
     av = []
     std = []
     max = []
@@ -91,6 +117,8 @@ def calculate_data(dc, bc, lc, cc):
         max.append((np.max(c)))
         min.append(np.min(c))
     print(av, std, max, min)
+
+
 def save_graph(G, name):
     nx.write_gpickle(G, name)
 
@@ -116,7 +144,11 @@ def create_my_graph(query):
 
 if __name__ == '__main__':
     # graph = load_graph()
-    graph = create_my_graph(get_random_relationships)
+    nodes, edges, relationships = format_cytoscape_json()
+    graph = create_graph_from_dictionaries(nodes=nodes, relationship=relationships, edges=edges)
+    #graph = create_my_graph(get_random_relationships)
     save_graph(graph, "small_graph.pkl")
+    anc = nx.all_pairs_node_connectivity(graph)
+    print(nx.info(graph))
 
     # draw_graph(graph)

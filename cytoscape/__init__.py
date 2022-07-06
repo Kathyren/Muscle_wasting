@@ -1,9 +1,9 @@
-import dash
-import dash_cytoscape as cyto
-from dash import html
-
-app = dash.Dash(__name__)
-
+#import dash
+#import dash_cytoscape as cyto
+#from dash import html
+import json
+#app = dash.Dash(__name__)
+protein_name = 'display_name' # this will vary depending on the app that I use in cytoscape
 elements = [
     {'data': {'id': 'one', 'label': 'Node 1'}, 'position': {'x': 75, 'y': 75}},
     {'data': {'id': 'two', 'label': 'Node 2'}, 'position': {'x': 200, 'y': 200}},
@@ -2216,15 +2216,57 @@ elements = [{
       "selected" : false
     } ]
   }]
-app.layout = html.Div([
+#app.layout = html.Div([
 
-    cyto.Cytoscape(
-        id='cytoscape-two-nodes',
-        layout={'name': 'preset'},
-        style={'width': '100%', 'height': '400px'},
-        elements=elements
-    )
-])
+    #cyto.Cytoscape(
+    #    id='cytoscape-two-nodes',
+    #    layout={'name': 'preset'},
+     #   style={'width': '100%', 'height': '400px'},
+     #   elements=elements
+    #)])
+def read_cytoscape_json(cytoscape_file='test.cyjs'):
+    with open(cytoscape_file, 'r') as f:
+        data = json.load(f)
+        return data
+
+
+def extract_nodes_relationships(relationships):
+    """
+    This function will take the list as given from cytoscape to get the tuple  (name node 1, name node 2)
+    :param relationships:
+    :return:
+    """
+
+    pass
+def format_cytoscape_json():
+    """
+    This function takes the Json file and takes the edges and nodes separetly
+    and format in a way that I can feed to the networkX graph.
+
+    :return:
+    """
+    cytoscape = read_cytoscape_json(cytoscape_file="test.cyjs")
+    celements = cytoscape["elements"]
+    nodes = celements["nodes"]
+    edges = celements["edges"]
+    node_ids = {}
+    for node in nodes:
+        node_name = node['data'][protein_name]
+        node_id = node['data']['id']
+        node['source'] = 'Cytoscape'
+        node['type'] = 'protein'
+        node_ids[node_id] = node_name
+    relationships = []
+    for edge in edges:
+        source_name = edge['data']['source']
+        target_name = edge['data']['target']
+        relationship = (node_ids[source_name], node_ids[target_name])
+        relationships.append(relationship)
+    return nodes, edges, relationships
+
+
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    #app.run_server(debug=True)
+    nodes, edges, relationships = format_cytoscape_json()
+    print ("")
