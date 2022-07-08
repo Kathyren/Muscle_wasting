@@ -119,21 +119,20 @@ def test_remove_nodes_low_centrality():
     n_nodes = graph.number_of_nodes()
     graph_p = remove_nodes_low_centrality(graph)
     n_nodes_2 = graph_p.number_of_nodes()
-    assert n_nodes>= n_nodes_2
+    assert n_nodes >= n_nodes_2
 
 
 def test_create_graph_from_dictioanries():
     nodes = Constants.cytoscape_small_data_nodes
     edges = Constants.cytoscape_small_data_edges
-    ppi= Constants.cytoscape_small_string_json
+    ppi = Constants.cytoscape_small_string_json
     graph = create_graph_from_dictionaries(nodes=nodes, edges=edges, relationsip=relationship)
     print(list(graph.nodes))
     print(list(graph.edges))
+
 
 def test_get_mirna_mrna_relationships():
     relationship = get_mirna_mrna_relationships(genes=genes)
     assert type(relationship) is list
     assert type(relationship[0]) is tuple
     assert relationship[0][0] in genes
-
-
