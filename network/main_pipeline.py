@@ -20,7 +20,7 @@ def main(file, name):
     else:
         the_network = nx.load_graph(f"graph0_{name}")
     network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=0.75)
-    save_as_cjsn(network, f'graph1_{name}')
+    save_as_cjsn(network, f'graph1_{name}.cyjs')
 
 
 def save_as_cjsn(network, name):
@@ -37,6 +37,6 @@ def open_cytoscape(file_name):
 
 
 if __name__ == '__main__':
-    file = ""
-    main(file, "test")
+    file = "cardiovascular_cancer.cyjs"
+    main(file, "dryrun_cardiovascular" )
     pass

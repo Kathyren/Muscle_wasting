@@ -107,7 +107,7 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
         if node[1] < x:
             delete_nodes.append(node[0])
     graph.remove_nodes_from(delete_nodes)
-    draw_graph(graph)
+    # draw_graph(graph)
 
     return graph
 
@@ -174,6 +174,7 @@ def save_graph(G, name):
     """
     nx.write_gpickle(G, name)
 
+
 def convert_to_json(G):
     """
     This function will take a networkx object to json
@@ -181,7 +182,12 @@ def convert_to_json(G):
     :return: json object with
     """
     json = nx.cytoscape_data(G)
+    json = nx.node_link_data(G)
+    json['elements'] = {'nodes':json.pop('nodes'), 'edges': json.pop('links')}
+
+
     return json
+
 
 def load_graph(name):
     """
@@ -206,7 +212,7 @@ def get_mirna_mrna_relationships(genes):
     :param genes: list of string; List of gene names
     :return:
     """
-    genes = '"' + '","'.join(genes)+'"'
+    genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature from binding where  ' \
             f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
     relationships = sql.get_query(query=query)
@@ -214,6 +220,7 @@ def get_mirna_mrna_relationships(genes):
     mirnas = list(relationships['mirna_mature'])
     relationship = list(zip(genes, mirnas))
     return relationship
+
 
 def create_my_graph(query):
     relationships = sql.get_query(query=query)

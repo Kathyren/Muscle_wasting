@@ -1,8 +1,10 @@
 from networkx import is_bipartite
 
 import Constants
+from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
-    create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json
+    create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
+    save_graph
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -103,6 +105,7 @@ def test_create_network():
     draw_graph(graph)
 
 
+
 def test_draw():
     graph = create_graph(genes=genes, mirnas=mirnas, relationsip=relationship)
     draw_graph(graph)
@@ -126,7 +129,7 @@ def test_create_graph_from_dictioanries():
     nodes = Constants.cytoscape_small_data_nodes
     edges = Constants.cytoscape_small_data_edges
     ppi = Constants.cytoscape_small_string_json
-    graph = create_graph_from_dictionaries(nodes=nodes, edges=edges, relationsip=relationship)
+    graph = create_graph_from_dictionaries(nodes=nodes, edges=edges, relationship=relationship)
     print(list(graph.nodes))
     print(list(graph.edges))
 
@@ -148,3 +151,18 @@ def test_convert_to_json():
                                                               f"the keys are: {dict_graph['elements'].keys} "
     assert not (dict_graph['elements'].get('edges') is None), f"Json graph do not have essential key \"edges\", " \
                                                               f"the keys are: {dict_graph['elements'].keys} "
+
+def test_convert_network_to_json():
+    nodes = Constants.cytoscape_small_data_nodes
+    edges = Constants.cytoscape_small_data_edges
+    ppi = Constants.cytoscape_small_string_json
+    graph = create_graph_from_dictionaries(nodes=nodes, edges=edges, relationship=relationship)
+    dict_graph = convert_to_json(graph)
+
+    assert not (dict_graph.get(
+        'elements') is None), f"Json graph do not have essential key \"element\", the keys are: {dict_graph.keys} "
+    assert not (dict_graph['elements'].get('nodes') is None), f"Json graph do not have essential key \"nodes\", " \
+                                                              f"the keys are: {dict_graph['elements'].keys} "
+    assert not (dict_graph['elements'].get('edges') is None), f"Json graph do not have essential key \"edges\", " \
+                                                              f"the keys are: {dict_graph['elements'].keys} "
+
