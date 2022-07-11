@@ -2,7 +2,7 @@ from networkx import is_bipartite
 
 import Constants
 from network.networkX import create_graph, draw_graph, load_graph, \
-    create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality
+    create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -136,3 +136,15 @@ def test_get_mirna_mrna_relationships():
     assert type(relationship) is list
     assert type(relationship[0]) is tuple
     assert relationship[0][0] in genes
+
+
+def test_convert_to_json():
+    graph = load_graph("big_graph.pkl")
+    dict_graph = convert_to_json(graph)
+
+    assert not (dict_graph.get(
+        'elements') is None), f"Json graph do not have essential key \"element\", the keys are: {dict_graph.keys} "
+    assert not (dict_graph['elements'].get('nodes') is None), f"Json graph do not have essential key \"nodes\", " \
+                                                              f"the keys are: {dict_graph['elements'].keys} "
+    assert not (dict_graph['elements'].get('edges') is None), f"Json graph do not have essential key \"edges\", " \
+                                                              f"the keys are: {dict_graph['elements'].keys} "

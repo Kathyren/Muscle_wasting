@@ -17,6 +17,12 @@ def test_read_json():
                               'edges': cytoscape_small_data_edges}, f"The json file is in an unexpected format."
 
 
+def test_save_cytoscape_json():
+    js = Constants.cytoscape_small_string_json
+    ct.save_cytoscape_json(js,'test_cytoscape.cyjs')
+    js2 = ct.read_cytoscape_json('test_cytoscape.cyjs')
+    assert js == js2, f"The json was saved with modifications"
+
 def test_format_cytoscape_json():
     cytoscape = Constants.cytoscape_small_string_json
     nodes, edges, relationsips = ct.format_cytoscape_json(cytoscape)

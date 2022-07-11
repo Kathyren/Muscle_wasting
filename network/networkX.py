@@ -166,10 +166,29 @@ def calculate_data(centralities):
 
 
 def save_graph(G, name):
+    """
+    This function will save a network obj to pickle file
+    :param G:
+    :param name:
+    :return:
+    """
     nx.write_gpickle(G, name)
 
+def convert_to_json(G):
+    """
+    This function will take a networkx object to json
+    :param G:
+    :return: json object with
+    """
+    json = nx.cytoscape_data(G)
+    return json
 
 def load_graph(name):
+    """
+    Get a graph from a pickle file
+    :param name:
+    :return:
+    """
     G = nx.read_gpickle(name)
     return G
 

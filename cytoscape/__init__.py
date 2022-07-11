@@ -2235,19 +2235,26 @@ elements = [{
 #   elements=elements
 # )])
 def read_cytoscape_json(cytoscape_file='test.cyjs'):
+    """
+    This function will take the json file and return the data in json format as well
+    :param cytoscape_file:
+    :return:  json
+    """
     with open(cytoscape_file, 'r') as f:
         data = json.load(f)
         return data
 
 
-def extract_nodes_relationships(relationships):
+
+def save_cytoscape_json(json_file, cytoscape_file_name='cytoscape_from_python.cyjs'):
     """
-    This function will take the list as given from cytoscape to get the tuple  (name node 1, name node 2)
-    :param relationships:
+    This function takes a json file
+    :param json_file:
+    :param cytoscape_file_name:
     :return:
     """
-
-    pass
+    with open(cytoscape_file_name, 'w') as outfile:
+        json.dump(json_file, outfile)
 
 
 def get_relationships(edges, nodes):
@@ -2256,7 +2263,7 @@ def get_relationships(edges, nodes):
     relationship on format (protein1, protein2)
     :param edges: list of json of each edge
     :param nodes: list of json of each node
-    :return:
+    :return: list of tuples
     """
     node_ids = {}
     for node in nodes:
@@ -2288,6 +2295,9 @@ def format_cytoscape_json(cytoscape_json):
     edges = c_elements["edges"]
     relationships = get_relationships(edges, nodes)
     return nodes, edges, relationships
+
+
+
 
 
 if __name__ == '__main__':
