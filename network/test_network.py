@@ -180,14 +180,13 @@ def test_get_nodes_names():
 
 
 def test_add_mirnas(monkeypatch):
-
-
     def fake_relationships(*args, **kwargs):
         genes = Constants.cytoscape_small_network_node_names
         fake_relationship = [(genes[0], 'hsa-miR-111-5p'), (genes[1], 'hsa-miR-111-5p'),
-                              (genes[1], 'hsa-miR-122-3p'), (genes[1], 'hsa-miR-130-5p'), (genes[1], 'hsa-miR-122-5p'),
-                              (genes[0], 'hsa-miR-122-5p')]
+                             (genes[1], 'hsa-miR-122-3p'), (genes[1], 'hsa-miR-130-5p'), (genes[1], 'hsa-miR-122-5p'),
+                             (genes[0], 'hsa-miR-122-5p')]
         return fake_relationship, ['hsa-miR-111-5p', 'hsa-miR-122-3p', 'hsa-miR-130-5p', 'hsa-miR-122-5p']
+
     monkeypatch.setattr(
         networkX, "get_mirna_mrna_relationships", fake_relationships
     )
