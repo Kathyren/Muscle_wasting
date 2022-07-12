@@ -2245,7 +2245,6 @@ def read_cytoscape_json(cytoscape_file='test.cyjs'):
         return data
 
 
-
 def save_cytoscape_json(json_file, cytoscape_file_name='cytoscape_from_python.cyjs'):
     """
     This function takes a json file
@@ -2297,7 +2296,37 @@ def format_cytoscape_json(cytoscape_json):
     return nodes, edges, relationships
 
 
+def create_cytoscape_node(node_name, node_data={}, node_position={}, source='python_cut', node_type='unspecified',
+                          selected=False):
+    """
+    This node will return a dictionary corresponding to the node as cytoscape process them
+    :param node_name: str
+    :param node_data: dict
+    :param node_position: dict
+    :param source: Where is the node comming from
+    :param node_type: What type of biological element is it
+    :param selected: If the node is selected
+    :return:
+    """
+    node = {'data': node_data, 'position': node_position, 'id': node_name, 'source': source, 'type': node_type,
+            'selected': selected}
+    return node
 
+def create_cytoscape_edge(source, target, node_data={}, node_position={},
+                          selected=False):
+    """
+    This node will return a dictionary corresponding to the node as cytoscape process them
+    :param node_name: str
+    :param node_data: dict
+    :param node_position: dict
+    :param source: Where is the node comming from
+    :param node_type: What type of biological element is it
+    :param selected: If the node is selected
+    :return:
+    """
+    node = {'data': node_data, 'position': node_position, 'source': source, 'target': target,
+            'selected': selected}
+    return node
 
 
 if __name__ == '__main__':

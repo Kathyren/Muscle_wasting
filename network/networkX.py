@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 
 from database_analysis import sql_operations as sql
-from cytoscape import format_cytoscape_json
+from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge
 
 
 def create_graph(mirnas, genes, relationsip):
@@ -183,8 +183,7 @@ def convert_to_json(G):
     """
     json = nx.cytoscape_data(G)
     json = nx.node_link_data(G)
-    json['elements'] = {'nodes':json.pop('nodes'), 'edges': json.pop('links')}
-
+    json['elements'] = {'nodes': json.pop('nodes'), 'edges': json.pop('links')}
 
     return json
 
@@ -204,13 +203,23 @@ get_muscle_relationships = 'Select Distinct mrna, mirna_mature from binding wher
                            'mirna_mature like "hsa-%" and mrna in (select gene from gene_bank) ;'
 
 
+def get_nodes_names(G):
+    """
+        Return the name of the nodes in a list of string
+    :param G:
+    :return:
+    """
+    nodes = G.nodes
+    return nodes
+
+
 def get_mirna_mrna_relationships(genes):
     """
     This function will take the gene names and get the list
     of microrna and their relationships
 
     :param genes: list of string; List of gene names
-    :return:
+    :return: The list of tuples for the relationships and the list of string with the name of the mirnas
     """
     genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature from binding where  ' \
@@ -219,7 +228,7 @@ def get_mirna_mrna_relationships(genes):
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
     relationship = list(zip(genes, mirnas))
-    return relationship
+    return relationship, mirnas
 
 
 def create_my_graph(query):
@@ -231,13 +240,40 @@ def create_my_graph(query):
     return graph
 
 
-def add_mirna_relationships(query):
-    relationships = sql.get_query(query=query)
-    genes = list(relationships['mrna'])
-    mirnas = list(relationships['mirna_mature'])
-    relationship = list(zip(genes, mirnas))
-    graph = create_graph(mirnas=mirnas, genes=genes, relationsip=relationship)
-    return graph
+def add_relationships(graph, relationships):
+    """
+    This function will add to an existen network the relationships
+    :param graph: The networkx objs
+    :param relationships: A list of tuples with the relatioships
+    :return: None
+    """
+    graph.add_edges_from(relationships)
+
+
+def add_mirna_relationships(network):
+    genes = get_nodes_names(network)
+    relationships, mirnas = get_mirna_mrna_relationships(genes)
+    for idx, mirna in enumerate(mirnas):
+        node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
+                                          node_data={'id': f'900{idx}', 'display_name': mirna})
+        network.add_node(mirna, **node_data)
+    for idx, relationship in enumerate(relationships):
+        source = relationship[0]
+        target = relationship[1]
+        source_data = network.nodes[source]['data']
+        target_data = network.nodes[target]['data']
+        data2fill = {"id": f'800{idx}',
+                     "source": source_data['id'],
+                     "target": target_data['id'],
+                     "shared_interaction": "pm",  ## predicted mirna
+                     "shared_name": f"{source} (pm) {target}",
+                     "name": f"{source} (pm) {target}",
+                     "interaction": "pm",
+                     "SUID": f'800{idx}',
+                     "selected": False}
+        edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill)
+        network.add_edge(source, target, **edge_data)
+    add_relationships(network, relationships=relationships)
 
 
 if __name__ == '__main__':

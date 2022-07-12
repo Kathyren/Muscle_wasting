@@ -9,3 +9,5 @@ ncbi/__pycache__/eutilities.cpython-39.pyc
 cytoscape/logs/py4cytoscape.log
 *.cyjs
 *.log
+*.cys
+*.pkl

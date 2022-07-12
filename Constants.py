@@ -83,3 +83,4 @@ cytoscape_small_string_json = {'format_version': '1.0',
                                  'edges': cytoscape_small_data_edges}
                              }
 cytoscape_small_relationships = [('CLCN1', 'SCN4A')]
+cytoscape_small_network_node_names = ['CLCN1', 'SCN4A']

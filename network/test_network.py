@@ -1,10 +1,11 @@
 from networkx import is_bipartite
 
 import Constants
+from network import networkX
 from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
-    save_graph
+    save_graph, get_nodes_names, add_mirna_relationships
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -96,6 +97,7 @@ cytoscape_nodes = [{
     },
     "selected": False
 }]
+graph = load_graph("small_graph.pkl")
 
 
 def test_create_network():
@@ -103,7 +105,6 @@ def test_create_network():
     assert len(graph.nodes()) == 12
     assert len(graph.edges()) == 10
     draw_graph(graph)
-
 
 
 def test_draw():
@@ -152,6 +153,7 @@ def test_convert_to_json():
     assert not (dict_graph['elements'].get('edges') is None), f"Json graph do not have essential key \"edges\", " \
                                                               f"the keys are: {dict_graph['elements'].keys} "
 
+
 def test_convert_network_to_json():
     nodes = Constants.cytoscape_small_data_nodes
     edges = Constants.cytoscape_small_data_edges
@@ -166,3 +168,30 @@ def test_convert_network_to_json():
     assert not (dict_graph['elements'].get('edges') is None), f"Json graph do not have essential key \"edges\", " \
                                                               f"the keys are: {dict_graph['elements'].keys} "
 
+
+def test_get_nodes_names():
+    nodes = Constants.cytoscape_small_data_nodes
+    node_keys = Constants.cytoscape_small_network_node_names
+    edges = Constants.cytoscape_small_data_edges
+    relationship = Constants.cytoscape_small_relationships
+    graph = create_graph_from_dictionaries(nodes=nodes, edges=edges, relationship=relationship)
+    node_names = get_nodes_names(graph)
+    assert set(node_keys) == set(node_names)
+
+
+def test_add_mirnas(monkeypatch):
+
+
+    def fake_relationships(*args, **kwargs):
+        genes = Constants.cytoscape_small_network_node_names
+        fake_relationship = [(genes[0], 'hsa-miR-111-5p'), (genes[1], 'hsa-miR-111-5p'),
+                              (genes[1], 'hsa-miR-122-3p'), (genes[1], 'hsa-miR-130-5p'), (genes[1], 'hsa-miR-122-5p'),
+                              (genes[0], 'hsa-miR-122-5p')]
+        return fake_relationship, ['hsa-miR-111-5p', 'hsa-miR-122-3p', 'hsa-miR-130-5p', 'hsa-miR-122-5p']
+    monkeypatch.setattr(
+        networkX, "get_mirna_mrna_relationships", fake_relationships
+    )
+    node_count_1 = graph.number_of_nodes()
+    add_mirna_relationships(graph)
+    node_count_2 = graph.number_of_nodes()
+    assert node_count_2 > node_count_1, f'No added nodes?'

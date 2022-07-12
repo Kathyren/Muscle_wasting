@@ -13,13 +13,16 @@ def get_cytoscape_network(file_name):
     return the_network
 
 
-def main(file, name):
-    if not os.path.exists(f"graph0_{name}"):
-        the_network = get_cytoscape_network(file)
-        nx.save_graph(the_network, f"graph0_{name}")
+def main(cytoscape_network, name):
+    if not os.path.exists(f"graph0_{name}.pkl"):
+        the_network = get_cytoscape_network(cytoscape_network)
+        nx.save_graph(the_network, f"graph0_{name}.pkl")
     else:
-        the_network = nx.load_graph(f"graph0_{name}")
+        the_network = nx.load_graph(f"graph0_{name}.pkl")
+    nx.add_mirna_relationships(the_network)
+
     network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=0.75)
+
     save_as_cjsn(network, f'graph1_{name}.cyjs')
 
 
@@ -38,5 +41,5 @@ def open_cytoscape(file_name):
 
 if __name__ == '__main__':
     file = "cardiovascular_cancer.cyjs"
-    main(file, "dryrun_cardiovascular" )
+    main(file, "dryrun_cardiovascular_w_mirnas")
     pass
