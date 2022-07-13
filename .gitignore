@@ -9,3 +9,8 @@ ncbi/__pycache__/eutilities.cpython-39.pyc
 pytest.ini
 .idea/misc.xml
 .idea/Muscle_wasting.iml
+cytoscape/logs/py4cytoscape.log
+*.cyjs
+*.log
+*.cys
+*.pkl
