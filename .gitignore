@@ -6,3 +6,6 @@ Tests/pre_process_test.tsv
 .idea/*
 *.iml
 ncbi/__pycache__/eutilities.cpython-39.pyc
+pytest.ini
+.idea/misc.xml
+.idea/Muscle_wasting.iml
