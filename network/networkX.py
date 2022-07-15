@@ -250,6 +250,20 @@ def add_relationships(graph, relationships):
     graph.add_edges_from(relationships)
 
 
+def set_positions(network):
+    """
+    This function will rearrange the nodes and update the position as specified by cytoscape
+    :param network:
+    :return:
+    """
+    pos = nx.spectral_layout(network, scale=100, center=[50,50])
+    # pos = nx.circular_layout(network, scale=100, center=[50, 50])
+    for node in network.nodes:
+        network.nodes[node]['position']['x'] = pos[node][0]
+        network.nodes[node]['position']['y'] = pos[node][1]
+    return pos
+
+
 def add_mirna_relationships(network):
     genes = get_nodes_names(network)
     relationships, mirnas = get_mirna_mrna_relationships(genes)
@@ -257,22 +271,26 @@ def add_mirna_relationships(network):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
                                           node_data={'id': f'900{idx}', 'display_name': mirna})
         network.add_node(mirna, **node_data)
+
     for idx, relationship in enumerate(relationships):
-        source = relationship[0]
-        target = relationship[1]
-        source_data = network.nodes[source]['data']
-        target_data = network.nodes[target]['data']
-        data2fill = {"id": f'800{idx}',
-                     "source": source_data['id'],
-                     "target": target_data['id'],
-                     "shared_interaction": "pm",  ## predicted mirna
-                     "shared_name": f"{source} (pm) {target}",
-                     "name": f"{source} (pm) {target}",
-                     "interaction": "pm",
-                     "SUID": f'800{idx}',
-                     "selected": False}
-        edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill)
-        network.add_edge(source, target, **edge_data)
+        try:
+            source = relationship[0]
+            target = relationship[1]
+            source_data = network.nodes[source]['data']
+            target_data = network.nodes[target]['data']
+            data2fill = {"id": f'800{idx}',
+                         "source": source_data['id'],
+                         "target": target_data['id'],
+                         "shared_interaction": "pm",  ## predicted mirna
+                         "shared_name": f"{source} (pm) {target}",
+                         "name": f"{source} (pm) {target}",
+                         "interaction": "pm",
+                         "SUID": f'800{idx}',
+                         "selected": False}
+            edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill)
+            network.add_edge(source, target, **edge_data)
+        except Exception as e:
+            print(f"Relatuionship {source}-{target} coudn't be added due to {str(e)}")
     add_relationships(network, relationships=relationships)
 
 

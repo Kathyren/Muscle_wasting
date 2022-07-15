@@ -5,7 +5,7 @@ from network import networkX
 from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
-    save_graph, get_nodes_names, add_mirna_relationships
+    save_graph, get_nodes_names, add_mirna_relationships, set_positions
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -194,3 +194,19 @@ def test_add_mirnas(monkeypatch):
     add_mirna_relationships(graph)
     node_count_2 = graph.number_of_nodes()
     assert node_count_2 > node_count_1, f'No added nodes?'
+
+def test_set_positions():
+    x = set_positions(graph)
+    a = Constants.cytoscape_small_network_node_names[0]
+    b = Constants.cytoscape_small_network_node_names[1]
+    pos_a = [x[a][0], x[a][1]]
+    pos_b = [x[b][0], x[b][1]]
+    assert graph.nodes[a]['position']['x'] == pos_a[0], f"The value for {a} in x is {pos_a[0]}," \
+                                                        f" {graph.nodes[a]['position']['x']} found"
+    assert graph.nodes[a]['position']['y'] == pos_a[1], f"The value for {a} in y is {pos_a[1]}," \
+                                                        f" {graph.nodes[a]['position']['y']} found"
+    assert graph.nodes[b]['position']['x'] == pos_b[0], f"The value for {b} in x is {pos_a[0]}," \
+                                                        f" {graph.nodes[b]['position']['x']} found"
+    assert graph.nodes[b]['position']['y'] == pos_b[1], f"The value for {b} in y is {pos_a[1]}," \
+                                                        f" {graph.nodes[b]['position']['y']} found"
+

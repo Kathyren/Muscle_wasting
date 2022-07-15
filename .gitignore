@@ -11,3 +11,4 @@ cytoscape/logs/py4cytoscape.log
 *.log
 *.cys
 *.pkl
+network/graph1_STRING_Magagnes20092default node.csv

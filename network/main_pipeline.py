@@ -13,17 +13,24 @@ def get_cytoscape_network(file_name):
     return the_network
 
 
-def main(cytoscape_network, name):
-    if not os.path.exists(f"graph0_{name}.pkl"):
-        the_network = get_cytoscape_network(cytoscape_network)
-        nx.save_graph(the_network, f"graph0_{name}.pkl")
+def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=True):
+    if use_prefix:
+        px1 = "graph0_"
+        px2 = "graph1_"
     else:
-        the_network = nx.load_graph(f"graph0_{name}.pkl")
-    nx.add_mirna_relationships(the_network)
+        px1 = px2 = ""
+    if not os.path.exists(f"{px1}{name}.pkl"):
+        the_network = get_cytoscape_network(cytoscape_network)
+        nx.save_graph(the_network, f"{px1}{name}.pkl")
+    else:
+        the_network = nx.load_graph(f"{px1}{name}.pkl")
+    if add_mirnas:
+        nx.add_mirna_relationships(the_network)
 
-    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=0.75)
-
-    save_as_cjsn(network, f'graph1_{name}.cyjs')
+    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=0.5)
+    nx.set_positions(network)
+    nx.save_graph(network, f"{px2}{name}.pkl")
+    save_as_cjsn(network, f'{px2}{name}.cyjs')
 
 
 def save_as_cjsn(network, name):
@@ -40,6 +47,9 @@ def open_cytoscape(file_name):
 
 
 if __name__ == '__main__':
-    file = "cardiovascular_cancer.cyjs"
-    main(file, "dryrun_cardiovascular_w_mirnas")
+    file = "GSE38718.cyjs"
+    magagnes2009 = "STRING_Magagnes2009"
+    #add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas")
+    #add_mirnas_n_select(file, "GSE38718_w_mirnas")
+    add_mirnas_n_select(magagnes2009+".cyjs", magagnes2009+"2")
     pass
