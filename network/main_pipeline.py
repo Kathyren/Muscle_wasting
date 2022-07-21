@@ -14,6 +14,14 @@ def get_cytoscape_network(file_name):
 
 
 def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=True):
+    """
+
+    :param cytoscape_network: str Name of the network saved as cyjs
+    :param name: str Name to save the graph and subproducts
+    :param use_prefix: Bool
+    :param add_mirnas: Bool
+    :return:
+    """
     if use_prefix:
         px1 = "graph0_"
         px2 = "graph1_"
@@ -33,6 +41,34 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     save_as_cjsn(network, f'{px2}{name}.cyjs')
 
 
+def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=True, add_tissues=True):
+    """
+    :param cytoscape_network: str Name of the network saved as cyjs
+    :param name: str Name to save the graph and subproducts
+    :param use_prefix: Bool
+    :param add_mirnas: Bool
+    :param add_tissues: Bool
+    :return:
+    """
+    if use_prefix:
+        px1 = "graph0_"
+        px2 = "graph1_"
+    else:
+        px1 = px2 = ""
+    if not os.path.exists(f"{px1}{name}.pkl"):
+        the_network = get_cytoscape_network(cytoscape_network)
+        nx.save_graph(the_network, f"{px1}{name}.pkl")
+    else:
+        the_network = nx.load_graph(f"{px1}{name}.pkl")
+    if add_mirnas:
+        nx.add_mirna_relationships(the_network)
+    if add_tissues:
+        nx.add_tissue_relationship(the_network)
+    nx.set_positions(the_network)
+    nx.save_graph(the_network, f"{px2}{name}.pkl")
+    save_as_cjsn(the_network, f'{px2}{name}.cyjs')
+
+
 def save_as_cjsn(network, name):
     """
     This function will take a network and save it for cytoscape use
@@ -49,7 +85,7 @@ def open_cytoscape(file_name):
 if __name__ == '__main__':
     file = "GSE38718.cyjs"
     magagnes2009 = "STRING_Magagnes2009"
-    #add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas")
-    #add_mirnas_n_select(file, "GSE38718_w_mirnas")
-    add_mirnas_n_select(magagnes2009+".cyjs", magagnes2009+"2")
+    # add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas")
+    # add_mirnas_n_select(file, "GSE38718_w_mirnas")
+    add_mirnas_n_select(magagnes2009 + ".cyjs", magagnes2009 + "2")
     pass
