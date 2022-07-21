@@ -1,3 +1,4 @@
+import networkx
 from networkx import is_bipartite
 
 import Constants
@@ -5,7 +6,7 @@ from network import networkX
 from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
-    save_graph, get_nodes_names, add_mirna_relationships, set_positions
+    save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, add_tissue_relationship
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -136,10 +137,13 @@ def test_create_graph_from_dictioanries():
 
 
 def test_get_mirna_mrna_relationships():
-    relationship = get_mirna_mrna_relationships(genes=genes)
+    relationship, mirnas, scores = get_mirna_mrna_relationships(genes=genes)
     assert type(relationship) is list
     assert type(relationship[0]) is tuple
     assert relationship[0][0] in genes
+    assert relationship[0][1] in mirnas
+    assert type(scores) is list
+    assert scores[0] > 0
 
 
 def test_convert_to_json():
@@ -185,7 +189,8 @@ def test_add_mirnas(monkeypatch):
         fake_relationship = [(genes[0], 'hsa-miR-111-5p'), (genes[1], 'hsa-miR-111-5p'),
                              (genes[1], 'hsa-miR-122-3p'), (genes[1], 'hsa-miR-130-5p'), (genes[1], 'hsa-miR-122-5p'),
                              (genes[0], 'hsa-miR-122-5p')]
-        return fake_relationship, ['hsa-miR-111-5p', 'hsa-miR-122-3p', 'hsa-miR-130-5p', 'hsa-miR-122-5p']
+        return fake_relationship, ['hsa-miR-111-5p', 'hsa-miR-122-3p',
+                                   'hsa-miR-130-5p', 'hsa-miR-122-5p'], [1] * len(relationship)
 
     monkeypatch.setattr(
         networkX, "get_mirna_mrna_relationships", fake_relationships
@@ -194,6 +199,8 @@ def test_add_mirnas(monkeypatch):
     add_mirna_relationships(graph)
     node_count_2 = graph.number_of_nodes()
     assert node_count_2 > node_count_1, f'No added nodes?'
+    # save_graph(graph,'test_w_mirnas.pkl')
+
 
 def test_set_positions():
     x = set_positions(graph)
@@ -210,3 +217,55 @@ def test_set_positions():
     assert graph.nodes[b]['position']['y'] == pos_b[1], f"The value for {b} in y is {pos_a[1]}," \
                                                         f" {graph.nodes[b]['position']['y']} found"
 
+
+def test_get_mirna_tissue_edges_random_mirnas():
+    random_mirnas = ['hsa-miR-181a-2-3p', 'hsa-miR-519b-5p', 'hsa-miR-629-5p', 'hsa-miR-6721-5p', 'hsa-miR-519a-3p']
+    edges, organs, source = get_mirna_tissue_edges(random_mirnas)
+    assert len(edges) > 1
+    assert source[0] > 0
+
+
+def test_add_tissue_relationship(monkeypatch):
+    def fake_relationships(*args, **kwargs):
+        fake_relationship = [('muscle', 'hsa-miR-111-5p'), ('brain', 'hsa-miR-111-5p'),
+                             ('muscle', 'hsa-miR-122-3p'), ('vein', 'hsa-miR-130-5p'), ('bone', 'hsa-miR-122-5p'),
+                             ('vein', 'hsa-miR-122-5p')]
+        return fake_relationship, ['muscle', 'vein',
+                                   'bone'], [1] * len(relationship)
+
+    monkeypatch.setattr(
+        networkX, "get_mirna_tissue_edges", fake_relationships
+    )
+    graph = load_graph("test_w_mirnas.pkl")
+    node_count_1 = graph.number_of_nodes()
+    add_tissue_relationship(graph)
+    node_count_2 = graph.number_of_nodes()
+    assert node_count_2 > node_count_1, f'No added nodes?'
+    save_graph(graph,'test_w_mirnas_organs.pkl')
+    cc_it = networkx.all_neighbors(graph=graph, node='muscle')
+    cc = len(list(cc_it))
+    assert cc == 2, f"The fake relationships is designed to give 2 neighbors for muscle." \
+                    f" Maybe mocked graph already had muscles? "
+
+
+def test_add_organ_system_relationship(monkeypatch):
+    def fake_relationships(*args, **kwargs):
+        fake_relationship = [('muscle', 'lymphatic'), ('brain', 'lymphatic'),
+                             ('musculoskeletal', 'muscle'), ('vein', 'lymphatic'), ('bone', 'musculoskeletal'),
+                             ('vein', 'cardiovascular')]
+        return fake_relationship, ['lymphatic', 'musculoskeletal',
+                                   'cardiovascular'], [1] * len(relationship)
+
+    monkeypatch.setattr(
+        networkX, "get_tissue_system_edges", fake_relationships
+    )
+    graph = load_graph("test_w_mirnas.pkl")
+    node_count_1 = graph.number_of_nodes()
+    add_tissue_relationship(graph)
+    node_count_2 = graph.number_of_nodes()
+    assert node_count_2 > node_count_1, f'No added nodes?'
+    # node = graph.nodes['muscle']
+    cc_it = networkx.all_neighbors(graph=graph, node='muscle')
+    cc = len(list(cc_it))
+    assert cc == 2, f"The fake relationships is designed to give 2 neighbors for muscle." \
+                    f" Maybe mocked graph already had muscles? "
