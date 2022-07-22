@@ -1,8 +1,4 @@
 import networkx as nx
-from datetime import datetime
-import matplotlib.pyplot as plt
-import numpy as np
-import warnings
 import numpy as np
 
 from database_analysis import sql_operations as sql
@@ -112,33 +108,6 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
     return graph
 
 
-def calculate_all_nodes_centralities(G):
-    """
-    This function will calculate the
-    -In degree centrality
-    -out degree centrality
-    -betweenness centrality
-    -Load centralitu
-    -Eigenvector centrality
-    -closeness centrality
-    Depending on the use (they are commented now)
-
-    :param G: A networkX graph
-    :return: a list of list of the centrality for each node.
-    """
-    centralities = []
-    # dc = list(nx.degree_centrality(graph).values())
-    # idc = nx.in_degree_centrality(G)
-    # odc = nx.out_degree_centrality(G)
-    # bc = list(nx.betweenness_centrality(graph).values())
-    # lc = list(nx.load_centrality(graph).values())
-    #    ec = list(nx.eigenvector_centrality(G).values())
-    cc_t = nx.closeness_centrality(G)
-    cc = list(cc_t.values())
-    centralities.append(cc)
-    return centralities
-
-
 def calculate_data(centralities):
     """
     This function takes a bounch of data (orginiginally intended as diferent centralities) and calculates how each
@@ -219,16 +188,50 @@ def get_mirna_mrna_relationships(genes):
     of microrna and their relationships
 
     :param genes: list of string; List of gene names
-    :return: The list of tuples for the relationships and the list of string with the name of the mirnas
+    :return: The list of tuples for the relationships and the list of string with the name of the mirnas and the scores
     """
     genes = '"' + '","'.join(genes) + '"'
-    query = 'Select Distinct mrna, mirna_mature from binding where  ' \
-            f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
+    query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
+            f'mirna_mature like "hsa-%" and source in ("mirWalk", "miRDB") and mrna in ({genes}) ;'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
     relationship = list(zip(genes, mirnas))
-    return relationship, mirnas
+    scores = list(relationships['probability'])
+
+    return relationship, mirnas, scores
+
+
+def get_mirna_tissue_edges(mirnas):
+    """
+    This function will collect the organ-mirna edges
+
+    :return: tuple of the relationships and their probability
+    """
+    mirna_list = '"' + '","'.join(mirnas) + '"'
+    query = f"select * from mirna_tissues where auto_mature in ({mirna_list});"
+    result = sql.get_query(query=query)
+    organ = list(result['organ'])
+    mirnas = list(result['auto_mature'])
+    relationship = list(zip(organ, mirnas))
+    scores = list(result['organ_TSI'])
+    return relationship, organ, scores
+
+
+def get_tissue_system_edges(organs):
+    """
+        This function will collect the organ-system edges
+
+        :return: tuple of the relationships and the systems
+        """
+    organ_list = '"' + '","'.join(organs) + '"'
+    query = f"select distinct mirna_tissues.system, organ from mirna_tissues " \
+            f"where organ in ({organ_list});"
+    result = sql.get_query(query=query)
+    organ = list(result['organ'])
+    systems = list(result['system'])
+    relationship = list(zip(organ, systems))
+    return relationship, systems
 
 
 def create_my_graph(query):
@@ -256,7 +259,7 @@ def set_positions(network):
     :param network:
     :return:
     """
-    pos = nx.spectral_layout(network, scale=100, center=[50,50])
+    pos = nx.spectral_layout(network, scale=100, center=[50, 50])
     # pos = nx.circular_layout(network, scale=100, center=[50, 50])
     for node in network.nodes:
         network.nodes[node]['position']['x'] = pos[node][0]
@@ -266,41 +269,70 @@ def set_positions(network):
 
 def add_mirna_relationships(network):
     genes = get_nodes_names(network)
-    relationships, mirnas = get_mirna_mrna_relationships(genes)
+    relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
                                           node_data={'id': f'900{idx}', 'display_name': mirna})
         network.add_node(mirna, **node_data)
 
-    for idx, relationship in enumerate(relationships):
+    add_edge_from_relationships(network=network, edges=relationships, scores=scores)
+    # add_relationships(network, relationships=relationships)
+
+
+def add_edge_from_relationships(network, edges, scores=None, relationship_type="pm"):
+    # edges, scores = get_mirna_tissue_edges(mirnas=mirnas)
+    if scores is None:
+        scores= [1]*len(edges)
+    for idx, edge in enumerate(edges):
         try:
-            source = relationship[0]
-            target = relationship[1]
+            source = edge[0]
+            target = edge[1]
             source_data = network.nodes[source]['data']
             target_data = network.nodes[target]['data']
             data2fill = {"id": f'800{idx}',
                          "source": source_data['id'],
                          "target": target_data['id'],
-                         "shared_interaction": "pm",  ## predicted mirna
-                         "shared_name": f"{source} (pm) {target}",
-                         "name": f"{source} (pm) {target}",
-                         "interaction": "pm",
-                         "SUID": f'800{idx}',
-                         "selected": False}
+                         "shared_interaction": relationship_type,  ## predicted mirna
+                         "shared_name": f"{source} ({relationship_type}) {target}",
+                         "name": f"{source} ({relationship_type}) {target}",
+                         "interaction": relationship_type,
+                         "selected": False,
+                         "weight": scores[idx]}
             edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill)
             network.add_edge(source, target, **edge_data)
         except Exception as e:
-            print(f"Relatuionship {source}-{target} coudn't be added due to {str(e)}")
-    add_relationships(network, relationships=relationships)
+            print(f"Relationship {source}-{target} couldn't be added due to {str(e)}")
+    add_relationships(network, edges)
+
+
+def add_tissue_relationship(network):
+    nodes = get_nodes_names(network)
+    relationships, organs, scores = get_mirna_tissue_edges(nodes)
+    for idx, organ in enumerate(organs):
+        node_data = create_cytoscape_node(node_name=organ, node_type='organ', source='miRNATissueAtlas2',
+                                          node_data={'id': f'700{idx}', 'display_name': organ})
+        network.add_node(organ, **node_data)
+    add_edge_from_relationships(network=network, edges=relationships, scores=scores, relationship_type='mo')
+
+
+def add_organ_system_relationship(network):
+    nodes = [x for x, y in network.nodes(data=True) if y['type'] == 'organ']
+    relationships, systems = get_tissue_system_edges(nodes)
+    for idx, system_n in enumerate(systems):
+        node_data = create_cytoscape_node(node_name=system_n, node_type='system', source='miRNATissueAtlas2',
+                                          node_data={'id': f'500{idx}', 'display_name': system_n})
+        network.add_node(system_n, **node_data)
+    add_edge_from_relationships(network=network, edges=relationships, relationship_type='os')
 
 
 if __name__ == '__main__':
     # graph = load_graph()
-    nodes, edges, relationships = format_cytoscape_json()
-    graph = create_graph_from_dictionaries(nodes=nodes, relationship=relationships, edges=edges)
+    c_nodes, c_edges, c_relationships = format_cytoscape_json()
+    graph = create_graph_from_dictionaries(nodes=c_nodes, relationship=c_relationships, edges=c_edges)
     # graph = create_my_graph(get_random_relationships)
     save_graph(graph, "small_graph.pkl")
     anc = nx.all_pairs_node_connectivity(graph)
+
     print(nx.info(graph))
 
     # draw_graph(graph)

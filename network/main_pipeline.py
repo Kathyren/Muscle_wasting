@@ -41,8 +41,9 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     save_as_cjsn(network, f'{px2}{name}.cyjs')
 
 
-def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=True, add_tissues=True):
+def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=True, add_tissues=True, add_system=True):
     """
+    :param add_system: Bool
     :param cytoscape_network: str Name of the network saved as cyjs
     :param name: str Name to save the graph and subproducts
     :param use_prefix: Bool
@@ -64,6 +65,8 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
         nx.add_mirna_relationships(the_network)
     if add_tissues:
         nx.add_tissue_relationship(the_network)
+    if add_system:
+        nx.add_organ_system_relationship(the_network)
     nx.set_positions(the_network)
     nx.save_graph(the_network, f"{px2}{name}.pkl")
     save_as_cjsn(the_network, f'{px2}{name}.cyjs')
