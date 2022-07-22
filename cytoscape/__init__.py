@@ -2313,19 +2313,18 @@ def create_cytoscape_node(node_name, node_data={}, node_position={}, source='pyt
     return node
 
 def create_cytoscape_edge(source, target, node_data={}, node_position={},
-                          selected=False):
+                          selected=False, weight=1):
     """
     This node will return a dictionary corresponding to the node as cytoscape process them
-    :param node_name: str
+    :param weight:
     :param node_data: dict
     :param node_position: dict
-    :param source: Where is the node comming from
-    :param node_type: What type of biological element is it
+    :param source: Where is the node coming from
     :param selected: If the node is selected
     :return:
     """
     node = {'data': node_data, 'position': node_position, 'source': source, 'target': target,
-            'selected': selected}
+            'selected': selected, 'weight':weight}
     return node
 
 

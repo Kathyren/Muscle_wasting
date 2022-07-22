@@ -298,7 +298,7 @@ def add_edge_from_relationships(network, edges, scores=None, relationship_type="
                          "interaction": relationship_type,
                          "selected": False,
                          "weight": scores[idx]}
-            edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill)
+            edge_data = create_cytoscape_edge(source=source, target=target, node_data=data2fill, weight=scores[idx])
             network.add_edge(source, target, **edge_data)
         except Exception as e:
             print(f"Relationship {source}-{target} couldn't be added due to {str(e)}")

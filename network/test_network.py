@@ -266,7 +266,8 @@ def test_add_organ_system_relationship(monkeypatch):
     add_organ_system_relationship(graph)
     node_count_2 = graph.number_of_nodes()
     assert node_count_2 > node_count_1, f'No added nodes?'
-    # node = graph.nodes['muscle']
+
+    # save_graph(graph, "test_w_mirnas_organs_n_systems.pkl")
     cc_it = networkx.all_neighbors(graph=graph, node='lymphatic')
     cc = len(list(cc_it))
     assert cc == 3, f"The fake relationships is designed to give 2 neighbors for muscle." \
