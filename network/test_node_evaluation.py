@@ -19,3 +19,17 @@ def test_distance_to_target():
         end = test_path[i + 1]
         edge = graph[source][end]
         assert 'weight' in edge, f"The edge only has the values {edge.keys()} but not weight."
+
+
+def test_calculate_all_nodes_eigenvector_centrality():
+    graph = load_graph("test_w_mirnas_organs_n_systems.pkl")
+    nodes_centralities = ne.calculate_all_nodes_eigenvector_centrality(graph)
+    assert nodes_centralities
+
+def test_remove_nodes():
+    graph = load_graph("test_w_mirnas_organs_n_systems.pkl")
+    nodes1 = graph.number_of_nodes()
+    ne.evaluate_nodes(graph)
+    ne.remove_nodes(graph, threshold=0.5)
+    nodes2 = graph.number_of_nodes()
+    assert nodes1 > nodes2

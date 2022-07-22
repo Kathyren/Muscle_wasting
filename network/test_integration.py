@@ -50,4 +50,4 @@ def test_main(monkeypatch):
 def test_add_mirnas_n_tissues():
     cytoscape_network = "STRING_Magagnes2009.cyjs"
 
-    mp.add_mirnas_n_tissues(cytoscape_network=cytoscape_network, name="test_mirnas_tissues")
+    mp.add_mirnas_n_tissues(cytoscape_network=cytoscape_network, name="test_mirnas_tissues_evaluating")
