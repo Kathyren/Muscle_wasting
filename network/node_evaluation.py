@@ -1,17 +1,36 @@
 import networkx as nx
 
 
+def distance_to_target(network, source, target='muscle'):
+    """
 
-def calculate_all_nodes_centralities(G):
+    :param source: str Node name (commonly the mirna)
+    :param target: str Node name (by now, the muscle)
+    :return: list with the route
+    """
+
+    shortest_paths = nx.shortest_path(network, source=source, target=target, weight='weight')
+    return shortest_paths
+
+
+def calculate_all_nodes_closeness_centrality(G):
     """
     This function will calculate the
-    -In degree centrality
-    -out degree centrality
-    -betweenness centrality
-    -Load centralitu
-    -Eigenvector centrality
     -closeness centrality
-    Depending on the use (they are commented now)
+
+    :param G: A networkX graph
+    :return: a list of tuples node-centrality
+    """
+    cc_t = nx.closeness_centrality(G)
+    nodes = list(G.nodes)
+    cc = list(cc_t.values())
+    centralities = zip(nodes, cc)
+    return centralities
+
+def calculate_all_nodes_betweenness_centrality(G):
+    """
+    This function will calculate the
+    -betweenness centrality
 
     :param G: A networkX graph
     :return: a list of list of the centrality for each node.
