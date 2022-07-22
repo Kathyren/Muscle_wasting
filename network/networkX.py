@@ -320,7 +320,7 @@ def add_organ_system_relationship(network):
     relationships, systems = get_tissue_system_edges(nodes)
     for idx, system_n in enumerate(systems):
         node_data = create_cytoscape_node(node_name=system_n, node_type='system', source='miRNATissueAtlas2',
-                                          node_data={'id': f'500{idx}', 'display_name': system_n})
+                                          node_data={'id': f'500{idx}', 'display_name': system_n, 'weight': 1})
         network.add_node(system_n, **node_data)
     add_edge_from_relationships(network=network, edges=relationships, relationship_type='os')
 

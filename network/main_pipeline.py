@@ -69,7 +69,7 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
         nx.add_organ_system_relationship(the_network)
     nx.set_positions(the_network)
     ne.evaluate_nodes(the_network)
-    ne.remove_nodes(the_network, threshold=0.5)
+    ne.remove_nodes(the_network, threshold=0.85)
     nx.save_graph(the_network, f"{px2}{name}.pkl")
     save_as_cjsn(the_network, f'{px2}{name}.cyjs')
 
