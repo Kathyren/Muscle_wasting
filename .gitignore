@@ -1,6 +1,20 @@
-
 Tests/x.tsv
 Tests/pre_process_test.tsv
 *.cpython-39.pyc
 *\paper_mining.log
 *.pyc
+.idea/*
+*.iml
+ncbi/__pycache__/eutilities.cpython-39.pyc
+pytest.ini
+.idea/misc.xml
+.idea/Muscle_wasting.iml
+cytoscape/logs/py4cytoscape.log
+*.cyjs
+*.log
+*.cys
+*.pkl
+network/graph1_STRING_Magagnes20092default node.csv
+*.gmt
+*.csv
+
