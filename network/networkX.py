@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 
+import network.node_evaluation
 from database_analysis import sql_operations as sql
 from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge
 
@@ -192,12 +193,12 @@ def get_mirna_mrna_relationships(genes):
     """
     genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
-            f'mirna_mature like "hsa-%" and source in ("mirWalk", "miRDB") and mrna in ({genes}) ;'
+            f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
     relationship = list(zip(genes, mirnas))
-    scores = list(relationships['probability'])
+    scores = [1]*len(genes) # list(relationships['probability'])
 
     return relationship, mirnas, scores
 
@@ -262,8 +263,12 @@ def set_positions(network):
     pos = nx.spectral_layout(network, scale=100, center=[50, 50])
     # pos = nx.circular_layout(network, scale=100, center=[50, 50])
     for node in network.nodes:
-        network.nodes[node]['position']['x'] = pos[node][0]
-        network.nodes[node]['position']['y'] = pos[node][1]
+        try:
+            network.nodes[node]['position']['x'] = pos[node][0]
+            network.nodes[node]['position']['y'] = pos[node][1]
+        except Exception as e:
+            print(f"error with node {node} with {str(e)}")
+            network.node_evaluation.remove_nodes(node)
     return pos
 
 

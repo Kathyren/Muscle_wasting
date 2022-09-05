@@ -19,10 +19,14 @@ def evaluate_nodes(network):
     ec = nx.eigenvector_centrality(network, weight='weight', tol=1.0e-3)
     for mirna in mirna_nodes:
 
-        path = distance_to_target(network, source=mirna, target='muscle')
         try:
+            path = distance_to_target(network, source=mirna, target='muscle')
             weight = nx.path_weight(network, path=path, weight='weight')
         except KeyError as e:
+            weight = 1
+        except Exception as e:
+            print (e)
+            path = [mirna]
             weight = 1
         network.nodes[mirna]["shortest_path_len"] = len(path)
         network.nodes[mirna]["path_weight"] = weight
