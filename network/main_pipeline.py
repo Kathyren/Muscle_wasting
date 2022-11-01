@@ -88,8 +88,8 @@ def open_cytoscape(file_name):
 
 
 if __name__ == '__main__':
-    file = "GSE38718.cyjs"
-    magagnes2009 = "STRING_Magagnes2009"
+    file_name = "miR130_1.cyjs"
+    magagnes2009 = "miR130_1"
     # add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas")
     # add_mirnas_n_select(file, "GSE38718_w_mirnas")
     add_mirnas_n_select(magagnes2009 + ".cyjs", magagnes2009 + "2")

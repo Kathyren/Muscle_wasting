@@ -3,10 +3,10 @@ from mysql.connector import errorcode
 import pandas as pd
 from logger import logger
 config = {
-    'user': 'root',
-    'password': 'gato',
-    'host': '127.0.0.1',
-    'database': 'mirnadbs',
+    'user': 'mirna',
+    'password': 'Password_123',
+    'host': '185.175.171.169',
+    'database': 'mirdb',
     'raise_on_warnings': True
 }
 cnx = None
