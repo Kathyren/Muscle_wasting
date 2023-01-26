@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 
 from database_analysis import sql_operations as sql
-from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge
+from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
 
 
 def create_graph(mirnas, genes, relationsip):
@@ -30,7 +30,7 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
     """
     G = nx.Graph()
     for element in nodes:
-        node = element['data']['display_name']
+        node = element['data'][protein_name]
         G.add_node(node, **element)
     for index, edge in enumerate(edges):
         G.add_edge(relationship[index][0], relationship[index][1], **edge)
@@ -99,9 +99,12 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
     cc = list(cc_t.values())
     x = np.quantile(cc, cutoff)
     delete_nodes = []
+    delete_edges=[]
     for node in cc_t.items():
         if node[1] < x:
             delete_nodes.append(node[0])
+            delete_edges.extend(graph.edges(node[0]))
+    graph.remove_edges_from(delete_edges)
     graph.remove_nodes_from(delete_nodes)
     # draw_graph(graph)
 

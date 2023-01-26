@@ -13,7 +13,7 @@ def get_cytoscape_network(file_name):
     return the_network
 
 
-def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=True):
+def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=True,  cutoff=0.5):
     """
 
     :param cytoscape_network: str Name of the network saved as cyjs
@@ -35,9 +35,10 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     if add_mirnas:
         nx.add_mirna_relationships(the_network)
 
-    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=0.5)
+    nx.save_graph(the_network, f"{px2}{name}.pkl")
+    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
     nx.set_positions(network)
-    nx.save_graph(network, f"{px2}{name}.pkl")
+    nx.save_graph(network, f"{px2}_filtered_{name}.pkl")
     save_as_cjsn(network, f'{px2}{name}.cyjs')
 
 
@@ -69,7 +70,7 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
         nx.add_organ_system_relationship(the_network)
     nx.set_positions(the_network)
     ne.evaluate_nodes(the_network)
-    ne.remove_nodes(the_network, threshold=0.85)
+    # ne.remove_nodes(the_network, threshold=0.85)
     nx.save_graph(the_network, f"{px2}{name}.pkl")
     save_as_cjsn(the_network, f'{px2}{name}.cyjs')
 
@@ -90,7 +91,38 @@ def open_cytoscape(file_name):
 if __name__ == '__main__':
     file_name = "miR130_1.cyjs"
     magagnes2009 = "miR130_1"
-    # add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas")
+    # add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas"
+    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Diff_express_genes.cyjs"
+    name = "Selected_genes"
+    # add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
     # add_mirnas_n_select(file, "GSE38718_w_mirnas")
-    add_mirnas_n_select(magagnes2009 + ".cyjs", magagnes2009 + "2")
+    add_mirnas_n_select(file, name + "2",  cutoff=0.85)
+    pass
+
+def test_remove():
+    cutoff = 0.85
+    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
+    save_as_cjsn(the_network, f'check_Selected_genes.cyjs')
+    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
+    nx.save_graph(network, f"graph3_Selected_genes.pkl")
+    save_as_cjsn(network, f'graph1_Selected_genes.cyjs')
+    network2= get_cytoscape_network("graph1_Selected_genes.cyjs")
+    pass
+
+def test_check_sanity():
+    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
+    nodes = the_network._node
+    edges = the_network.edges()
+
+    for edge in edges:
+        print(edge)
+        if edge[0] in nodes and edge[1] in nodes:
+            pass
+        else:
+            print(f"edge {edge[0]}-{edge[1]} ")
+    #nx.save_graph(the_network, f"test.pkl")
+    save_as_cjsn(the_network, f'test.cyjs')
+    network2= get_cytoscape_network("test.cyjs")
+    x = network2.nodes
+
     pass

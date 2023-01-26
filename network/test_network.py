@@ -282,3 +282,7 @@ def test_get_tissue_system_edges():
 
 
 
+def test_get_network():
+    network= "graph1_Selected_genes2.cyjs"
+    the_network = get_cytoscape_network(network)
+    nodes = the_network.nodes

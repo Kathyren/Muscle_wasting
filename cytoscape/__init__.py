@@ -4,7 +4,7 @@
 import json
 
 # app = dash.Dash(__name__)
-protein_name = 'display_name'  # this will vary depending on the app that I use in cytoscape
+protein_name = 'name'  # this will vary depending on the app that I use in cytoscape
 elements = [
     {'data': {'id': 'one', 'label': 'Node 1'}, 'position': {'x': 75, 'y': 75}},
     {'data': {'id': 'two', 'label': 'Node 2'}, 'position': {'x': 200, 'y': 200}},
@@ -2275,8 +2275,11 @@ def get_relationships(edges, nodes):
     for edge in edges:
         source_name = edge['data']['source']
         target_name = edge['data']['target']
-        relationship = (node_ids[source_name], node_ids[target_name])
-        relationships.append(relationship)
+        if source_name in node_ids and target_name in node_ids:
+            relationship = (node_ids[source_name], node_ids[target_name])
+            relationships.append(relationship)
+        else:
+            print(f"Missing node with edge {edge['data']}")
     return relationships
 
 
