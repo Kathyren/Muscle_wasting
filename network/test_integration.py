@@ -3,6 +3,7 @@ import networkX as nx
 import pytest
 import main_pipeline as mp
 import cytoscape as ct
+from network import main_pipeline
 
 
 def test_get_readable_output(monkeypatch):
@@ -87,9 +88,7 @@ def test_node_integration(monkeypatch):
     This test is to check if the nodes are keeping the same values after being treated
     :return:
     """
-    the_network = nx.load_graph(f"graph0_Selected_genes.pkl")
-    nodes_1 = the_network.nodes()
-    edges_1 = the_network.edges()
+
     def fake_relationships(*args, **kwargs):
 
         genes = ['EPB41L3', 'BDKRB2', 'ATF3', 'Ywhah']
@@ -102,9 +101,22 @@ def test_node_integration(monkeypatch):
     #monkeypatch.setattr(
     #    nx, "get_mirna_mrna_relationships", fake_relationships
     #)
+    #monkeypatch.setattr(
+    #    nx, 'save_graph', lambda x, y: None
+    #)
+    monkeypatch.setattr(
+        nx, 'remove_nodes_low_centrality', lambda graph, cutoff: graph
+    )
+    #monkeypatch.setattr(
+    #    main_pipeline, 'save_as_cjsn', lambda *args, **kwargs: None
+    #)
+    monkeypatch.setattr(
+        nx, 'set_positions', lambda *args, **kwargs: None
+    )
+
     file_n = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Diff_express_genes.cyjs"
     name_n = "Selected_genes_testing"
-    mp.add_mirnas_n_select(file_n, name_n, cutoff=0.85)
+    network = mp.add_mirnas_n_select(file_n, name_n, cutoff=0.85)
+    nodes = network.nodes()
+    edges = network.edges()
     network2 = mp.get_cytoscape_network(f'graph1_{name_n}.cyjs')
-    nodes = the_network.nodes()
-    edges = the_network.edges()

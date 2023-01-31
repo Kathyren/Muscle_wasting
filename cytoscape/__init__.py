@@ -2260,35 +2260,61 @@ def get_relationships(edges, nodes):
     """
     Takes the metadata of the edges and the nodes and return a list of tuples with the
     relationship on format (protein1, protein2)
+    The edges shouls alrady have the parameters source and target with the value of protein_name
     :param edges: list of json of each edge
     :param nodes: list of json of each node
     :return: list of tuples
     """
-    node_ids = {}
-    node_names = {}
+
     for node in nodes:
-        node_name = node['data'][protein_name]
-        node_id = node['data']['id']
         node['source'] = 'Cytoscape'
         node['type'] = 'protein'
-        node_ids[node_id] = node_name
-        node_names[node_name] = node_id
+
     relationships = []
     for edge in edges:
-        missing = False
-        source_name = edge['data']['source']
-        if source_name not in node_ids:
-            print(f"Missing source node of edge {edge['data']}")
-            missing = True
-        target_name = edge['data']['target']
-        if  target_name not in node_ids:
-            print(f"Missing source node of edge {edge['data']}")
-            missing = True
-        if not missing:
-            relationship = (node_ids[source_name], node_ids[target_name])
-            relationships.append(relationship)
+        source_name = edge['source']
+        target_name = edge['target']
+        relationship = (source_name, target_name)
+        relationships.append(relationship)
 
     return relationships
+
+
+def get_id_name_map(nodes):
+    """
+    This funtion should return a dictionary of id: name of the nodes
+    :param nodes:
+    :return:
+    """
+    name_id_map={}
+    unique_names={}
+    for node in nodes:
+        n_id = node['data']['id']
+        n_name = node['data'][protein_name]
+        name_id_map[n_id] = n_name
+        if n_name not in unique_names:
+            unique_names[n_name]=n_id
+
+    return name_id_map, unique_names
+
+    pass
+
+
+def clean_edges(edges, name_id_map, unique_names):
+    """This function should add the values target and source with
+    whatever protein_name is using now"""
+    for edge in edges:
+        try:
+            e_id = edge['data']['source']
+            edge['source']= name_id_map[e_id]
+            edge['data']['source'] = unique_names[edge['source']]
+            e_id = edge['data']['target']
+            edge['target'] = name_id_map[e_id]
+            edge['data']['target'] = unique_names[edge['target']]
+
+        except Exception as e:
+            print(e)
+    return edges
 
 
 def format_cytoscape_json(cytoscape_json):
@@ -2303,6 +2329,8 @@ def format_cytoscape_json(cytoscape_json):
     c_elements = cytoscape["elements"]
     nodes = c_elements["nodes"]
     edges = c_elements["edges"]
+    name_id_map, unique_names = get_id_name_map(nodes)
+    edges = clean_edges(edges, name_id_map, unique_names)
     relationships = get_relationships(edges, nodes)
     return nodes, edges, relationships
 

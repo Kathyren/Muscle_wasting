@@ -31,9 +31,15 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
     G = nx.Graph()
     for element in nodes:
         node = element['data'][protein_name]
-        G.add_node(node, **element)
-    for index, edge in enumerate(edges):
-        G.add_edge(relationship[index][0], relationship[index][1], **edge)
+        if node not in G._node:
+            G.add_node(node, **element)
+    for edge in edges:
+        try:
+            if edge['target'] not in G._adj[edge['source']] :
+                G.add_edge(edge['source'], edge['target'], **edge)
+        except Exception as e:
+            print(e)
+
     # is_bipartite(G)
 
     return G
