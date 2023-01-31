@@ -2265,21 +2265,29 @@ def get_relationships(edges, nodes):
     :return: list of tuples
     """
     node_ids = {}
+    node_names = {}
     for node in nodes:
         node_name = node['data'][protein_name]
         node_id = node['data']['id']
         node['source'] = 'Cytoscape'
         node['type'] = 'protein'
         node_ids[node_id] = node_name
+        node_names[node_name] = node_id
     relationships = []
     for edge in edges:
+        missing = False
         source_name = edge['data']['source']
+        if source_name not in node_ids:
+            print(f"Missing source node of edge {edge['data']}")
+            missing = True
         target_name = edge['data']['target']
-        if source_name in node_ids and target_name in node_ids:
+        if  target_name not in node_ids:
+            print(f"Missing source node of edge {edge['data']}")
+            missing = True
+        if not missing:
             relationship = (node_ids[source_name], node_ids[target_name])
             relationships.append(relationship)
-        else:
-            print(f"Missing node with edge {edge['data']}")
+
     return relationships
 
 
