@@ -1,4 +1,7 @@
 ### This file is the mail pipeline for my priject
+import pytest
+
+import Constants
 import cytoscape as ct
 import networkX as nx
 import os.path
@@ -40,6 +43,7 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     nx.set_positions(network)
     nx.save_graph(network, f"{px2}_filtered_{name}.pkl")
     save_as_cjsn(network, f'{px2}{name}.cyjs')
+    return network
 
 
 def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=True, add_tissues=True, add_system=True):
@@ -91,38 +95,8 @@ def open_cytoscape(file_name):
 if __name__ == '__main__':
     file_name = "miR130_1.cyjs"
     magagnes2009 = "miR130_1"
-    # add_mirnas_n_select(file, "dryrun_cardiovascular_w_mirnas"
     file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Diff_express_genes.cyjs"
     name = "Selected_genes"
-    # add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
-    # add_mirnas_n_select(file, "GSE38718_w_mirnas")
-    add_mirnas_n_select(file, name + "2",  cutoff=0.85)
+    add_mirnas_n_select(file, name ,  cutoff=0.85)
     pass
 
-def test_remove():
-    cutoff = 0.85
-    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
-    save_as_cjsn(the_network, f'check_Selected_genes.cyjs')
-    network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
-    nx.save_graph(network, f"graph3_Selected_genes.pkl")
-    save_as_cjsn(network, f'graph1_Selected_genes.cyjs')
-    network2= get_cytoscape_network("graph1_Selected_genes.cyjs")
-    pass
-
-def test_check_sanity():
-    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
-    nodes = the_network._node
-    edges = the_network.edges()
-
-    for edge in edges:
-        print(edge)
-        if edge[0] in nodes and edge[1] in nodes:
-            pass
-        else:
-            print(f"edge {edge[0]}-{edge[1]} ")
-    #nx.save_graph(the_network, f"test.pkl")
-    save_as_cjsn(the_network, f'test.cyjs')
-    network2= get_cytoscape_network("test.cyjs")
-    x = network2.nodes
-
-    pass
