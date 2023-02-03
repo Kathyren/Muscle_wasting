@@ -201,7 +201,7 @@ def get_mirna_mrna_relationships(genes):
     """
     genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
-            f'mirna_mature like "hsa-%" and source in ("mirWalk", "miRDB") and mrna in ({genes}) ;'
+            f'mirna_mature like "hsa-%"  and mrna in ({genes}) ;'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
