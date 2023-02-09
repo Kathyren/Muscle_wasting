@@ -66,12 +66,16 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
         nx.save_graph(the_network, f"{px1}{name}.pkl")
     else:
         the_network = nx.load_graph(f"{px1}{name}.pkl")
-    if add_mirnas:
+    if add_mirnas and not os.path.exists(f"{px1}{name}_mirnas.pkl"):
         nx.add_mirna_relationships(the_network)
+        nx.save_graph(the_network, f"{px1}{name}_mirnas.pkl")
+    else:
+        the_network = nx.load_graph(f"{px1}{name}_mirnas.pkl")
     if add_tissues:
         nx.add_tissue_relationship(the_network)
     if add_system:
         nx.add_organ_system_relationship(the_network)
+    the_network.remove_nodes_from(['Tnf'])
     nx.set_positions(the_network)
     ne.evaluate_nodes(the_network)
     # ne.remove_nodes(the_network, threshold=0.85)
@@ -93,10 +97,18 @@ def open_cytoscape(file_name):
 
 
 if __name__ == '__main__':
+    #file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
+    #name = "Analysis_Sarcopenia_cut"
+    #add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
+    # add_mirnas_n_select(file, "GSE38718_w_mirnas")
+    # add_mirnas_n_select(name + ".cyjs", name + "2")
     file_name = "miR130_1.cyjs"
     magagnes2009 = "miR130_1"
     file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Diff_express_genes.cyjs"
     name = "Selected_genes"
     add_mirnas_n_select(file, name ,  cutoff=0.85)
+
+
+
     pass
 

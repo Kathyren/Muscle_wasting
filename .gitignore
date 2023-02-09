@@ -17,3 +17,6 @@ cytoscape/logs/py4cytoscape.log
 network/graph1_STRING_Magagnes20092default node.csv
 *.gmt
 *.csv
+
+.idea/misc.xml
+.idea/Muscle_wasting.iml
