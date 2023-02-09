@@ -286,7 +286,7 @@ def add_mirna_relationships(network):
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
-                                          node_data={'id': f'900{idx}', 'display_name': mirna})
+                                          node_data={'id': f'900{idx}', 'display_name': mirna, 'shared_name':mirna})
         network.add_node(mirna, **node_data)
 
     add_edge_from_relationships(network=network, edges=relationships, scores=scores)
