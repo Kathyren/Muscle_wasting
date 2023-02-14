@@ -36,9 +36,13 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     else:
         the_network = nx.load_graph(f"{px1}{name}.pkl")
     if add_mirnas:
-        nx.add_mirna_relationships(the_network)
+        if not os.path.exists(f"{px2}{name}.pkl"):
+            nx.add_mirna_relationships(the_network)
+            nx.save_graph(the_network, f"{px2}{name}.pkl")
+        else:
+            the_network = nx.load_graph(f"{px2}{name}.pkl")
 
-    nx.save_graph(the_network, f"{px2}{name}.pkl")
+
     network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
     nx.set_positions(network)
     nx.save_graph(network, f"{px2}_filtered_{name}.pkl")
@@ -104,9 +108,9 @@ if __name__ == '__main__':
     # add_mirnas_n_select(name + ".cyjs", name + "2")
     file_name = "miR130_1.cyjs"
     magagnes2009 = "miR130_1"
-    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Young_Old_Fuzzy.cyjs"
-    name = "Young_Old_Fuzzy"
-    add_mirnas_n_select(file, name,  cutoff=0.85)
+    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/YoungvsMA_Fuzzy.cyjs"
+    name = "YoungvsMA_Fuzzy_0"
+    add_mirnas_n_select(file, name,  cutoff=0.0)
 
 
 
