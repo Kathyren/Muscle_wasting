@@ -108,9 +108,9 @@ if __name__ == '__main__':
     # add_mirnas_n_select(name + ".cyjs", name + "2")
     file_name = "miR130_1.cyjs"
     magagnes2009 = "miR130_1"
-    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/YoungvsMA_Fuzzy.cyjs"
-    name = "YoungvsMA_Fuzzy_0"
-    add_mirnas_n_select(file, name,  cutoff=0.0)
+    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/MA<O_IntAct Fuzzy.cyjs"
+    name = "MAvsOld_Fuzzy_85"
+    add_mirnas_n_select(file, name,  cutoff=0.85)
 
 
 
