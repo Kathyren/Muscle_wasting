@@ -1,4 +1,6 @@
 import json
+import os
+
 
 # Load the JSON file into a dictionary
 def get_source_data(network_file_name, source, main_name):
@@ -33,8 +35,15 @@ def add_source_data_to_file(source, node_data, edge_data, main_name, file_name="
     # Save the extracted data to a file
     with open(file_name, 'a') as f:
         data = {'source':source, "node_keys":node_data, "edge_keys":edge_data, "main_name": main_name }
-        f.write(f'"{source}:"'+json.dumps(data)+"\n")
+        if not f or os.path.getsize(file_name) == 0:
+            f.write('{\n')
+            # Otherwise, remove closing bracket, write comma and new line
+        else:
+            f.seek(f.tell() - 1, os.SEEK_SET)
+            f.truncate()
+            f.write(',\n')
+        f.write(f'\n"{source}":'+json.dumps(data)+"}}")
 
 
 
-get_source_data(network_file_name="../network/Networks_CYJS/mo_GeneMania_Base.cyjs", source="gene_mania", main_name="gene_name")
+get_source_data(network_file_name="../network/Networks_CYJS/my_GeneMania_Base.cyjs", source="gene_mania", main_name="gene_name")
