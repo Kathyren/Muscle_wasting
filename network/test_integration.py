@@ -58,12 +58,24 @@ def test_add_mirnas_n_tissues():
 def test_remove():
     cutoff = 0.85
     the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
-    save_as_cjsn(the_network, f'check_Selected_genes.cyjs')
+    mp.save_as_cjsn(the_network, f'check_Selected_genes.cyjs')
     network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
     nx.save_graph(network, f"graph3_Selected_genes.pkl")
-    save_as_cjsn(network, f'graph1_Selected_genes.cyjs')
-    network2= get_cytoscape_network("graph1_Selected_genes.cyjs")
+    mp.save_as_cjsn(network, f'graph1_Selected_genes.cyjs')
+    network2= mp.get_cytoscape_network("graph1_Selected_genes.cyjs")
     pass
+def test_remove_page_rank():
+    """
+
+    :return:
+    """
+    cutoff = 0.85
+    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
+    nodes = len(the_network.nodes())
+    network = nx.remove_nodes_low_centrality_pageRank(graph=the_network, cutoff=cutoff)
+    final = len(network.nodes())
+    assert nodes>final, f"There were not nodes eliminated"
+    assert nodes * (0.9 - cutoff) < final < nodes * (1.1 - cutoff), f"The final network had an unexpected amount of nodes"
 
 def test_check_sanity():
     the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
