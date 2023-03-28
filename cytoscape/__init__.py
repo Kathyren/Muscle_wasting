@@ -4,7 +4,7 @@
 import json
 
 # app = dash.Dash(__name__)
-protein_name = 'name'  # this will vary depending on the app that I use in cytoscape
+protein_name = 'gene_name'  # this will vary depending on the app that I use in cytoscape
 elements = [
     {'data': {'id': 'one', 'label': 'Node 1'}, 'position': {'x': 75, 'y': 75}},
     {'data': {'id': 'two', 'label': 'Node 2'}, 'position': {'x': 200, 'y': 200}},
