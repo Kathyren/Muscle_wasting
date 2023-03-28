@@ -121,7 +121,7 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
         px2 = "graph1_"
     else:
         px1 = px2 = ""
-    the_network = get_network(px1, px2, cytoscape_network)
+    the_network = get_network(px1, px2, cytoscape_network, save_name=name)
 
     network = nx.remove_nodes_low_centrality_pageRank(graph=the_network, cutoff=cutoff)
     nx.set_positions(network)

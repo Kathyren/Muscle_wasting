@@ -132,3 +132,37 @@ def test_node_integration(monkeypatch):
     nodes = network.nodes()
     edges = network.edges()
     network2 = mp.get_cytoscape_network(f'graph1_{name_n}.cyjs')
+
+
+def test_get_network():
+    """
+    Evaluate the get network when the network already exist
+    :return:
+    """
+    px1 = "graph1_"
+    px2 = "graph1_"
+    the_network = nx.load_graph(f"graph1_Selected_genes.pkl")
+    network = mp.get_network(px1, px2, cytoscape_network= "Selected_genes", save_name="Selected_genes",  add_mirnas=False)
+
+    assert the_network.nodes()==network.nodes()
+    assert the_network.edges() == network.edges()
+
+
+def test_full_flow_pageRank(monkeypatch):
+
+    graph = nx.load_graph("small_graph.pkl")
+    monkeypatch.setattr(mp, "get_cytoscape_network",  lambda *args, **kwargs: graph )
+    monkeypatch.setattr(
+        nx, 'remove_nodes_low_centrality_pageRank', lambda graph, cutoff: graph.subgraph([0, 1, 2])
+    )
+    monkeypatch.setattr(
+        main_pipeline, 'save_as_cjsn', lambda *args, **kwargs: None
+     )
+    monkeypatch.setattr(
+        nx, 'set_positions', lambda *args, **kwargs: None
+    )
+    name_n = "Selected_genes_testing"
+    network = mp.full_flow_pageRank(cytoscape_network="test_integration_01.cyjs",
+                                    name= name_n,  use_prefix=True,
+                                    cutoff=0.5)
+    assert network.nodes() == graph.subgraph([0, 1, 2]).nodes(), f"The nodes expected where a smaller version"
