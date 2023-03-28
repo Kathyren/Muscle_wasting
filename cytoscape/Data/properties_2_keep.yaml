@@ -1,3 +1,7 @@
+all:
+  -id
+  -source
+  -target
 gene_mania:
   -annotation_name
   -score

@@ -3,9 +3,15 @@
 # from dash import html
 import json
 
-# app = dash.Dash(__name__)
-protein_name = 'gene_name'  # this will vary depending on the app that I use in cytoscape
+from cytoscape.enum_network_sources import NetworkSource
 
+source = NetworkSource.GENE_MANIA
+
+
+# app = dash.Dash(__name__)
+protein_name = source.get_main_name()  # this will vary depending on the app that I use in cytoscape
+node_keys = source.get_node_keys()
+edge_keys = source.get_edge_keys()
 false = False
 true = True
 
