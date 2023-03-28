@@ -61,16 +61,7 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
         px2 = "graph1_"
     else:
         px1 = px2 = ""
-    if not os.path.exists(f"{px1}{name}.pkl"):
-        the_network = get_cytoscape_network(cytoscape_network)
-        nx.save_graph(the_network, f"{px1}{name}.pkl")
-    else:
-        the_network = nx.load_graph(f"{px1}{name}.pkl")
-    if add_mirnas and not os.path.exists(f"{px1}{name}_mirnas.pkl"):
-        nx.add_mirna_relationships(the_network)
-        nx.save_graph(the_network, f"{px1}{name}_mirnas.pkl")
-    else:
-        the_network = nx.load_graph(f"{px1}{name}_mirnas.pkl")
+    the_network = get_network(px1, px2, cytoscape_network)
     if add_tissues:
         nx.add_tissue_relationship(the_network)
     if add_system:
@@ -92,6 +83,52 @@ def save_as_cjsn(network, name):
     ct.save_cytoscape_json(json_network, cytoscape_file_name=name)
 
 
+def get_network(px1, px2, cytoscape_network, save_name, add_mirnas=True):
+    """
+    This function will get the network, first is going to check if it already
+    constructed it or if it has to calculate it.
+    :param px1: the prefix of the first buiid
+    :param px2: the prefix of the network with the microRNAS
+    :param cytoscape_network: The name of the file that holds the cjsn of the network
+    :param save_name: The name from which the network is saved
+    :param add_mirnas: If we shoul add mirnas or not
+    :return:
+    """
+    if not os.path.exists(f"{px1}{save_name}.pkl"):
+        the_network = get_cytoscape_network(cytoscape_network)
+        nx.save_graph(the_network, f"{px1}{save_name}.pkl")
+    else:
+        the_network = nx.load_graph(f"{px1}{save_name}.pkl")
+    if add_mirnas:
+        if not os.path.exists(f"{px2}{save_name}.pkl"):
+            nx.add_mirna_relationships(the_network)
+            nx.save_graph(the_network, f"{px2}{save_name}.pkl")
+        else:
+            the_network = nx.load_graph(f"{px2}{save_name}.pkl")
+    return the_network
+
+def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
+    """
+    :param cytoscape_network: str Name of the network saved as cyjs
+    :param name: str Name to save the graph and subproducts
+    :param use_prefix: Bool
+    :param cutoff:
+
+    :return:
+    """
+    if use_prefix:
+        px1 = "graph0_"
+        px2 = "graph1_"
+    else:
+        px1 = px2 = ""
+    the_network = get_network(px1, px2, cytoscape_network)
+
+    network = nx.remove_nodes_low_centrality_pageRank(graph=the_network, cutoff=cutoff)
+    nx.set_positions(network)
+    nx.save_graph(network, f"Networks_pkl/pageRank_{px2}_{name}.pkl")
+    save_as_cjsn(network, f'Networks_CYJS(out)/pageRank_{px2}_{name}.cyjs')
+    return network
+
 def open_cytoscape(file_name):
     py4.open_session(file_name)
 
@@ -109,9 +146,9 @@ if __name__ == '__main__':
 
     for file in desktop.iterdir():
         file_name= os.path.basename(file)
-        for n in [0, .80,.90,.95]:
+        for n in [.80,.90,.95]:
             name = file_name.split(".")[0]+f"_cutoff_{n}"
-            add_mirnas_n_select(file, name ,  cutoff=n)
+            full_flow_pageRank(file, name ,  cutoff=n)
 
 
 
