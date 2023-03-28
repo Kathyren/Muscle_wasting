@@ -116,7 +116,36 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
     # draw_graph(graph)
 
     return graph
+def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
+    """
+    This function will calculate a centrality
 
+
+    :param cutoff: What is going to be the quartile of nodes that we are going to keep
+    :param graph: A networkX graphThe graph without the un-relevant nodes
+    :return:
+    """
+    # @Todo: Establish a centrality or make this dynamic in code
+    # dc = list(nx.degree_centrality(graph).values())
+    # idc = nx.in_degree_centrality(G)
+    # odc = nx.out_degree_centrality(G)
+    # bc = list(nx.betweenness_centrality(graph).values())
+    # lc = list(nx.load_centrality(graph).values())
+    #    ec = list(nx.eigenvector_centrality(G).values())
+    cc_t = nx.pagerank(graph)
+    cc = list(cc_t.values())
+    x = np.quantile(cc, cutoff)
+    delete_nodes = []
+    delete_edges=[]
+    for node in cc_t.items():
+        if node[1] < x:
+            delete_nodes.append(node[0])
+            delete_edges.extend(graph.edges(node[0]))
+    graph.remove_edges_from(delete_edges)
+    graph.remove_nodes_from(delete_nodes)
+    # draw_graph(graph)
+
+    return graph
 
 def calculate_data(centralities):
     """
