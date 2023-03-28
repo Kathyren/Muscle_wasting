@@ -102,11 +102,17 @@ if __name__ == '__main__':
     #add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
     # add_mirnas_n_select(file, "GSE38718_w_mirnas")
     # add_mirnas_n_select(name + ".cyjs", name + "2")
-    file_name = "miR130_1.cyjs"
-    magagnes2009 = "miR130_1"
-    file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Diff_express_genes.cyjs"
-    name = "Selected_genes"
-    add_mirnas_n_select(file, name ,  cutoff=0.85)
+    path_d= "/home/karen/Documents/GitHub/Muscle_wasting/network/yo_GeneMania_Base.cyjs"
+    import pathlib
+    import os
+    desktop = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/")
+
+    for file in desktop.iterdir():
+        file_name= os.path.basename(file)
+        for n in [0, .80,.90,.95]:
+            name = file_name.split(".")[0]+f"_cutoff_{n}"
+            add_mirnas_n_select(file, name ,  cutoff=n)
+
 
 
 
