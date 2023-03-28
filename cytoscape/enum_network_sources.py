@@ -1,4 +1,4 @@
-
+import os
 from enum import Enum
 import json
 
@@ -15,6 +15,7 @@ class NetworkSource(Enum):
         self._node_keys = None
         self._edge_keys = None
         self._main_name = None
+        self._desired_data = None
 
     def get_node_keys(self):
         if self._node_keys is None:
@@ -32,10 +33,22 @@ class NetworkSource(Enum):
         return self._main_name
 
     def _load_keys(self):
-        with open(f'Data/Apps_details.yaml', 'r') as f:
+        cwd = os.getcwd()
+        file_name = cwd.split("Muscle_wasting")[0]+"Muscle_wasting/cytoscape/Data/Apps_details.yaml"
+        with open(file_name, 'r') as f:
             keys = yaml.safe_load(f)
             keys = keys[self.source_name]
         self._node_keys = keys.get('node_keys', {})
         self._edge_keys = keys.get('edge_keys', {})
         self._main_name = keys.get('main_name', {})
+
+    def _load_desired_data(self):
+        cwd = os.getcwd()
+        file_name = cwd.split("Muscle_wasting")[0] + "Muscle_wasting/cytoscape/Data/properties_2_keep.yaml"
+        with open(file_name, 'r') as f:
+            keys = yaml.safe_load(f)
+            specific = keys[self.source_name]
+            general = keys["all"]
+        self._desired_data = specific | general
+
 

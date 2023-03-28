@@ -3,7 +3,7 @@ import numpy as np
 
 import network.node_evaluation
 from database_analysis import sql_operations as sql
-from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
+from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, source
 
 
 def create_graph(mirnas, genes, relationsip):
@@ -29,9 +29,13 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
     :param genes: List of string with the gene names
     :param relationsip: List of tuple of string with the node names
     """
+    protein_name = source.get_main_name()
     G = nx.Graph()
     for element in nodes:
         node = element['data'][protein_name]
+        new_values ={}
+        for v in element['data']:
+            if
         if node not in G._node:
             G.add_node(node, **element)
     for edge in edges:
