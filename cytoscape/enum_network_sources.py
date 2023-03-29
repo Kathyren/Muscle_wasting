@@ -9,7 +9,7 @@ class NetworkSource(Enum):
     GENE_MANIA = 'gene_mania'
     STRING = 'stringdb'
     INTACT = 'intact'
-
+    GENERAL = 'all'
     def __init__(self, source_name):
         self.source_name = source_name
         self._node_keys = None
@@ -32,6 +32,11 @@ class NetworkSource(Enum):
             self._load_keys()
         return self._main_name
 
+    def get_desired_data(self):
+        if self._desired_data is None:
+            self._load_desired_data()
+        return self._desired_data
+
     def _load_keys(self):
         cwd = os.getcwd()
         file_name = cwd.split("Muscle_wasting")[0]+"Muscle_wasting/cytoscape/Data/Apps_details.yaml"
@@ -47,8 +52,13 @@ class NetworkSource(Enum):
         file_name = cwd.split("Muscle_wasting")[0] + "Muscle_wasting/cytoscape/Data/properties_2_keep.yaml"
         with open(file_name, 'r') as f:
             keys = yaml.safe_load(f)
-            specific = keys[self.source_name]
-            general = keys["all"]
-        self._desired_data = specific | general
+            specific = []
+            general = []
+            if self.source_name in keys:
+                specific = keys[self.source_name]
+            if self.GENERAL.source_name in keys:
+                general = keys[self.GENERAL.source_name]
+            specific.extend(general)
+        self._desired_data = specific
 
 
