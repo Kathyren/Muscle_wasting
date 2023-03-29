@@ -1,9 +1,9 @@
 all:
-  -id
-  -source
-  -target
+  - id
+  - source
+  - target
 gene_mania:
-  -annotation_name
-  -score
-"intAct":
-"stringdb":
+  - annotation_name
+  - score
+stringdb:
+  - tissue_urine
