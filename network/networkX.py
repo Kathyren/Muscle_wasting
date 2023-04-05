@@ -39,6 +39,8 @@ def create_graph_from_dictionaries(nodes, relationship, edges, type="gene"):
                 new_values[key]=value
         new_values[source.get_type_label()] = type
         element["data"] = new_values
+        element["data"]["id"] = element["data"][source.get_main_name()]
+        element["id"]= element["data"][source.get_main_name()]
         if node not in G._node:
             G.add_node(node, **element)
         else:
@@ -153,6 +155,8 @@ def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     delete_nodes = []
     delete_edges=[]
     for node in cc_t.items():
+        if "miR-1-" in node[0]:
+            print(node[0])
         if node[1] < x:
             delete_nodes.append(node[0])
             delete_edges.extend(graph.edges(node[0]))
@@ -246,7 +250,7 @@ def get_mirna_mrna_relationships(genes):
     """
     genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
-            f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
+            f'mirna_mature like "hsa-%" and mrna in ({genes}) and probability>0.86 ;'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
@@ -330,7 +334,7 @@ def add_mirna_relationships(network):
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
-                                          node_data={'id': f'900{idx}', source.get_main_name(): mirna,
+                                          node_data={'id': mirna, source.get_main_name(): mirna,
                                                      source.get_type_label():"mirna"})
         network.add_node(mirna, **node_data)
 
