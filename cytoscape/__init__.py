@@ -5,7 +5,7 @@ import json
 
 from cytoscape.enum_network_sources import NetworkSource
 
-source = NetworkSource.STRING
+source = NetworkSource.GENE_MANIA
 
 # app = dash.Dash(__name__)
   # this will vary depending on the app that I use in cytoscape
@@ -78,7 +78,10 @@ def get_id_name_map(nodes):
     unique_names={}
     for node in nodes:
         n_id = node['data']['id']
-        n_name = node['data'][protein_name]
+        if source.get_main_name() in node["data"]:
+            n_name = node['data'][source.get_main_name()]
+        else:
+            print("NOOOO")
         name_id_map[n_id] = n_name
         if n_name not in unique_names:
             unique_names[n_name]=n_id

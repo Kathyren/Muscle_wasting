@@ -17,6 +17,13 @@ class NetworkSource(Enum):
         self._main_name = None
         self._desired_data = None
 
+    def get_type_label(self):
+        """
+        This will just keep the way I name the property type in the network
+        :return:
+        """
+        return "node_type"
+
     def get_node_keys(self):
         if self._node_keys is None:
             self._load_keys()

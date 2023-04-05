@@ -21,7 +21,7 @@ def create_graph(mirnas, genes, relationsip):
     return G
 
 #todo Maybe id will be better to recognize the nodes than the main atribute
-def create_graph_from_dictionaries(nodes, relationship, edges):
+def create_graph_from_dictionaries(nodes, relationship, edges, type="gene"):
     """
     This function will receive a list of genes and mirnas and create the network of them
     :param edges: List of dictionaries with the metadata of each relationship
@@ -37,6 +37,7 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
         for key, value in element['data'].items():
             if key in source.get_desired_data():
                 new_values[key]=value
+        new_values[source.get_type_label()] = type
         element["data"] = new_values
         if node not in G._node:
             G.add_node(node, **element)
@@ -329,7 +330,8 @@ def add_mirna_relationships(network):
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
-                                          node_data={'id': f'900{idx}', source.get_main_name(): mirna})
+                                          node_data={'id': f'900{idx}', source.get_main_name(): mirna,
+                                                     source.get_type_label():"mirna"})
         network.add_node(mirna, **node_data)
 
     add_edge_from_relationships(network=network, edges=relationships, scores=scores)
