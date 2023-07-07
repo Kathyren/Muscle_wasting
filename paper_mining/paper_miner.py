@@ -1,7 +1,7 @@
 # ### Main function for paper_miner
 
 
-import sys, getopt
+import sys, getopt, os
 
 import common_tools as ct
 from paper_info import get_papers_from_NCBI
@@ -23,11 +23,13 @@ def paper_miner(regular_exp, min_papers, max_papers=None, output="output.txt", p
     print("Getting the papers c:")
     if input is None:
         papers_dictionary = get_papers_from_NCBI(search=regular_exp, retmax=max_papers)
+        pre_process_path = os.path.split(output)[0] + "/pre_process_" + os.path.split(output)[1]
+        print(pre_process_path)
         if len(papers_dictionary) == 0:
             print(f"No articles were found with the query {regular_exp}. Please use the PubMed sintax.")
             return 0
         print(f"{len(papers_dictionary)} results found!, saving output")
-        save_papers("pre_process_" + output, papers_dictionary)
+        save_papers(pre_process_path, papers_dictionary)
     else:
         papers_dictionary = ct.get_tsv_into_dictionary(input)
         if len(papers_dictionary) == 0:
