@@ -289,3 +289,65 @@ INFO:root:Pareto front [[-2022    -1]
  [-2020   -34]
  [-2015   -48]
  [-2013   -55]]
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+INFO:root:Getting pareto front of 5 elements
+INFO:root:Pareto front [[-2023     0]]
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+WARNING:eutils._internal.queryservice:No NCBI API key provided; throttling to 3 requests/second; see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/

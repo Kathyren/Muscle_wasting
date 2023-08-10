@@ -7,10 +7,11 @@ from bs4 import BeautifulSoup
 def write_dictionary_to_tsv(file_name="x.csv", keys=[], list_dic=None):
     if list_dic is None:
         dic = [{}]
-    with open(file_name, mode='w', newline='', encoding="utf8") as outfile:
+    with open(file_name, mode='a', newline='', encoding="utf8") as outfile:
         dict_writer = csv.DictWriter(outfile, fieldnames=keys, delimiter='\t')
-        dict_writer.writeheader()
+        #dict_writer.writeheader()
         dict_writer.writerows(list_dic)
+        dict_writer.close()
 
 
 def get_list_from_file(file_name="resources/data/human_only_databases_list.txt"):

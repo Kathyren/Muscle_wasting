@@ -4,6 +4,7 @@ import pytest
 import Constants
 import cytoscape as ct
 import networkX as nx
+import networkx as ntx
 import os.path
 from os import path
 import py4cytoscape as py4
@@ -76,7 +77,10 @@ def add_mirnas_n_tissues(cytoscape_network, name, use_prefix=True, add_mirnas=Tr
 
 def save_as_cjsn(network, name):
     """
-    This function will take a network and save it for cytoscape use
+    This function will take a network and save it for cytoscape use.
+    It will save a cjsn file that can be imported on cytoscape with all the network data
+    :param network: The networkx graph to save
+    :param name: Name that is going to be use to save the file (INCLUDE EXTENTION)
     :return:
     """
     json_network = nx.convert_to_json(network)
@@ -133,6 +137,24 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
+
+if __name__ == '__main__':
+    # file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
+    # name = "Analysis_Sarcopenia_cut"
+    # add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
+    # add_mirnas_n_select(file, "GSE38718_w_mirnas")
+    # add_mirnas_n_select(name + ".cyjs", name + "2")
+    path_d = "/home/karen/Documents/GitHub/Muscle_wasting/network/yo_GeneMania_Base.cyjs"
+    import pathlib
+    import os
+
+    file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/mo_GeneMania_Base.cyjs")
+    file_name = os.path.basename(file)
+    for n in [0.99]:
+        name = file_name.split(".")[0] + f"_cutoff_{n}"
+        full_flow_pageRank(file, name, cutoff=n)
+
+
 if __name__ == '__main__':
     #file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
     #name = "Analysis_Sarcopenia_cut"
@@ -150,8 +172,5 @@ if __name__ == '__main__':
             name = file_name.split(".")[0]+f"_cutoff_{n}"
             full_flow_pageRank(file, name ,  cutoff=n)
 
-
-
-
-    pass
+pass
 
