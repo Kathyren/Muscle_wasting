@@ -252,6 +252,7 @@ class EutilsConnection:
                             'Year': '0000',
                             'Title': 'NA',
                             'Key_words': [],
+                            'Abstract': "",
                             'Cite_by': '0'}
             root = egs
             articles = root.findall('.//PubmedArticle')
@@ -279,21 +280,30 @@ class EutilsConnection:
                 if title is None:
                     print(f"Failed to find title for {pmid}")
                     title = 'NA'
+                    abstract = 'NA'
                 else:
                     title = title.text
+                    abstract =  article.find('.//MedlineCitation/Article/Abstract/AbstractText')
+                    if abstract is None:
+                        abstract = article.find('.//MedlineCitation/Article/AuthorList/Abstract/AbstractText')
+                    if abstract is None:
+                        abstract = 'NA'
+                    else:
+                        abstract = abstract.text
                 key_words = []
                 citation = root.find('.//MedlineCitation/Article/')
                 if citation is None:
                     print(f"Failed to find key words for {pmid}")
                 else:
-                    key_words_xml = citation.find("KeywordList")
+                    key_words_xml = article.find('.//MedlineCitation/Article/Abstract/ObjectList')
                     if key_words_xml is not None:
                         for c in key_words_xml:
                             key_words.append(c.text)
                 article_data = {'Pubmed_id': pmid,
                                 'Year': year,
                                 'Title': title,
-                                'Key_words': key_words}
+                                'Key_words': key_words,
+                                'Abstract': abstract}
                 articles_list.append(article_data)
             for book in books:
                 pim = book.find('.//BookDocument/PMID')
