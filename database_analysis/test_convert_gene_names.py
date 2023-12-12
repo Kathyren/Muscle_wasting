@@ -7,3 +7,4 @@ def test_convert_all_genes():
     real_name = get_gene(genes[0])
     orn  =get_gene(genes[2])
     assert real_name is None
+
