@@ -37,9 +37,13 @@ def add_mirnas_n_select(cytoscape_network, name, use_prefix=True, add_mirnas=Tru
     else:
         the_network = nx.load_graph(f"{px1}{name}.pkl")
     if add_mirnas:
-        nx.add_mirna_relationships(the_network)
+        if not os.path.exists(f"{px2}{name}.pkl"):
+            nx.add_mirna_relationships(the_network)
+            nx.save_graph(the_network, f"{px2}{name}.pkl")
+        else:
+            the_network = nx.load_graph(f"{px2}{name}.pkl")
 
-    nx.save_graph(the_network, f"{px2}{name}.pkl")
+
     network = nx.remove_nodes_low_centrality(graph=the_network, cutoff=cutoff)
     nx.set_positions(network)
     nx.save_graph(network, f"{px2}_filtered_{name}.pkl")
@@ -171,6 +175,4 @@ if __name__ == '__main__':
         for n in [.80,.90,.95]:
             name = file_name.split(".")[0]+f"_cutoff_{n}"
             full_flow_pageRank(file, name ,  cutoff=n)
-
-pass
 
