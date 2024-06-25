@@ -1,0 +1,13 @@
+all:
+  - id
+  - source
+  - target
+gene_mania:
+  - annotation_name
+  - score
+  - gene_name
+stringdb:
+  - tissue_urine
+tf:
+  - shared_name
+  - name
