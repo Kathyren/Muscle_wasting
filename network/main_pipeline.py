@@ -128,33 +128,30 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
     the_network = get_network(px1, px2, cytoscape_network, save_name=name)
 
     network = nx.remove_nodes_low_centrality_pageRank(graph=the_network, cutoff=cutoff)
-    nx.set_positions(network)
+    network = nx.set_positions(network)
     nx.save_graph(network, f"Networks_pkl/pageRank_{px2}_{name}.pkl")
     save_as_cjsn(network, f'Networks_CYJS(out)/pageRank_{px2}_{name}.cyjs')
+
     return network
 
 def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
+
 if __name__ == '__main__':
-    #file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
-    #name = "Analysis_Sarcopenia_cut"
-    #add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
+    # file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
+    # name = "Analysis_Sarcopenia_cut"
+    # add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
     # add_mirnas_n_select(file, "GSE38718_w_mirnas")
     # add_mirnas_n_select(name + ".cyjs", name + "2")
-    path_d= "/home/karen/Documents/GitHub/Muscle_wasting/network/yo_GeneMania_Base.cyjs"
+
     import pathlib
     import os
-    desktop = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/")
 
-    for file in desktop.iterdir():
-        file_name= os.path.basename(file)
-        for n in [.80,.90,.95]:
-            name = file_name.split(".")[0]+f"_cutoff_{n}"
-            full_flow_pageRank(file, name ,  cutoff=n)
-
-
-
-    pass
+    file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network.cyjs")
+    file_name = os.path.basename(file)
+    for n in [0]:
+        name = file_name.split(".")[0] + f"_cutoff_{n}"
+        full_flow_pageRank(file, name, cutoff=n)
 
