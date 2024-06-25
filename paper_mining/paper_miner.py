@@ -38,10 +38,10 @@ def paper_miner(regular_exp, min_papers, max_papers=None, output="output.txt", p
               f"articles desired or they are the exact number. Nothing else to do.")
         return 0
     print("Evaluating best articles")
-    ep = EvaluatePapers(papers_info=papers_dictionary)
-    pareto = ep.get_pareto_cites_year(plot=True, min_papers=min_papers)
-    print(f"{len(pareto)} articles were selected!, saving output in {output}")
-    ct.write_list_of_dict(pareto, file_name=output)
+    #ep = EvaluatePapers(papers_info=papers_dictionary)
+    #pareto = ep.get_pareto_cites_year(plot=True, min_papers=min_papers)
+    #print(f"{len(pareto)} articles were selected!, saving output in {output}")
+    #ct.write_list_of_dict(pareto, file_name=output)
     print(f"Successfully saved!!")
 
 
@@ -98,18 +98,20 @@ def main(argv):
 def fake_main():
     regular_exp = '(mirna) AND (sarcopenia[Title])'
     regular_exp = 'HMB'
-    regular_exp = 'Network mirna'
 
     min_papers = 1
-    max_papers = 100
-    output = 'Prueba_100.tsv'
-    print_diagram = True
+    max_papers = 9999
+    output = 'myeloma.tsv'
+    print_diagram = False
     input = None # "pre_process_test_commandline.tsv"
-    return paper_miner(regular_exp=regular_exp, min_papers=min_papers, max_papers=max_papers,
+
+    for y in range(1960,2000, 10):
+        regular_exp = f'(Multiple Myeloma) AND (("{y}"[Date - Publication] : "{y+10}"[Date - Publication]))'
+        paper_miner(regular_exp=regular_exp, min_papers=min_papers, max_papers=max_papers,
                        output=output, print_diagram=print_diagram, input=input)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    #main(sys.argv[1:])
     # print("Holi")
-    # fake_main()
+    fake_main()

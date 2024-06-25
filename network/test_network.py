@@ -2,6 +2,7 @@ import networkx
 from networkx import is_bipartite
 
 import Constants
+import cytoscape
 from network import networkX
 from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \

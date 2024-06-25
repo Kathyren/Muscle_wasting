@@ -2,6 +2,7 @@ import pytest
 
 import Constants
 import cytoscape as ct
+from cytoscape.enum_network_sources import NetworkSource
 
 cytoscape_small_data_nodes = Constants.cytoscape_small_data_nodes
 cytoscape_small_data_edges = Constants.cytoscape_small_data_edges
@@ -33,3 +34,12 @@ def test_format_cytoscape_json():
     assert nodes == Constants.cytoscape_small_data_nodes
     assert edges == Constants.cytoscape_small_data_edges
     assert relationsips == Constants.cytoscape_small_relationships
+
+
+
+def test_enum_network_source():
+    source = NetworkSource.GENE_MANIA
+    x = source.get_main_name()
+    assert source.get_main_name() == "gene_name"
+    assert "query_term" in source.get_node_keys()
+    assert "shared_name" in source.get_edge_keys()

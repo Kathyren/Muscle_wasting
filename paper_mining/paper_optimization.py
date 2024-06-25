@@ -270,10 +270,9 @@ class EvaluatePapers:
         pareto_bool = pareto.tolist()
         pareto_values = []
         for count, paper in enumerate(self.papers_info):
-            if pareto_bool[count]:
-                pareto_values.append(paper)
-        if plot:
-            self.plot_pareto(npArray, pareto)
+            pareto_values.append(paper)
+        #if plot:
+            #self.plot_pareto(npArray, pareto)
         return pareto_values
 
     def is_pareto_efficient(self, costs, return_mask=True, min_paper=1):

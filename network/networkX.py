@@ -3,7 +3,7 @@ import numpy as np
 
 import network.node_evaluation
 from database_analysis import sql_operations as sql
-from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
+from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, source
 
 
 def create_graph(mirnas, genes, relationsip):
@@ -20,8 +20,8 @@ def create_graph(mirnas, genes, relationsip):
     is_bipartite(G)
     return G
 
-
-def create_graph_from_dictionaries(nodes, relationship, edges):
+#todo Maybe id will be better to recognize the nodes than the main atribute
+def create_graph_from_dictionaries(nodes, relationship, edges, type="gene"):
     """
     This function will receive a list of genes and mirnas and create the network of them
     :param edges: List of dictionaries with the metadata of each relationship
@@ -29,14 +29,31 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
     :param genes: List of string with the gene names
     :param relationsip: List of tuple of string with the node names
     """
+    protein_name = source.get_main_name()
     G = nx.Graph()
     for element in nodes:
         node = element['data'][protein_name]
+        new_values ={}
+        for key, value in element['data'].items():
+            if key in source.get_desired_data():
+                new_values[key]=value
+        new_values[source.get_type_label()] = type
+        element["data"] = new_values
+        element["data"]["id"] = element["data"][source.get_main_name()]
+        element["id"]= element["data"][source.get_main_name()]
         if node not in G._node:
             G.add_node(node, **element)
+        else:
+            G.remove_node(node)
+            G.add_node(node, **element)
     for edge in edges:
+        new_values = {}
+        for key, value in edge['data'].items():
+            if key in source.get_desired_data():
+                new_values[key] = value
+        edge["data"] = new_values
         try:
-            if edge['target'] not in G._adj[edge['source']] :
+            if edge['data']['target'] not in G._adj[edge['data']['source']] :
                 G.add_edge(edge['source'], edge['target'], **edge)
         except Exception as e:
             print(e)
@@ -138,6 +155,8 @@ def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     delete_nodes = []
     delete_edges=[]
     for node in cc_t.items():
+        if "miR-1-" in node[0]:
+            print(node[0])
         if node[1] < x:
             delete_nodes.append(node[0])
             delete_edges.extend(graph.edges(node[0]))
@@ -231,7 +250,7 @@ def get_mirna_mrna_relationships(genes):
     """
     genes = '"' + '","'.join(genes) + '"'
     query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
-            f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
+            f'mirna_mature like "hsa-%" and mrna in ({genes}) and probability>0.86 ;'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
@@ -315,7 +334,8 @@ def add_mirna_relationships(network):
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
-                                          node_data={'id': f'900{idx}', 'display_name': mirna, 'shared_name':mirna, 'name':mirna})
+                                          node_data={'id': mirna, source.get_main_name(): mirna,
+                                                     source.get_type_label():"mirna"})
         network.add_node(mirna, **node_data)
 
     add_edge_from_relationships(network=network, edges=relationships, scores=scores)
@@ -353,7 +373,7 @@ def add_tissue_relationship(network):
     relationships, organs, scores = get_mirna_tissue_edges(nodes)
     for idx, organ in enumerate(organs):
         node_data = create_cytoscape_node(node_name=organ, node_type='organ', source='miRNATissueAtlas2',
-                                          node_data={'id': f'700{idx}', 'display_name': organ})
+                                          node_data={'id': f'700{idx}', source.get_main_name(): organ})
         network.add_node(organ, **node_data)
     add_edge_from_relationships(network=network, edges=relationships, scores=scores, relationship_type='mo')
 
@@ -363,7 +383,7 @@ def add_organ_system_relationship(network):
     relationships, systems = get_tissue_system_edges(nodes)
     for idx, system_n in enumerate(systems):
         node_data = create_cytoscape_node(node_name=system_n, node_type='system', source='miRNATissueAtlas2',
-                                          node_data={'id': f'500{idx}', 'display_name': system_n, 'weight': 1})
+                                          node_data={'id': f'500{idx}', source.get_main_name(): system_n, 'weight': 1})
         network.add_node(system_n, **node_data)
     add_edge_from_relationships(network=network, edges=relationships, relationship_type='os')
 
