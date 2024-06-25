@@ -21,3 +21,7 @@ network/graph1_STRING_Magagnes20092default node.csv
 .idea/misc.xml
 .idea/Muscle_wasting.iml
 *.bkp
+*.sif
+network/Sessions/*
+*.png
+*.gif
