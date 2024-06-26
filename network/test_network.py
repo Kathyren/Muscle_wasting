@@ -1,5 +1,5 @@
-import networkx
 from networkx import is_bipartite
+from cytoscape.enum_network_sources import NetworkSource
 
 import Constants
 from network import networkX
@@ -7,7 +7,8 @@ from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
-    add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges
+    add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_nodes_from_pathways, \
+    add_pathway_to_node
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -241,7 +242,7 @@ def test_add_tissue_relationship(monkeypatch):
     node_count_1 = graph.number_of_nodes()
     add_tissue_relationship(graph)
     node_count_2 = graph.number_of_nodes()
-    assert node_count_2 >= node_count_1+4, f'No added nodes?'
+    assert node_count_2 >= node_count_1 + 4, f'No added nodes?'
     # (graph,'test_w_mirnas_organs.pkl')
     cc_it = networkx.all_neighbors(graph=graph, node='muscle')
     cc = len(list(cc_it))
@@ -273,6 +274,7 @@ def test_add_organ_system_relationship(monkeypatch):
     assert cc == 3, f"The fake relationships is designed to give 2 neighbors for muscle." \
                     f" Maybe mocked graph already had muscles? "
 
+
 def test_get_tissue_system_edges():
     organs = ['muscle', 'brain']
     edges, systems = get_tissue_system_edges(organs=organs)
@@ -280,9 +282,28 @@ def test_get_tissue_system_edges():
     assert edges[0][0] in organs
 
 
-
-
 def test_get_network():
-    network= "graph1_Selected_genes2.cyjs"
+    network = "graph1_Selected_genes2.cyjs"
     the_network = get_cytoscape_network(network)
     nodes = the_network.nodes
+
+
+def test_extract_nodes_from_pathways():
+    result = extract_nodes_from_pathways('test_enr_pathways.csv')
+    print(result)
+    assert len(result) == 98, "not all the genes are registered here"
+    assert 'WP_ELECTRON_TRANSPORT_CHAIN_OXPHOS_SYSTEM_IN_MITOCHONDRIA' in result['ATP5F1A']
+    assert 'WP_ELECTRON_TRANSPORT_CHAIN_OXPHOS_SYSTEM_IN_MITOCHONDRIA' in result['COX17']
+
+
+def test_add_pathway_to_node(monkeypatch):
+    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    test_node = dict(graph.nodes(data=True))
+
+    node_name = 'BGLAP'
+    test_node = test_node[node_name]
+    pathways = ['P1', 'P2']
+
+    add_pathway_to_node(graph, node_name, pathways)
+
+    assert test_node['data']['pathways'] == pathways

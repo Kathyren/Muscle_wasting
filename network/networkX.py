@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 import network.node_evaluation
 from database_analysis import sql_operations as sql
@@ -39,7 +40,7 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
             G.add_node(node, **element)
     for edge in edges:
         try:
-            if edge['target'] not in G._adj[edge['source']] :
+            if edge['target'] not in G._adj[edge['source']]:
                 G.add_edge(edge['source'], edge['target'], **edge)
         except Exception as e:
             print(e)
@@ -109,7 +110,7 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
     cc = list(cc_t.values())
     x = np.quantile(cc, cutoff)
     delete_nodes = []
-    delete_edges=[]
+    delete_edges = []
     for node in cc_t.items():
         if node[1] < x:
             delete_nodes.append(node[0])
@@ -145,8 +146,6 @@ def evaluate_edge_quality(graph):
                     data['data'][key] = None  # or any default value you prefer
                 source_id = data['data'].get('source')
                 target_id = data['data'].get('target')
-
-
 
                 if source_id not in nodes_with_ids or target_id not in nodes_with_ids:
                     remove = False
@@ -202,6 +201,7 @@ def evaluate_node_quality(graph):
 
     graph.remove_nodes_from(nodes_to_remove)
 
+
 def remove_node_and_edges(graph, node):
     """
         This function will calculate a centrality
@@ -220,6 +220,79 @@ def remove_node_and_edges(graph, node):
     # draw_graph(graph)
 
     return graph
+
+
+def extract_nodes_from_TF(pathway_file, threshold_feature='enrichment', threshold_value=1):
+    """
+    This function takes a fiile that cointains the TF and a score value to tell us how relevant they are
+    TF, enrichment and pvals
+
+    This will get the threshold feature, take the TF that pass the filter and give a dictionary with the nodes as
+    key and the TF as values
+
+    :param pathway_file:
+    :return:
+    """
+    pass
+
+
+def extract_nodes_from_pathways(pathway_file, threshold_feature='Combined score',
+                                id_feature='Features', pathway_feature='Term', threshold_value=50):
+    """
+    This function takes a fiile that cointains
+    id term set size overlap ratio p_value fdr p-vale odds ratuo combine score and features
+
+
+    :param threshold_feature:
+    :param id_feature:
+    :param pathway_feature:
+    :param pathway_file:
+    :param threshold_value:
+    :return:
+    """
+    pathway_df = pd.read_csv(pathway_file)
+    pathway_df = pathway_df[pathway_df[threshold_feature] > threshold_value]
+    feature_dict = {}
+
+    # Iterate through each row in the dataframe
+    for index, row in pathway_df.iterrows():
+        # Split the Features column by ';' to get individual features
+        features = row[id_feature].split(';')
+
+        # Iterate through each feature
+        for feature in features:
+            if feature:  # Ignore empty strings
+                if feature not in feature_dict:
+                    feature_dict[feature] = []
+                # Append the Term (pathway) to the list of pathways for this feature
+                feature_dict[feature].append(row[pathway_feature])
+    return feature_dict
+
+
+def add_pathway_to_node(graph, node_name, pathways):
+    """
+    This function will add as metadata to the node a list of pathways
+    :param graph:
+    :param node:
+    :param pathways:
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            graph.nodes[node]['data']['pathways'] = pathways
+    pass
+
+
+def get_interest_genes_and_neighbors(graph, n_neighbors: int, interest_genes: list):
+    """
+    This function will check a list of genes of interest and only keep those genes, and their nodes at distance n_neighbors
+    :param graph:
+    :param n_neighbors:
+    :return:
+    """
+
+    pass
+
 
 def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     """
@@ -241,7 +314,7 @@ def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     cc = list(cc_t.values())
     x = np.quantile(cc, cutoff)
     delete_nodes = []
-    delete_edges=[]
+    delete_edges = []
     for node in cc_t.items():
         if node[1] < x:
             delete_nodes.append(node[0])
@@ -251,6 +324,7 @@ def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     # draw_graph(graph)
 
     return graph
+
 
 def calculate_data(centralities):
     """
@@ -341,7 +415,7 @@ def get_mirna_mrna_relationships(genes):
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
     relationship = list(zip(genes, mirnas))
-    scores = [1]*len(genes) # list(relationships['probability'])
+    scores = [1] * len(genes)  # list(relationships['probability'])
 
     return relationship, mirnas, scores
 
@@ -408,7 +482,6 @@ def set_positions(network):
     pos = nx.spectral_layout(network, scale=100, center=[50, 50])
     # pos = nx.circular_layout(network, scale=100, center=[50, 50])
 
-
     for node in network.nodes:
         try:
             network_copy.nodes[node]['position']['x'] = pos[node][0]
@@ -423,7 +496,7 @@ def set_positions(network):
 
             #network.node_evaluation.remove_nodes(node)
         #if not 'data' in network_copy.nodes[node]:
-            #network_copy.nodes[node]['data'] = {'id': node, 'share_name': node, 'selected': False}
+        #network_copy.nodes[node]['data'] = {'id': node, 'share_name': node, 'selected': False}
 
     evaluate_edge_quality(network_copy)
 
@@ -439,7 +512,8 @@ def add_mirna_relationships(network):
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
         node_data = create_cytoscape_node(node_name=mirna, node_type='mirna', source='mirbase',
-                                          node_data={'id': f'900{idx}', 'display_name': mirna, 'shared_name':mirna, 'name':mirna})
+                                          node_data={'id': f'900{idx}', 'display_name': mirna, 'shared_name': mirna,
+                                                     'name': mirna})
         network.add_node(mirna, **node_data)
 
     add_edge_from_relationships(network=network, edges=relationships, scores=scores)
@@ -449,7 +523,7 @@ def add_mirna_relationships(network):
 def add_edge_from_relationships(network, edges, scores=None, relationship_type="pm"):
     # edges, scores = get_mirna_tissue_edges(mirnas=mirnas)
     if scores is None:
-        scores= [1]*len(edges)
+        scores = [1] * len(edges)
     for idx, edge in enumerate(edges):
         try:
             source = edge[0]
