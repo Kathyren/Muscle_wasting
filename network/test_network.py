@@ -7,8 +7,8 @@ from network.main_pipeline import get_cytoscape_network
 from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
-    add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_nodes_from_pathways, \
-    add_pathway_to_node
+    add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_genes_from_pathways, \
+    add_pathway_to_node, add_pathways_to_nodes
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -289,7 +289,7 @@ def test_get_network():
 
 
 def test_extract_nodes_from_pathways():
-    result = extract_nodes_from_pathways('test_enr_pathways.csv')
+    result = extract_genes_from_pathways('test_enr_pathways.csv')
     print(result)
     assert len(result) == 98, "not all the genes are registered here"
     assert 'WP_ELECTRON_TRANSPORT_CHAIN_OXPHOS_SYSTEM_IN_MITOCHONDRIA' in result['ATP5F1A']
@@ -307,3 +307,12 @@ def test_add_pathway_to_node(monkeypatch):
     add_pathway_to_node(graph, node_name, pathways)
 
     assert test_node['data']['pathways'] == pathways
+
+
+def test_add_pathways_to_nodes():
+    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    pathway_file = 'test_enr_pathways.csv'
+    add_pathways_to_nodes(graph, pathway_file)
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    assert len(test_nodes['MYC']['pathways']) == 2

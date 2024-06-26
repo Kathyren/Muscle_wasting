@@ -236,7 +236,7 @@ def extract_nodes_from_TF(pathway_file, threshold_feature='enrichment', threshol
     pass
 
 
-def extract_nodes_from_pathways(pathway_file, threshold_feature='Combined score',
+def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
     """
     This function takes a fiile that cointains
@@ -268,6 +268,11 @@ def extract_nodes_from_pathways(pathway_file, threshold_feature='Combined score'
                 feature_dict[feature].append(row[pathway_feature])
     return feature_dict
 
+def add_pathways_to_nodes(graph, pathway_file ):
+    gene_pathway_dic = extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
+                                id_feature='Features', pathway_feature='Term', threshold_value=10)
+    for gene, pathways in gene_pathway_dic.items():
+        add_pathway_to_node(graph, gene, pathways)
 
 def add_pathway_to_node(graph, node_name, pathways):
     """
@@ -280,7 +285,6 @@ def add_pathway_to_node(graph, node_name, pathways):
     for node, data in graph.nodes(data=True):
         if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
             graph.nodes[node]['data']['pathways'] = pathways
-    pass
 
 
 def get_interest_genes_and_neighbors(graph, n_neighbors: int, interest_genes: list):
