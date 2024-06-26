@@ -8,7 +8,7 @@ from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
     add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_genes_from_pathways, \
-    add_pathway_to_node, add_pathways_to_nodes
+    add_pathway_to_node, add_pathways_to_nodes, mark_TF_nodes_from_file
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -316,3 +316,14 @@ def test_add_pathways_to_nodes():
     test_nodes = dict(graph.nodes(data=True))
     print(test_nodes)
     assert len(test_nodes['MYC']['pathways']) == 2
+
+
+
+def test_mark_TF_nodes_from_file():
+    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    tf_file = 'test_tf_act.csv'
+    mark_TF_nodes_from_file(graph, tf_file)
+
+    nodes = dict(graph.nodes(data=True))
+    test_node = nodes['RELA']
+    assert test_node['data']['node_type'] == 'TF'

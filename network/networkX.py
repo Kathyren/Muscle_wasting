@@ -222,7 +222,7 @@ def remove_node_and_edges(graph, node):
     return graph
 
 
-def extract_nodes_from_TF(pathway_file, threshold_feature='enrichment', threshold_value=1):
+def mark_TF_nodes_from_file(graph, TF_file):
     """
     This function takes a fiile that cointains the TF and a score value to tell us how relevant they are
     TF, enrichment and pvals
@@ -233,8 +233,35 @@ def extract_nodes_from_TF(pathway_file, threshold_feature='enrichment', threshol
     :param pathway_file:
     :return:
     """
+    tf_dic = pd.read_csv(TF_file, index_col=0).to_dict('index')
+
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] in tf_dic.keys():
+            graph.nodes[node]['data']['node_type'] = 'TF'
+            graph.nodes[node]['data']['presence'] = tf_dic[data['data']['name']]['enrichment']
+
+
     pass
 
+
+def mark_miR_nodes(graph):
+    """
+    This function takes a fiile that cointains the TF and a score value to tell us how relevant they are
+    TF, enrichment and pvals
+
+    This will get the threshold feature, take the TF that pass the filter and give a dictionary with the nodes as
+    key and the TF as values
+
+    :param pathway_file:
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if str('data' in data and 'id' in data['data'] and data['data']['name']).startswith('hsa-miR'):
+            graph.nodes[node]['data']['node_type'] = 'miR'
+            graph.nodes[node]['data']['presence'] = None
+
+
+    pass
 
 def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
@@ -418,7 +445,7 @@ def get_mirna_mrna_relationships(genes):
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
-    relationship = list(zip(genes, mirnas))
+    relationship = list(zip(mirnas, genes))
     scores = [1] * len(genes)  # list(relationships['probability'])
 
     return relationship, mirnas, scores
