@@ -8,12 +8,12 @@ from cytoscape.enum_network_sources import NetworkSource
 source = NetworkSource.TF
 
 # app = dash.Dash(__name__)
-protein_name = 'gene_name'  # this will vary depending on the app that I use in cytoscape
-elements = [
-    {'data': {'id': 'one', 'label': 'Node 1'}, 'position': {'x': 75, 'y': 75}},
-    {'data': {'id': 'two', 'label': 'Node 2'}, 'position': {'x': 200, 'y': 200}},
-    {'data': {'source': 'one', 'target': 'two'}}
-]
+protein_name = source.get_main_name()  # this will vary depending on the app that I use in cytoscape
+#elements = [
+##    {'data': {'id': 'one', 'label': 'Node 1'}, 'position': {'x': 75, 'y': 75}},
+##    {'data': {'id': 'two', 'label': 'Node 2'}, 'position': {'x': 200, 'y': 200}},
+##    {'data': {'source': 'one', 'target': 'two'}}
+#]
 false = False
 true = True
 
@@ -46,7 +46,8 @@ def save_cytoscape_json(json_file, cytoscape_file_name='cytoscape_from_python.cy
     :return:
     """
     with open(cytoscape_file_name, 'w') as outfile:
-        json.dump(json_file, outfile)
+        json.dump(json_file, outfile, sort_keys=True,
+                  indent=4, separators=(',', ': '))
 
 
 def get_relationships(edges, nodes):

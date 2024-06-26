@@ -29,7 +29,10 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
     :param genes: List of string with the gene names
     :param relationsip: List of tuple of string with the node names
     """
-    G = nx.Graph()
+
+    #protein_name = source.get_main_name()
+    G = nx.DiGraph()
+
     for element in nodes:
         node = element['data'][protein_name]
         if node not in G._node:
@@ -116,6 +119,108 @@ def remove_nodes_low_centrality(graph, cutoff=0.75):
     # draw_graph(graph)
 
     return graph
+
+
+def evaluate_edge_quality(graph):
+    """
+    This function will evaluate if the edges have all the necesary requierement
+
+    :param graph:
+    :return:
+    """
+    #todo: Change this dictionary with a ymal file eventually
+    required_keys = {"id", "interaction", "name", "selected", "shared_interaction", "shared_name", "source",
+                     "target", "weight"}
+    nodes_with_ids = {data['data']['id']: node for node, data in graph.nodes(data=True) if
+                      'data' in data and isinstance(data['data'], dict) and 'id' in data['data']}
+    reverse_dict = {v: k for k, v in nodes_with_ids.items()}
+
+    edges_to_remove = []
+
+    for u, v, data in graph.edges(data=True):
+        if 'data' in data:
+            if isinstance(data['data'], dict):
+                missing_keys = required_keys - data['data'].keys()
+                for key in missing_keys:
+                    data['data'][key] = None  # or any default value you prefer
+                source_id = data['data'].get('source')
+                target_id = data['data'].get('target')
+
+
+
+                if source_id not in nodes_with_ids or target_id not in nodes_with_ids:
+                    remove = False
+                    try:
+                        if source_id not in nodes_with_ids:
+                            if u in nodes_with_ids.values():
+                                source_id = reverse_dict.get(u)
+                                data['data']['source'] = source_id
+                            else:
+                                remove = True
+                        if target_id not in nodes_with_ids:
+                            if v in nodes_with_ids.values():
+                                target_id = reverse_dict.get(v)
+                                data['data']['target'] = target_id
+                            else:
+                                remove = True
+                        if remove:
+                            edges_to_remove.append((u, v))
+
+                    except Exception as e:
+                        edges_to_remove.append((u, v))
+
+            else:
+                edges_to_remove.append((u, v))
+        else:
+            edges_to_remove.append((u, v))
+
+    graph.remove_edges_from(edges_to_remove)
+
+
+def evaluate_node_quality(graph):
+    """
+    This function will evaluate if the nodes have all the necesary requierement
+
+    :param graph:
+    :return:
+    """
+    #todo: Change this dictionary with a ymal file eventually
+    required_keys = {"id", "SUID", "name", "selected", "shared_name"}
+
+    nodes_to_remove = []
+
+    for node, data in graph.nodes(data=True):
+        if 'data' in data:
+            if isinstance(data['data'], dict):
+                missing_keys = required_keys - data['data'].keys()
+                for key in missing_keys:
+                    data['data'][key] = None  # or any default value you prefer
+            else:
+                nodes_to_remove.append(node)
+        else:
+            nodes_to_remove.append(node)
+
+    graph.remove_nodes_from(nodes_to_remove)
+
+def remove_node_and_edges(graph, node):
+    """
+        This function will calculate a centrality
+        :param cutoff: What is going to be the quartile of nodes that we are going to keep
+        :param graph: A networkX graphThe graph without the unrelevant nodes
+        :return:
+    """
+
+    delete_nodes = [node]
+    delete_edges = []
+    #delete_edges.extend(graph.edges(node))
+    delete_edges.extend(graph.in_edges(node))
+    delete_edges.extend(graph.out_edges(node))
+    graph.remove_edges_from(delete_edges)
+    #graph.remove_nodes_from(delete_nodes)
+    # draw_graph(graph)
+
+    return graph
+
 def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     """
     This function will calculate a centrality
@@ -230,8 +335,8 @@ def get_mirna_mrna_relationships(genes):
     :return: The list of tuples for the relationships and the list of string with the name of the mirnas and the scores
     """
     genes = '"' + '","'.join(genes) + '"'
-    query = 'Select Distinct mrna, mirna_mature, probability from binding where  ' \
-            f'mirna_mature like "hsa-%" and mrna in ({genes}) ;'
+    query = 'Select Distinct mrna, mirna_mature from gene_mirna where  ' \
+            f'mirna_mature like "hsa-%" and mrna in ({genes});'
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
@@ -298,16 +403,35 @@ def set_positions(network):
     :param network:
     :return:
     """
+    evaluate_node_quality(network)
+    network_copy = network.copy()
     pos = nx.spectral_layout(network, scale=100, center=[50, 50])
     # pos = nx.circular_layout(network, scale=100, center=[50, 50])
+
+
     for node in network.nodes:
         try:
-            network.nodes[node]['position']['x'] = pos[node][0]
-            network.nodes[node]['position']['y'] = pos[node][1]
+            network_copy.nodes[node]['position']['x'] = pos[node][0]
+            network_copy.nodes[node]['position']['y'] = pos[node][1]
+
         except Exception as e:
             print(f"error with node {node} with {str(e)}")
-            network.node_evaluation.remove_nodes(node)
-    return pos
+
+            #network_copy.nodes[node]['position'] = {'x':pos[node][0],'y':f'{pos[node][1]}' }
+            #network.nodes[node]['data'] = {'id': '', 'share_name': 'name', 'selected': ''}
+            network_copy = remove_node_and_edges(network_copy, node)
+
+            #network.node_evaluation.remove_nodes(node)
+        #if not 'data' in network_copy.nodes[node]:
+            #network_copy.nodes[node]['data'] = {'id': node, 'share_name': node, 'selected': False}
+
+    evaluate_edge_quality(network_copy)
+
+    #for edge in network_copy.edges:
+
+    #    network_copy.edges[edge]['data'] = {'id': '', 'share_name': 'name', 'selected': ''}
+
+    return network_copy
 
 
 def add_mirna_relationships(network):
