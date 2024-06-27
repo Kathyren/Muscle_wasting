@@ -1,4 +1,5 @@
 ### This file is the mail pipeline for my priject
+import pandas as pd
 import pytest
 
 import Constants
@@ -8,6 +9,9 @@ import os.path
 from os import path
 import py4cytoscape as py4
 import node_evaluation as ne
+
+
+
 
 def get_cytoscape_network(file_name):
     cytoscape_json = ct.read_cytoscape_json(cytoscape_file=file_name)
@@ -134,6 +138,39 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
 
     return network
 
+
+
+
+def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, cutoff=0.5):
+    """
+    :param cytoscape_network: str Name of the network saved as cyjs
+    :param name: str Name to save the graph and subproducts
+    :param use_prefix: Bool
+    :param cutoff:
+
+    :return:
+    """
+    if use_prefix:
+        px1 = "original_"
+        px2 = "mirnas_"
+    else:
+        px1 = px2 = ""
+    network = get_network(px1, px2, cytoscape_network, save_name=name)
+    nx.add_pathways_to_nodes(graph=network,
+                             pathway_file="data/enr_pvals_RNAseq_abundances_adjusted_combat_inmose_young.vs"
+                                          ".old_filtered.csv")
+    nx.mark_TF_nodes_from_file(graph=network, TF_file="data/tf_actsRNAseq_abundances_adjusted_combat_inmose_young.vs"
+                                                      ".old.csv")
+    nx.mark_miR_nodes(graph=network)
+    if dds_df is not None:
+        nx.add_DDS_data(network, dds_df=dds_df)
+    #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
+    network = nx.set_positions(network)
+    nx.save_graph(network, f"Networks_pkl/pathway_n_tf_{px2}_{name}.pkl")
+    save_as_cjsn(network, f'Networks_CYJS(out)/pathway_n_tf_{px2}_{name}.cyjs')
+
+    return network
+
 def open_cytoscape(file_name):
     py4.open_session(file_name)
 
@@ -150,8 +187,10 @@ if __name__ == '__main__':
     import os
 
     file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network.cyjs")
+    path_DDS_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/RNAseq_abundance_adjusted_combat_inmose_all_lfc.csv"
+    dds_df = pd.read_csv(path_DDS_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
     for n in [0]:
         name = file_name.split(".")[0] + f"_cutoff_{n}"
-        full_flow_pageRank(file, name, cutoff=n)
+        full_flow_genes_tf(file, name,dds_df=dds_df, cutoff=n)
 

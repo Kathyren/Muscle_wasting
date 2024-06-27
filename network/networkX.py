@@ -240,7 +240,6 @@ def mark_TF_nodes_from_file(graph, TF_file):
             graph.nodes[node]['data']['node_type'] = 'TF'
             graph.nodes[node]['data']['presence'] = tf_dic[data['data']['name']]['enrichment']
 
-
     pass
 
 
@@ -260,8 +259,35 @@ def mark_miR_nodes(graph):
             graph.nodes[node]['data']['node_type'] = 'miR'
             graph.nodes[node]['data']['presence'] = None
 
+    pass
+
+
+def add_DDS_data(graph, dds_df):
+    """
+    This function will look for the nodes in the gene column and then add as an attribute every of the columns
+    :param graph:
+    :param dds_df:
+    :return:
+    """
+    for index, row in dds_df.iterrows():
+        add_dds_to_node(graph=graph, node_name=index, dds=dict(row))
 
     pass
+
+
+def add_dds_to_node(graph, node_name, dds:dict):
+    """
+    This function will add as metadata to the node a list of pathways
+    :param graph:
+    :param node:
+    :param pathways:
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            for dd, value in dds.items():
+                graph.nodes[node]['data'][dd] = value
+
 
 def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
@@ -295,11 +321,13 @@ def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score'
                 feature_dict[feature].append(row[pathway_feature])
     return feature_dict
 
-def add_pathways_to_nodes(graph, pathway_file ):
+
+def add_pathways_to_nodes(graph, pathway_file):
     gene_pathway_dic = extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
-                                id_feature='Features', pathway_feature='Term', threshold_value=10)
+                                                   id_feature='Features', pathway_feature='Term', threshold_value=10)
     for gene, pathways in gene_pathway_dic.items():
         add_pathway_to_node(graph, gene, pathways)
+
 
 def add_pathway_to_node(graph, node_name, pathways):
     """
