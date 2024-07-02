@@ -9,7 +9,7 @@ from network.networkX import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
     add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_genes_from_pathways, \
-    add_pathway_to_node, add_pathways_to_nodes, mark_TF_nodes_from_file, add_dds_to_node, add_DDS_data
+    add_pathway_to_node, add_pathways_to_nodes, mark_TF_nodes_from_file, add_dds_to_node, add_DDS_data, random_walk
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -309,6 +309,7 @@ def test_add_pathway_to_node(monkeypatch):
 
     assert test_node['data']['pathways'] == pathways
 
+
 def test_add_dds_to_node():
     graph = load_graph("graph0_tf_network_cutoff_0.pkl")
     row_dict = {'yo': -0.266, 'ym': None, 'mo': None, 'ml_c': None, 'ml_s': None}
@@ -316,8 +317,9 @@ def test_add_dds_to_node():
     add_dds_to_node(graph=graph, node_name=node, dds=dict(row_dict))
     test_nodes = dict(graph.nodes(data=True))
     dds = test_nodes[node]
-    assert dds['data']['yo']==-0.266
+    assert dds['data']['yo'] == -0.266
     pass
+
 
 def test_add_dds_to_node_non_existent():
     graph = load_graph("graph0_tf_network_cutoff_0.pkl")
@@ -326,6 +328,8 @@ def test_add_dds_to_node_non_existent():
     add_dds_to_node(graph=graph, node_name=node, dds=dict(row_dict))
     test_nodes = dict(graph.nodes(data=True))
     assert node not in test_nodes
+
+
 def test_add_pathways_to_nodes():
     graph = load_graph("graph0_tf_network_cutoff_0.pkl")
     pathway_file = 'test_enr_pathways.csv'
@@ -334,12 +338,13 @@ def test_add_pathways_to_nodes():
     print(test_nodes)
     assert len(test_nodes['MYC']['pathways']) == 2
 
+
 def test_add_DDS_data():
     graph = load_graph("graph0_tf_network_cutoff_0.pkl")
 
-    ddf_dict_list = [{'gene': 'CFH','yo': -0.2, 'ym': 3, 'mo': None, 'ml_c': None, 'ml_s': -0.5},
-                {'gene': 'SEMA3F','yo': -4.10, 'ym': None, 'mo': -3, 'ml_c': None, 'ml_s': None},
-                {'gene': 'CFTR', 'yo': -3.34, 'ym': None, 'mo': -4, 'ml_c': None, 'ml_s': 0.5}]
+    ddf_dict_list = [{'gene': 'CFH', 'yo': -0.2, 'ym': 3, 'mo': None, 'ml_c': None, 'ml_s': -0.5},
+                     {'gene': 'SEMA3F', 'yo': -4.10, 'ym': None, 'mo': -3, 'ml_c': None, 'ml_s': None},
+                     {'gene': 'CFTR', 'yo': -3.34, 'ym': None, 'mo': -4, 'ml_c': None, 'ml_s': 0.5}]
     df = pd.DataFrame.from_dict(ddf_dict_list)
     df = df.set_index('gene')
     add_DDS_data(graph=graph, dds_df=df)
@@ -349,6 +354,7 @@ def test_add_DDS_data():
     assert test_nodes['CFTR']['data']['ml_s'] == 0.5
     pass
 
+
 def test_mark_TF_nodes_from_file():
     graph = load_graph("graph0_tf_network_cutoff_0.pkl")
     tf_file = 'test_tf_act.csv'
@@ -357,3 +363,37 @@ def test_mark_TF_nodes_from_file():
     nodes = dict(graph.nodes(data=True))
     test_node = nodes['RELA']
     assert test_node['data']['node_type'] == 'TF'
+
+
+def test_random_walk():
+    """
+    Test random walk of a node with no out nodes
+    :return:
+    """
+    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    gene = 'CFTR'
+
+    paths = random_walk(graph=graph, node_name=gene, distance=5, sample_size=1)
+    print(paths)
+    assert len(paths) == 1
+    a = paths[0]
+    assert a == []
+
+def test_random_walk():
+    """
+    Test random walk of a node
+    :return:
+    """
+    graph = load_graph("mirnas_tf_network_cutoff_0.pkl")
+    gene = 'hsa-miR-21-5p'
+    sample_size = 10000
+    n_distance = 10
+    paths = random_walk(graph=graph, node_name=gene, distance=n_distance, sample_size=sample_size)
+    print(paths)
+    assert len(paths) == sample_size
+    a = paths[0]
+    print(a)
+    x = list(filter(lambda i: len(i) > 3, paths))
+    print(x)
+    assert len(a)>=1
+    assert len(a)<=n_distance

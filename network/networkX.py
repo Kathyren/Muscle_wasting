@@ -1,3 +1,5 @@
+import random
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -342,7 +344,7 @@ def add_pathway_to_node(graph, node_name, pathways):
             graph.nodes[node]['data']['pathways'] = pathways
 
 
-def get_interest_genes_and_neighbors(graph, n_neighbors: int, interest_genes: list):
+def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance:int, interest_genes: list):
     """
     This function will check a list of genes of interest and only keep those genes, and their nodes at distance n_neighbors
     :param graph:
@@ -350,7 +352,47 @@ def get_interest_genes_and_neighbors(graph, n_neighbors: int, interest_genes: li
     :return:
     """
 
+    for gene in interest_genes:
+        pass
+
+
+
     pass
+
+def get_random_path(G, start_node, path_length):
+    path = [start_node]
+    current_node = start_node
+
+    for _ in range(path_length - 1):
+        try:
+            neighbors = list(G.successors(current_node))  # Get the successors (out-neighbors) of the current node
+
+        except KeyError as ke:
+            return []
+        if not neighbors:
+            break  # No more neighbors to explore, end the path here
+        next_node = random.choice(neighbors)
+        path.append(next_node)
+        current_node = next_node
+
+    return path
+
+def random_walk(graph, node_name, distance, sample_size)-> list:
+    """
+    This function takes  the graph, looks for the correspongng node and do the random path.
+    :param graph:
+    :param node_name:
+    :param distance:
+    :param sample_size:
+    :return:
+    """
+    if node_name is None:
+        return []
+    paths = []
+    for i in range(sample_size):
+        path = get_random_path(graph, node_name, distance)
+        paths.append(path)
+    return paths
 
 
 def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
