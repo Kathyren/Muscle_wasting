@@ -4,7 +4,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-import network.node_evaluation
 from database_analysis import sql_operations as sql
 from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
 
@@ -277,7 +276,7 @@ def add_DDS_data(graph, dds_df):
     pass
 
 
-def add_dds_to_node(graph, node_name, dds:dict):
+def add_dds_to_node(graph, node_name, dds: dict):
     """
     This function will add as metadata to the node a list of pathways
     :param graph:
@@ -344,7 +343,7 @@ def add_pathway_to_node(graph, node_name, pathways):
             graph.nodes[node]['data']['pathways'] = pathways
 
 
-def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance:int, interest_genes: list):
+def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, interest_genes: list):
     """
     This function will check a list of genes of interest and only keep those genes, and their nodes at distance n_neighbors
     :param graph:
@@ -355,15 +354,29 @@ def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance:int, inte
     for gene in interest_genes:
         pass
 
-
-
     pass
+
+
+def select_next_valid_node(i, path_length, graph, neighbors) -> str:
+    next_node = random.choice(neighbors)
+    #return next_node
+    if i < (path_length -1):
+        n_neighbors = len(list(graph.successors(next_node)))
+        while len(neighbors) > 1 > n_neighbors:
+            data = graph.nodes[next_node]
+            if 'data' in data and 'pathways' in data['data']:
+                break
+            neighbors.remove(next_node)
+            next_node = random.choice(neighbors)
+            n_neighbors = len(list(graph.successors(next_node)))
+    return next_node
+
 
 def get_random_path(G, start_node, path_length):
     path = [start_node]
     current_node = start_node
 
-    for _ in range(path_length - 1):
+    for i in range(path_length - 1):
         try:
             neighbors = list(G.successors(current_node))  # Get the successors (out-neighbors) of the current node
 
@@ -371,13 +384,16 @@ def get_random_path(G, start_node, path_length):
             return []
         if not neighbors:
             break  # No more neighbors to explore, end the path here
-        next_node = random.choice(neighbors)
+
+        next_node = select_next_valid_node(i, path_length, G, neighbors)
+
         path.append(next_node)
         current_node = next_node
 
     return path
 
-def random_walk(graph, node_name, distance, sample_size)-> list:
+
+def random_walk(graph, node_name, distance, sample_size) -> list:
     """
     This function takes  the graph, looks for the correspongng node and do the random path.
     :param graph:
