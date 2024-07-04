@@ -365,7 +365,7 @@ def test_mark_TF_nodes_from_file():
     assert test_node['data']['node_type'] == 'TF'
 
 
-def test_random_walk():
+def test_random_walk_no_neig():
     """
     Test random walk of a node with no out nodes
     :return:
@@ -386,7 +386,26 @@ def test_random_walk():
     """
     graph = load_graph("mirnas_tf_network_cutoff_0.pkl")
     gene = 'hsa-miR-21-5p'
-    sample_size = 10000
+    sample_size = 100
+    n_distance = 10
+    paths = random_walk(graph=graph, node_name=gene, distance=n_distance, sample_size=sample_size)
+    print(paths)
+    assert len(paths) == sample_size
+    a = paths[0]
+    print(a)
+    x = list(filter(lambda i: len(i) > 3, paths))
+    print(x)
+    assert len(a)>=1
+    assert len(a)<=n_distance
+
+def test_random_walk_leave_pathway():
+    """
+    Test random walk of a node
+    :return:
+    """
+    graph = load_graph("mirnas_tf_network_cutoff_0.pkl")
+    gene = 'hsa-miR-584-5p'
+    sample_size = 100
     n_distance = 10
     paths = random_walk(graph=graph, node_name=gene, distance=n_distance, sample_size=sample_size)
     print(paths)
