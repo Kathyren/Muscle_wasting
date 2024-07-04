@@ -168,7 +168,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, cu
 
     network = nx.remove_nodes_low_centrality_pageRank(graph=network, cutoff=cutoff)
 
-    network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
+    #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     nx.save_graph(network, f"Networks_pkl/pathway_n_tf_{px2}_{name}.pkl")
     save_as_cjsn(network, f'Networks_CYJS(out)/pathway_n_tf_{px2}_{name}.cyjs')
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     path_DDS_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/RNAseq_abundance_adjusted_combat_inmose_all_lfc.csv"
     dds_df = pd.read_csv(path_DDS_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
-    for n in [0.5]:
+    for n in [0.9,0.1, 0.2, 0.8]:
         name = file_name.split(".")[0] + f"_cutoff_{n}"
         full_flow_genes_tf(file, name,dds_df=dds_df, cutoff=n)
 
