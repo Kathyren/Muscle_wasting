@@ -4,6 +4,69 @@ pathway_keywords = ["ATP", "MITOCHONDRI", "RESPIRAT", "METABOLI", "OXIDATIVE_PHO
                     "NONALCOHOLIC_FATTY_LIVER", "MUSCLE", "ELECTRON"]
 compariosn = ['m_l', 'm_s', 'yo', 'ym', 'mo']
 
+def register_path(graph, node, mir:str, visited_edges=None, path=[]):
+    if visited_edges is None:
+        visited_edges = []
+    node_values = node['data']['influence'][mir]
+    node_name = node['data']['name']
+    paths= []
+    for neighbor in graph.successors(node_name):
+        path.append(neighbor)
+        edge = graph[node_name][neighbor]
+        if edge in visited_edges:
+            break
+        visited_edges.append(edge)
+        edge['weight'] = edge['data']['weight']
+        weight = edge['weight']
+        if node_name == neighbor:
+            effect = node_values[-1]
+        else:
+            effect = node_values[-1] * weight
+        if node_name=="EPAS1" and mir=='hsa-miR-145-5p':
+            print('path:', path)
+        neighbor_node = graph.nodes[neighbor]
+        if 'influence' in neighbor_node['data']:
+            if mir in neighbor_node['data']['influence']:
+                #print(f"appending_{neighbor}")
+                neighbor_node['data']['influence'][mir].append(effect)
+            else:
+                neighbor_node['data']['influence'][mir] = [effect]
+        else:
+            neighbor_node['data']['influence'] = {mir: [effect]}
+        path = register_path(graph, neighbor_node, mir, visited_edges, path)
+        paths.append(path)
+    return paths
+def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
+    if visited_edges is None:
+        visited_edges = []
+    node_values = node['data']['influence'][mir]
+    node_name = node['data']['name']
+    for neighbor in graph.successors(node_name):
+
+        edge = graph[node_name][neighbor]
+        if edge in visited_edges:
+            break
+        visited_edges.append(edge)
+        edge['weight'] = edge['data']['weight']
+        weight = edge['weight']
+        if node_name == neighbor:
+            effect = node_values[-1]
+        else:
+            effect = node_values[-1] * weight
+        neighbor_node = graph.nodes[neighbor]
+        if 'influence' in neighbor_node['data']:
+            if mir in neighbor_node['data']['influence']:
+                #print(f"appending_{neighbor}")
+                neighbor_node['data']['influence'][mir].append(effect)
+            else:
+                neighbor_node['data']['influence'][mir] = [effect]
+        else:
+            neighbor_node['data']['influence'] = {mir: [effect]}
+        visit_all_neighbours(graph, neighbor_node, mir, visited_edges)
+def start_mir_path(graph, mir):
+    node = graph.nodes[mir]
+    node['data']['influence']= {mir:[1]}
+    visit_all_neighbours(graph, node, mir, visited_edges=[])
 
 def traverse_and_update(graph, start_node):
     # Initialize node values and visited count
@@ -17,6 +80,7 @@ def traverse_and_update(graph, start_node):
             edge = graph[current_node][neighbor]
             if not 'weight' in edge:
                 edge['weight'] = edge['data']['weight']
+
             weight = edge['weight']
             new_product = current_product * weight
             node_visited[neighbor] += 1
