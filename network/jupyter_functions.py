@@ -1,16 +1,10 @@
-import walking_network as wn
-import networkx as nx
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap, Normalize
-import matplotlib.colors as mcolors
+
 from scipy.spatial.distance import pdist, squareform
-from scipy.spatial.distance import cityblock
 from sklearn.cluster import SpectralClustering
 
 
@@ -49,7 +43,7 @@ def get_impact_data(df):
     return color_data
 
 
-def plot_dotplot(df):
+def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5):
     """
     This take the dataframe with the lists of [1,1,-1] type, and plots a dotplot
     with the size of the dot the len of the list and the color the sum
@@ -91,16 +85,18 @@ def plot_dotplot(df):
     n_genes = len(size_data) + 1
     print('genes', n_genes - 1)
     print('mirnas', n_mirna - 1)
-    height_plot = min(655, int(n_genes * .3))
+    height_plot = min(655, int(n_genes * gene_scale))
 
     height_plot = max(10, height_plot)
     sns.set(rc={'axes.facecolor': 'lightgray'})
-    fig, ax = plt.subplots(figsize=(n_mirna * 1.5, height_plot))
+    x = n_mirna * mirna_scale
+    y = height_plot
+    fig, ax = plt.subplots(figsize=(x,y ))
     ax.grid(False)
 
     # plt.figure(figsize=(10, height_plot))
     scatter_plot = sns.scatterplot(data=plot_data, x='miRNA', y='Gene', size='Paths', hue='Influence', palette=cmap,
-                                   sizes=(20, 200))
+                                   sizes=(x, y))
     scatter_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
 
     # Get the first two and last y-tick positions.
@@ -277,3 +273,32 @@ def get_curve_type(de_df):
             curve_type = ''.join(curve_type)
             curves.append(curve_type)
     return curves
+
+
+def calculate_measurements(int_influence_df):
+    influence_weight = int_influence_df.copy()
+    influence_weigh_ym = int_influence_df.copy()
+    influence_weigh_mo = int_influence_df.copy()
+    influence_weigh_yo = int_influence_df.copy()
+    influence_quantity = int_influence_df.copy()
+    for col in int_influence_df.columns:
+        if col not in ['yo', 'ym', 'mo']:
+            yo = int_influence_df[col] * int_influence_df['yo']
+            ym = int_influence_df[col] * int_influence_df['ym']
+            mo = int_influence_df[col] * int_influence_df['mo']
+            influence_weigh_ym[col] = ym
+            influence_weigh_mo[col] = mo
+            influence_weigh_yo[col] = yo
+            yo = (int_influence_df[col] * int_influence_df['yo'] > 0).astype(int)
+            ym = (int_influence_df[col] * int_influence_df['ym'] > 0).astype(int)
+            mo = (int_influence_df[col] * int_influence_df['mo'] > 0).astype(int)
+            influence_quantity[col] = yo + ym + mo
+
+    influence_weight.drop(columns=['yo', 'ym', 'mo'], inplace=True)
+    influence_weigh_ym.drop(columns=['yo', 'ym', 'mo'], inplace=True)
+    influence_weigh_mo.drop(columns=['yo', 'ym', 'mo'], inplace=True)
+    influence_weigh_yo.drop(columns=['yo', 'ym', 'mo'], inplace=True)
+
+    influence_quantity.drop(columns=['yo', 'ym', 'mo'], inplace=True)
+    measurements = [influence_weight, influence_weigh_ym, influence_weigh_mo, influence_weigh_yo, influence_quantity]
+    return measurements
