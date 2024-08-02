@@ -91,22 +91,22 @@ def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5):
     sns.set(rc={'axes.facecolor': 'lightgray'})
     x = n_mirna * mirna_scale
     y = height_plot
-    fig, ax = plt.subplots(figsize=(x,y ))
+    fig, ax = plt.subplots(figsize=(x, y))
     ax.grid(False)
 
     # plt.figure(figsize=(10, height_plot))
     scatter_plot = sns.scatterplot(data=plot_data, x='miRNA', y='Gene', size='Paths', hue='Influence', palette=cmap,
                                    sizes=(x, y))
     scatter_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
+    if n_genes > 2:
+        # Get the first two and last y-tick positions.
+        miny, nexty, *_, maxy = ax.get_yticks()
 
-    # Get the first two and last y-tick positions.
-    miny, nexty, *_, maxy = ax.get_yticks()
-
-    # Compute half the y-tick interval (for example).
-    eps = (nexty - miny) / 2  # <-- Your choice.
-    plt.xticks(rotation=90)
-    # Adjust the limits.
-    ax.set_ylim(maxy + eps, miny - eps)
+        # Compute half the y-tick interval (for example).
+        eps = (nexty - miny) / 2  # <-- Your choice.
+        plt.xticks(rotation=90)
+        # Adjust the limits.
+        ax.set_ylim(maxy + eps, miny - eps)
     # plt.tight_layout()
     plt.show()
 
@@ -302,3 +302,14 @@ def calculate_measurements(int_influence_df):
     influence_quantity.drop(columns=['yo', 'ym', 'mo'], inplace=True)
     measurements = [influence_weight, influence_weigh_ym, influence_weigh_mo, influence_weigh_yo, influence_quantity]
     return measurements
+
+
+def get_cytoscape_filter_from_list(mirnas_good: list) -> str:
+    query_mirna = ""
+    for mir in mirnas_good:
+        query_mirna = query_mirna + f"({mir})|"
+    return query_mirna
+
+
+def get_mirna_impact_pathway_rw():
+    pass

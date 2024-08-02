@@ -65,13 +65,7 @@ def draw_graph(G):
 
 def is_bipartite(G):
     return True
-    for edge, data in G.edges(data=True):
-        count = 0
-        for node in edge:
-            if '-miR-' in node:
-                count = count + 1
-        assert count == 1, 'There is a mirna_mirna interaction or a gene- gene interaction'
-    return True
+
 
 
 def filter_by_degree(G):
@@ -234,6 +228,7 @@ def mark_TF_nodes_from_file(graph, TF_file):
     :param pathway_file:
     :return:
     """
+
     tf_dic = pd.read_csv(TF_file, index_col=0).to_dict('index')
 
     for node, data in graph.nodes(data=True):
@@ -263,6 +258,42 @@ def mark_miR_nodes(graph):
     pass
 
 
+def get_n_mirs(graph):
+    """
+    This function takes a fiile that cointains the TF and a score value to tell us how relevant they are
+    TF, enrichment and pvals
+
+    This will get the threshold feature, take the TF that pass the filter and give a dictionary with the nodes as
+    key and the TF as values
+
+    :param pathway_file:
+    :return:
+    """
+    mir_nodes = 0
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'node_type' in data['data'] and data['data']['node_type'] == 'miR':
+            mir_nodes += 1
+
+    return mir_nodes
+
+def get_mirs(graph):
+    """
+    This function takes a fiile that cointains the TF and a score value to tell us how relevant they are
+    TF, enrichment and pvals
+
+    This will get the threshold feature, take the TF that pass the filter and give a dictionary with the nodes as
+    key and the TF as values
+
+    :param pathway_file:
+    :return:
+    """
+    mir_nodes = []
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'node_type' in data['data'] and data['data']['node_type'] == 'miR':
+            mir_nodes.append(node)
+
+    return mir_nodes
+
 def add_DDS_data(graph, dds_df):
     """
     This function will look for the nodes in the gene column and then add as an attribute every of the columns
@@ -290,11 +321,40 @@ def add_dds_to_node(graph, node_name, dds: dict):
                 graph.nodes[node]['data'][dd] = value
 
 
+def add_tissue_to_node(graph, node_name, tissues: dict):
+    """
+    This function will add the tissue data to the node.
+    :param graph:
+    :param node_name:
+    :param tissues:
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            for index, value in tissues.items():
+                tissues[index] = float(value)
+            graph.nodes[node]['data']['tissue_expr'] = str(tissues)
+
+
+def add_tissue_to_nodes(graph, tissues_df):
+    """
+    This function will get the data in tissues_df and add them to the node
+    Is expected that tissues_df is only the tissues, and it is already processed
+    (the normalize Transcripts per million of the tissue divided by the sum of the normalized Transcripts per Million)
+    :param graph:
+    :param tissues_df:
+    :return:
+    """
+    filtered_tissues_df = tissues_df[tissues_df.index.isin(graph.nodes)]
+    for index, row in filtered_tissues_df.iterrows():
+        add_tissue_to_node(graph=graph, node_name=index, tissues=dict(row))
+
+
 def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
     """
     This function takes a fiile that cointains
-    id term set size overlap ratio p_value fdr p-vale odds ratuo combine score and features
+    id term set size overlap ratio p_value fdr p-vale odds ratio combine score and features
 
 
     :param threshold_feature:
@@ -360,7 +420,7 @@ def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, int
 def select_next_valid_node(i, path_length, graph, neighbors) -> str:
     next_node = random.choice(neighbors)
     #return next_node
-    if i < (path_length -1):
+    if i < (path_length - 1):
         n_neighbors = len(list(graph.successors(next_node)))
         while len(neighbors) > 1 > n_neighbors:
             data = graph.nodes[next_node]
@@ -411,7 +471,7 @@ def random_walk(graph, node_name, distance, sample_size) -> list:
     return paths
 
 
-def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
+def remove_nodes_low_centrality_pageRank(graph, weigth=None, cutoff=0.75):
     """
     This function will calculate a centrality
 
@@ -427,7 +487,7 @@ def remove_nodes_low_centrality_pageRank(graph, cutoff=0.75):
     # bc = list(nx.betweenness_centrality(graph).values())
     # lc = list(nx.load_centrality(graph).values())
     #    ec = list(nx.eigenvector_centrality(G).values())
-    cc_t = nx.pagerank(graph)
+    cc_t = nx.pagerank(graph, weight=weigth)
     cc = list(cc_t.values())
     x = np.quantile(cc, cutoff)
     delete_nodes = []
@@ -476,7 +536,12 @@ def save_graph(G, name):
     :param name:
     :return:
     """
-    nx.write_gpickle(G, name)
+    if int(nx.__version__[0]) > 2:
+        import pickle
+        with open(name, 'wb') as f:
+            pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+    else:
+        nx.write_gpickle(G, name)
 
 
 def convert_to_json(G):
@@ -498,7 +563,12 @@ def load_graph(name):
     :param name:
     :return:
     """
-    G = nx.read_gpickle(name)
+    if int(nx.__version__[0]) > 2:
+        import pickle
+        with open(name, 'rb') as f:
+            G = pickle.load(f)
+    else:
+        G = nx.read_gpickle(name)
     return G
 
 
@@ -645,6 +715,10 @@ def add_edge_from_relationships(network, edges, scores=None, relationship_type="
         try:
             source = edge[0]
             target = edge[1]
+            if 'data' not in network.nodes[source]:
+                network.nodes[source]['data'] = {'id': source}
+            if 'data' not in network.nodes[target]:
+                network.nodes[target]['data'] = {'id': target}
             source_data = network.nodes[source]['data']
             target_data = network.nodes[target]['data']
             data2fill = {"id": f'800{idx}',
@@ -681,6 +755,53 @@ def add_organ_system_relationship(network):
                                           node_data={'id': f'500{idx}', 'display_name': system_n, 'weight': 1})
         network.add_node(system_n, **node_data)
     add_edge_from_relationships(network=network, edges=relationships, relationship_type='os')
+
+
+def weight_nodes(graph, tissues=None):
+    """
+    This function will add a weigh to each node. This will consist in the sum of the absolute values of the DDS
+    times the muscle value
+    :param graph:
+    :return:
+    """
+    if tissues is None:
+        tissues = ['skeletal muscle']
+    for node, data in graph.nodes(data=True):
+        if 'data' not in data:
+            continue
+        total_w = 0
+        if 'yo' in data['data']:
+            total_w += abs(data['data']['yo'])
+        if 'mo' in data['data']:
+            total_w += abs(data['data']['mo'])
+        if 'ym' in data['data']:
+            total_w += abs(data['data']['ym'])
+        if 'tissue_expr' in data['data']:
+            for tissue in tissues:
+                total_w += (eval(data['data']['tissue_expr'])[tissue]) / len(tissues)
+        graph.nodes[node]['data']['weigh'] = total_w + 0.01
+
+    for node, data in graph.nodes(data=True):
+        if 'data' not in data:
+            continue
+        if 'node_type' in data['data']:
+            if data['data']['node_type'] == 'miR':
+                total_w = 0
+                all_neighbors = nx.all_neighbors(graph, node)
+                n = 0
+                for neighbor in all_neighbors:
+                    neighbor_node = graph.nodes[neighbor]
+                    if 'data' in neighbor_node and 'weigh' in neighbor_node['data']:
+                        neighbor_w = neighbor_node['data']['weigh']
+                        n += 1
+                    else:
+                        neighbor_w = 0
+                    total_w += neighbor_w
+                graph.nodes[node]['data']['weigh'] = total_w - 0.01 * (n - 1)
+
+
+DDS_w =1
+miR_w = 1
 
 
 if __name__ == '__main__':

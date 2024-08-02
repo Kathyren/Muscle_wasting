@@ -64,3 +64,20 @@ def test_register_path():
     node['data']['influence'] = {strat_node: [1]}
     p = register_path(graph, node, strat_node, visited_edges=[])
     print(p)
+
+
+def initialize_invariant(graph):
+    for node in graph.nodes:
+        assert graph.nodes[node]['data']['influence'] == [1], "Initialization invariant failed"
+
+def traversal_invariant(node, edge, weight, visited_edges):
+    assert edge not in visited_edges, "Traversal invariant failed: edge visited more than once"
+    assert weight == edge['data']['weight'], "Traversal invariant failed: weight mismatch"
+
+def update_invariant(node, influence_value):
+    assert node['data']['influence'][-1] == influence_value, "Update invariant failed"
+
+def termination_invariant(graph, visited_nodes, initial_nodes):
+    for node in graph.nodes:
+        if node in visited_nodes or node in initial_nodes:
+            assert 'influence' in graph.nodes[node]['data'], "Termination invariant failed: node influence not updated"

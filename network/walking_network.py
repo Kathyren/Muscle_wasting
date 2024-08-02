@@ -1,4 +1,4 @@
-import networkX as nx
+import network_processing as nx
 
 pathway_keywords = ["ATP", "MITOCHONDRI", "RESPIRAT", "METABOLI", "OXIDATIVE_PHOSPHORYLATION",
                     "NONALCOHOLIC_FATTY_LIVER", "MUSCLE", "ELECTRON"]
@@ -109,6 +109,11 @@ def join_paths(graph, paths: dict):
 
 
 def evaluate_pathway_influence(influence_data: list):
+    """
+
+    :param influence_data:
+    :return:
+    """
     pathway_eval_dict = {}
     all_pathways = []
     for pathway in pathway_keywords:

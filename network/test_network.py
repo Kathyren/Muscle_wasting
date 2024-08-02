@@ -3,9 +3,9 @@ from networkx import is_bipartite
 from cytoscape.enum_network_sources import NetworkSource
 
 import Constants
-from network import networkX
+from network import network_processing
 from network.main_pipeline import get_cytoscape_network
-from network.networkX import create_graph, draw_graph, load_graph, \
+from network.network_processing import create_graph, draw_graph, load_graph, \
     create_graph_from_dictionaries, get_mirna_mrna_relationships, remove_nodes_low_centrality, convert_to_json, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
     add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_genes_from_pathways, \

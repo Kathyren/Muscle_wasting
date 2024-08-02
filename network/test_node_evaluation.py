@@ -1,6 +1,6 @@
-import networkx as nx
+
 import node_evaluation as ne
-from network.networkX import create_graph, draw_graph, load_graph
+from network.network_processing import create_graph, draw_graph, load_graph
 
 
 def test_distance_to_target():

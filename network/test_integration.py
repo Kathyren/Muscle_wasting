@@ -1,5 +1,5 @@
 import Constants
-import networkX as nx
+import network_processing as nx
 import pytest
 import main_pipeline as mp
 import cytoscape as ct
