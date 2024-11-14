@@ -22,14 +22,17 @@ def convert_to_int_list(lst):
     elif isinstance(lst, str):
         string = lst.replace('[', '').replace(']', '')
         string = string.split(',')
-        return [int(x) for x in string]
+        if len(string) < 1:
+            return []
+        return [int(x) if x != '' else 0 for x in string]
     else:
         return [lst]
 
 
 def get_impact_data(df):
     """
-    From the list of impact, it just sums the numbers and return a dataframe where each value is an integer
+    From the list of impact, it just sums the numbers and
+     return a dataframe where each value is an integer
     :param df:
     :return:
     """
@@ -274,6 +277,23 @@ def get_curve_type(de_df):
             curves.append(curve_type)
     return curves
 
+
+def get_immune_score_mirna(immune_list:list, target_genes):
+    """
+    this function will take the targets of a microRNA and see if they are part of the immune genes
+    if they are, they will have negative score
+    :param inmune_list:
+    :return:
+    """
+    immune_set = set(immune_list)
+    target_set = set(target_genes)
+
+    # Find the intersection and return its size
+    intersection_size = len(immune_set.intersection(target_set))
+    if len(target_genes) > 0:
+        return intersection_size/len(target_genes)
+    else:
+        return 0
 
 def calculate_measurements(int_influence_df):
     influence_weight = int_influence_df.copy()
