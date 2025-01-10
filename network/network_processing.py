@@ -1,11 +1,16 @@
 import random
 
+import networkx
 import networkx as nx
 import numpy as np
 import pandas as pd
+from networkx import neighbors
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database_analysis import sql_operations as sql
-from cytoscape import format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
+from cytoscape import read_cytoscape_json, format_cytoscape_json, create_cytoscape_node, create_cytoscape_edge, protein_name
 
 
 def create_graph(mirnas, genes, relationsip):
@@ -293,6 +298,15 @@ def get_mirs(graph):
             mir_nodes.append(node)
 
     return mir_nodes
+
+def get_target_of_mir(G, mir):
+    """
+    Goes to the network and gets the targets of a particular mir
+    :param G:
+    :param mir:
+    :return:
+    """
+    return list(G.successors(mir))
 
 def add_DDS_data(graph, dds_df):
     """
@@ -770,48 +784,30 @@ def weight_nodes(graph, tissues=None):
         if 'data' not in data:
             continue
         total_w = 0
+        if 'node_type' in data['data']:
+            total_w += miR_w
         if 'yo' in data['data']:
-            total_w += abs(data['data']['yo'])
+            total_w += yo_w * abs(data['data']['yo'])
         if 'mo' in data['data']:
-            total_w += abs(data['data']['mo'])
+            total_w += mo_w * abs(data['data']['mo'])
         if 'ym' in data['data']:
-            total_w += abs(data['data']['ym'])
+            total_w += ym_w * abs(data['data']['ym'])
         if 'tissue_expr' in data['data']:
             for tissue in tissues:
-                total_w += (eval(data['data']['tissue_expr'])[tissue]) / len(tissues)
-        graph.nodes[node]['data']['weigh'] = total_w + 0.01
+                total_w += tissue_w * (eval(data['data']['tissue_expr'])[tissue]) / len(tissues)
 
-    for node, data in graph.nodes(data=True):
-        if 'data' not in data:
-            continue
-        if 'node_type' in data['data']:
-            if data['data']['node_type'] == 'miR':
-                total_w = 0
-                all_neighbors = nx.all_neighbors(graph, node)
-                n = 0
-                for neighbor in all_neighbors:
-                    neighbor_node = graph.nodes[neighbor]
-                    if 'data' in neighbor_node and 'weigh' in neighbor_node['data']:
-                        neighbor_w = neighbor_node['data']['weigh']
-                        n += 1
-                    else:
-                        neighbor_w = 0
-                    total_w += neighbor_w
-                graph.nodes[node]['data']['weigh'] = total_w - 0.01 * (n - 1)
+        graph.nodes[node]['data']['weigh'] = total_w
+
+
+
+
 
 
 DDS_w =1
+yo_w = 1
+ym_w = 1
+mo_w = 1
 miR_w = 1
+tissue_w = 1
 
 
-if __name__ == '__main__':
-    # graph = load_graph()
-    c_nodes, c_edges, c_relationships = format_cytoscape_json()
-    graph = create_graph_from_dictionaries(nodes=c_nodes, relationship=c_relationships, edges=c_edges)
-    # graph = create_my_graph(get_random_relationships)
-    save_graph(graph, "small_graph.pkl")
-    anc = nx.all_pairs_node_connectivity(graph)
-
-    print(nx.info(graph))
-
-    # draw_graph(graph)

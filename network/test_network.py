@@ -10,6 +10,7 @@ from network.network_processing import create_graph, draw_graph, load_graph, \
     save_graph, get_nodes_names, add_mirna_relationships, set_positions, get_mirna_tissue_edges, \
     add_tissue_relationship, add_organ_system_relationship, get_tissue_system_edges, extract_genes_from_pathways, \
     add_pathway_to_node, add_pathways_to_nodes, mark_TF_nodes_from_file, add_dds_to_node, add_DDS_data, random_walk
+
 import pytest
 
 genes = ['Cd320', 'Ndrg3', 'Aldoa', 'Bckdk', 'SLC7A1', 'ADAM17', 'NUMBL', 'FOXJ3', 'XPO6', 'AP3M2']
@@ -102,6 +103,7 @@ cytoscape_nodes = [{
     "selected": False
 }]
 graph = load_graph("small_graph.pkl")
+
 
 
 def test_create_network():
