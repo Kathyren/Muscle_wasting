@@ -9,6 +9,8 @@ import os.path
 from os import path
 import py4cytoscape as py4
 import node_evaluation as ne
+import argparse
+
 
 
 def get_cytoscape_network(file_name):
@@ -183,22 +185,26 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
-if __name__ == '__main__':
-    # file = "/home/karen/Documents/GitHub/Muscle_wasting/cytoscape/Sarcopenia.cyjs"
-    # name = "Analysis_Sarcopenia_cut"
-    # add_mirnas_n_tissues(file, name, add_tissues=False, add_system=False)
-    # add_mirnas_n_select(file, "GSE38718_w_mirnas")
-    # add_mirnas_n_select(name + ".cyjs", name + "2")
-
-    import pathlib
-    import os
-
-    file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs")
-    path_DDS_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv"
-    path_tissue_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv"
-    dds_df = pd.read_csv(path_DDS_data, index_col=0).fillna(0)
+def main(file, path_dds_data, path_tissue_data, ranks):
+    dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
-    for n in [0.5, 0.7]:
-        name = file_name.split(".")[0] + f"_cutoff_{n}"
+    
+    for n in ranks:
+        name = f"{file_name.split('.')[0]}_cutoff_{n}"
         full_flow_genes_tf(file, name, dds_df=dds_df, tissue_df=tissue_df, cutoff=n)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process gene network analysis with different cutoff values.")
+    parser.add_argument("file", type=str, \
+        default="/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs", help="Path to the input network file.")
+    parser.add_argument("path_dds_data", type=str, \
+        default="/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv", help="Path to the normalized DDS data file.")
+    parser.add_argument("path_tissue_data", type=str, \
+        default="/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv", help="Path to the gene tissue data file.")
+    parser.add_argument("--ranks", nargs='+', type=float, \
+        default=[0.5, 0.7], help="List of cutoff values for ranking.")
+    
+    args = parser.parse_args()
+    
+    main(args.file, args.path_dds_data, args.path_tissue_data, args.ranks)
