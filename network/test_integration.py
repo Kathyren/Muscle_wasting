@@ -4,7 +4,7 @@ import pytest
 import main_pipeline as mp
 import cytoscape as ct
 from network import main_pipeline
-
+import yaml
 
 def test_get_readable_output(monkeypatch):
     """
@@ -166,3 +166,43 @@ def test_full_flow_pageRank(monkeypatch):
                                     name= name_n,  use_prefix=True,
                                     cutoff=0.5)
     assert network.nodes() == graph.subgraph([0, 1, 2]).nodes(), f"The nodes expected where a smaller version"
+
+
+def test_full_flow_genes_tf(monkeypatch):
+
+    graph = nx.load_graph("small_graph.pkl")
+    monkeypatch.setattr(mp, "get_cytoscape_network",  lambda *args, **kwargs: graph )
+    monkeypatch.setattr(
+        nx, 'remove_nodes_low_centrality_pageRank', lambda graph, cutoff: graph.subgraph(['SCN4A', 'CLCN1', 'hsa-miR-211-5p'])
+    )
+    monkeypatch.setattr(
+        main_pipeline, 'save_as_cjsn', lambda *args, **kwargs: None
+     )
+    monkeypatch.setattr(
+        nx, 'set_positions', lambda *args, **kwargs: None
+    )
+    name_n = "Selected_genes_testing"
+
+    with open("settings/metadata.yml", 'r') as file:
+        config_data = yaml.safe_load(file)
+
+    file = config_data["oNetwork"]
+    path_tissue_data = config_data['path_tissue_data']
+    path_dds_data = config_data['path_DDS_data']
+    pathway_file = config_data['path_pathway_file'] 
+    tf_file = config_data['path_tf_file']
+
+
+    import pandas as pd
+    dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
+    tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
+
+    network = mp.full_flow_genes_tf(cytoscape_network="test_integration_01.cyjs",
+                                    name= name_n,  
+                                    dds_df= dds_df,
+                                    tissue_df=tissue_df,
+                                    tf_file=tf_file, 
+                                    pathway_file=pathway_file,
+                                    cutoff=0.5)
+    assert network.nodes() == graph.subgraph([0, 1, 2]).nodes(), f"The nodes expected where a smaller version"
+

@@ -238,9 +238,16 @@ def mark_TF_nodes_from_file(graph, TF_file):
     tf_dic = pd.read_csv(TF_file, index_col=0).to_dict('index')
 
     for node, data in graph.nodes(data=True):
-        if 'data' in data and 'id' in data['data'] and data['data']['name'] in tf_dic.keys():
-            graph.nodes[node]['data']['node_type'] = 'TF'
-            graph.nodes[node]['data']['presence'] = tf_dic[data['data']['name']]['enrichment']
+        try:
+            if 'data' in data and 'id' in data['data'] and data['data']['name'] in tf_dic.keys():
+                graph.nodes[node]['data']['node_type'] = 'TF'
+                graph.nodes[node]['data']['presence'] = tf_dic[data['data']['name']]['enrichment']
+        except KeyError as ke:
+            if graph.nodes[node]['type'] == 'mirna':
+                print("This is a problem with the network loaded, no worries, just change the file later.")
+            else:
+                print("Panick")
+                raise KeyError
 
     pass
 
@@ -257,10 +264,16 @@ def mark_miR_nodes(graph):
     :return:
     """
     for node, data in graph.nodes(data=True):
-        if str('data' in data and 'id' in data['data'] and data['data']['name']).startswith('hsa-miR'):
-            graph.nodes[node]['data']['node_type'] = 'miR'
-            graph.nodes[node]['data']['presence'] = None
-
+        try:
+            if str('data' in data and 'id' in data['data'] and data['data']['name']).startswith('hsa-miR'):
+                graph.nodes[node]['data']['node_type'] = 'miR'
+                graph.nodes[node]['data']['presence'] = None
+        except KeyError:
+            if graph.nodes[node]['type'] == 'mirna':
+                print("This is a problem with the network loaded, no worries, just change the file later.")
+            else:
+                print("Panick")
+                raise KeyError
     pass
 
 
@@ -331,10 +344,16 @@ def add_dds_to_node(graph, node_name, dds: dict):
     :return:
     """
     for node, data in graph.nodes(data=True):
-        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
-            for dd, value in dds.items():
-                graph.nodes[node]['data'][dd] = value
-
+        try:
+            if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+                for dd, value in dds.items():
+                    graph.nodes[node]['data'][dd] = value
+        except KeyError:
+            if graph.nodes[node]['type'] == 'mirna':
+                print("This is a problem with the network loaded, no worries, just change the file later.")
+            else:
+                print("Panick")
+                raise KeyError
 
 def add_tissue_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
     """
@@ -346,10 +365,17 @@ def add_tissue_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
     :return:
     """
     for node, data in graph.nodes(data=True):
-        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
-            for index, value in tissues.items():
-                tissues[index] = float(value)
-            graph.nodes[node]['data'][name] = str(tissues)
+        try:
+            if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+                for index, value in tissues.items():
+                    tissues[index] = float(value)
+                graph.nodes[node]['data'][name] = str(tissues)
+        except KeyError as ke:
+            if graph.nodes[node]['type'] == 'mirna':
+                print("This is a problem with the network loaded, no worries, just change the file later.")
+            else:
+                print("Panick")
+                raise KeyError
 
 
 def add_tissue_to_nodes(graph, tissues_df):
@@ -415,9 +441,15 @@ def add_pathway_to_node(graph, node_name, pathways):
     :return:
     """
     for node, data in graph.nodes(data=True):
-        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
-            graph.nodes[node]['data']['pathways'] = pathways
-
+        try:
+            if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+                graph.nodes[node]['data']['pathways'] = pathways
+        except KeyError as ke:
+            if graph.nodes[node]['type'] == 'mirna':
+                print("This is a problem with the network loaded, no worries, just change the file later.")
+            else:
+                print("Panick")
+                raise KeyError
 
 def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, interest_genes: list):
     """

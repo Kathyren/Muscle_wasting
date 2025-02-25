@@ -2,7 +2,6 @@
 import pandas as pd
 import pytest
 import yaml
-import Constants
 import cytoscape as ct
 import network_processing as ntp
 import os.path
@@ -139,8 +138,13 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
     return network
 
 
-def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, tissue_df=None, cutoff=0.5):
+def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
+                       tissue_df=None, tf_file=None, pathway_file=None, cutoff=0.5):
     """
+    :param pathway_file:
+    :param tf_file:
+    :param tissue_df:
+    :param dds_df:
     :param cytoscape_network: str Name of the network saved as cyjs
     :param name: str Name to save the graph and subproducts
     :param use_prefix: Bool
@@ -148,6 +152,8 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, ti
 
     :return:
     """
+    # if any of the attributes is None, we are going to use the default values
+
     if use_prefix:
         px1 = "original_"
         px2 = "mirnas_"
@@ -156,9 +162,8 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, ti
     if not os.path.exists(f"Networks_pkl/metadata_{px2}_{name}.pkl"):
         network = get_network(px1, px2, cytoscape_network, save_name=name)
         ntp.add_pathways_to_nodes(graph=network,
-                                  pathway_file="data/enr_pvals_RNAseq_abundances_adjusted_combat_inmose_young.vs"
-                                               ".old_filtered.csv")
-        ntp.mark_TF_nodes_from_file(graph=network, TF_file=)
+                                  pathway_file=pathway_file)
+        ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
         ntp.add_tissue_to_nodes(graph=network,
                                 tissues_df=tissue_df)
         ntp.mark_miR_nodes(graph=network)
@@ -184,20 +189,32 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
-def main(file, path_dds_data, path_tissue_data, ranks):
+def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, ranks):
+    if file is None:
+        file = config_data.oNetwork
     if path_tissue_data is None:
-        path_tissue_data = Constants.PATH_TISSUE_DATA
+        path_tissue_data = config_data.path_tissue_data
     if path_dds_data is None:
-        path_dds_data = Constants.PATH_DDS_DATA
+        path_dds_data = config_data.path_DDS_data
+    if pathway_file is None:
+        pathway_file = config_data.path_pathway_file
+    if tf_file is None:
+        tf_file = config_data.path_tf_file
     if ranks is None:
-        ranks = Constants.RANKS
+        ranks = config_data.page_rank_cutoff
+
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
     
     for n in ranks:
         name = f"{file_name.split('.')[0]}_cutoff_{n}"
-        full_flow_genes_tf(file, name, dds_df=dds_df, tissue_df=tissue_df, cutoff=n)
+        full_flow_genes_tf(file, name, 
+                           dds_df=dds_df, 
+                           tissue_df=tissue_df,
+                           tf_file=tf_file, 
+                           pathway_file=pathway_file,
+                           cutoff=n)
 
 def load_config(config_path):
     with open(config_path, 'r') as file:
