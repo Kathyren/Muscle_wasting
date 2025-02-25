@@ -1,7 +1,7 @@
 ### This file is the mail pipeline for my priject
 import pandas as pd
 import pytest
-
+import yaml
 import Constants
 import cytoscape as ct
 import network_processing as ntp
@@ -186,6 +186,12 @@ def open_cytoscape(file_name):
 
 
 def main(file, path_dds_data, path_tissue_data, ranks):
+    if path_tissue_data is None:
+        path_tissue_data = Constants.PATH_TISSUE_DATA
+    if path_dds_data is None:
+        path_dds_data = Constants.PATH_DDS_DATA
+    if ranks is None:
+        ranks = Constants.RANKS
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
@@ -194,17 +200,26 @@ def main(file, path_dds_data, path_tissue_data, ranks):
         name = f"{file_name.split('.')[0]}_cutoff_{n}"
         full_flow_genes_tf(file, name, dds_df=dds_df, tissue_df=tissue_df, cutoff=n)
 
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process gene network analysis with different cutoff values.")
-    parser.add_argument("file", type=str, \
-        default="/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs", help="Path to the input network file.")
-    parser.add_argument("path_dds_data", type=str, \
-        default="/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv", help="Path to the normalized DDS data file.")
-    parser.add_argument("path_tissue_data", type=str, \
-        default="/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv", help="Path to the gene tissue data file.")
-    parser.add_argument("--ranks", nargs='+', type=float, \
-        default=[0.5, 0.7], help="List of cutoff values for ranking.")
+    parser.add_argument("--config", type=str, help="Path to the configuration YAML file.")
+    parser.add_argument("--file", type=str, help="Path to the input network file.")
+    parser.add_argument("--path_dds_data", type=str, help="Path to the normalized DDS data file.")
+    parser.add_argument("--path_tissue_data", type=str, help="Path to the gene tissue data file.")
+    parser.add_argument("--ranks", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
     
     args = parser.parse_args()
+    if args.config:
+        config = load_config(args.config)
     
-    main(args.file, args.path_dds_data, args.path_tissue_data, args.ranks)
+    # Override config values with provided CLI arguments (if any)
+    file = args.file if args.file else config.get("file")
+    path_dds_data = args.path_dds_data if args.path_dds_data else config.get("path_dds_data")
+    path_tissue_data = args.path_tissue_data if args.path_tissue_data else config.get("path_tissue_data")
+    ranks = args.ranks if args.ranks else config.get("ranks", [0.5, 0.7])
+    
