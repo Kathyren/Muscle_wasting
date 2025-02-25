@@ -33,3 +33,10 @@ network/.ipynb_checkpoints/mirnas_influence_03_90-checkpoint.ipynb
 .virtual_documents/*
 network/data/inmune_genes_symbol.txt
 network/.virtual_documents/Untitled.ipynb
+.idea/Muscle_wasting.iml
+.ipynb_checkpoints/Untitled-checkpoint.ipynb
+*.tsv
+*.txt
+database_analysis/sql_operations.py
+*.jpg
+*.png
