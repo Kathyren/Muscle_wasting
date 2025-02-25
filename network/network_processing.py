@@ -335,19 +335,20 @@ def add_dds_to_node(graph, node_name, dds: dict):
                 graph.nodes[node]['data'][dd] = value
 
 
-def add_tissue_to_node(graph, node_name, tissues: dict):
+def add_tissue_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
     """
     This function will add the tissue data to the node.
-    :param graph:
-    :param node_name:
-    :param tissues:
+    :param graph: The networkx graph object
+    :param node_name: The name of the node to get the tissue. This is the name of the gene
+    :param tissues: A dictionary with the tissues and the expression. The key should be the gene as in the node.
+    :param name: The name of the attribute, tissue is the default (tissue_expr)
     :return:
     """
     for node, data in graph.nodes(data=True):
         if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
             for index, value in tissues.items():
                 tissues[index] = float(value)
-            graph.nodes[node]['data']['tissue_expr'] = str(tissues)
+            graph.nodes[node]['data'][name] = str(tissues)
 
 
 def add_tissue_to_nodes(graph, tissues_df):
