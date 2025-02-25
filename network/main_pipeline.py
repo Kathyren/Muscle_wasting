@@ -158,8 +158,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None, ti
         ntp.add_pathways_to_nodes(graph=network,
                                   pathway_file="data/enr_pvals_RNAseq_abundances_adjusted_combat_inmose_young.vs"
                                                ".old_filtered.csv")
-        ntp.mark_TF_nodes_from_file(graph=network, TF_file="data/tf_actsRNAseq_abundances_adjusted_combat_inmose_young.vs"
-                                                           ".old.csv")
+        ntp.mark_TF_nodes_from_file(graph=network, TF_file=)
         ntp.add_tissue_to_nodes(graph=network,
                                 tissues_df=tissue_df)
         ntp.mark_miR_nodes(graph=network)
@@ -208,18 +207,37 @@ def load_config(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process gene network analysis with different cutoff values.")
     parser.add_argument("--config", type=str, help="Path to the configuration YAML file.")
-    parser.add_argument("--file", type=str, help="Path to the input network file.")
-    parser.add_argument("--path_dds_data", type=str, help="Path to the normalized DDS data file.")
-    parser.add_argument("--path_tissue_data", type=str, help="Path to the gene tissue data file.")
-    parser.add_argument("--ranks", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
+    parser.add_argument("--network", type=str, help="Path to the input network file.")
+    parser.add_argument("--DE_data", type=str, help="Path to the normalized DeSeq2DataSet file.")
+    parser.add_argument("--Tissue_expression_data", type=str, help="Path to the gene tissue data file.")
+    parser.add_argument("--Cell_type_data", type=str, help="Path to the gene cell type data file.")
+    parser.add_argument("--Pathway_enrichment_data", type=str, help="Path to the gene pathway enrichment data file.")
+    parser.add_argument("--TF_enrichment_data",  type=float, help="Path to the gene TF enrichment data file.")
+    parser.add_argument("--Cutoff", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
+    parser.add_argument("--output", type=str, help="Path to the output directory.")
     
     args = parser.parse_args()
     if args.config:
-        config = load_config(args.config)
-    
+        config_data = load_config(args.config)
+    else:
+        config_data = load_config("settings/metadata.yml")
     # Override config values with provided CLI arguments (if any)
-    file = args.file if args.file else config.get("file")
-    path_dds_data = args.path_dds_data if args.path_dds_data else config.get("path_dds_data")
-    path_tissue_data = args.path_tissue_data if args.path_tissue_data else config.get("path_tissue_data")
-    ranks = args.ranks if args.ranks else config.get("ranks", [0.5, 0.7])
+    network = args.network if args.network else config_data.get("oNetwork")
+    DE_data = args.DE_data if args.DE_data else config_data.get("path_DDS_data")
+    Tissue_expression = args.Tissue_expression if args.Tissue_expression else config_data.get("path_tissue_data")
+    Cell_type = args.Cell_type if args.Cell_type else config_data.get("path_cell_type_data")
+    Pathway_enrichment = args.Pathway_enrichment if args.Pathway_enrichment else config_data.get("path_pathway_file")
+    TF_enrichment = args.TF_enrichment if args.TF_enrichment else config_data.get("path_tf_file")
+    Cutoff = args.Cutoff if args.Cutoff else config_data.get("page_rank_cutoff", [0.5, 0.7])
+    print(f"Running main pipeline with the following parameters:\n"
+          f"Network: {network}\n"
+          f"DE_data: {DE_data}\n"
+          f"Tissue_expression: {Tissue_expression}\n"
+          f"Cell_type: {Cell_type}\n"
+          f"Pathway_enrichment: {Pathway_enrichment}\n"
+          f"TF_enrichment: {TF_enrichment}\n"
+          f"Cutoff: {Cutoff}\n"
+          f"Output: {args.output}")
+    # main(config_data)
+
     

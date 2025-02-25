@@ -233,7 +233,8 @@ def mark_TF_nodes_from_file(graph, TF_file):
     :param pathway_file:
     :return:
     """
-
+    if TF_file is None:
+        return None
     tf_dic = pd.read_csv(TF_file, index_col=0).to_dict('index')
 
     for node, data in graph.nodes(data=True):
@@ -326,7 +327,7 @@ def add_dds_to_node(graph, node_name, dds: dict):
     This function will add as metadata to the node a list of pathways
     :param graph:
     :param node:
-    :param pathways:
+    :param dds: A dictionary with the Dseq2DataSet values (stat or log2FoldChange)
     :return:
     """
     for node, data in graph.nodes(data=True):
