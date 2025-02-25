@@ -1,0 +1,16 @@
+# This is the yaml file to keep the source of the metadata to be used. The result of the selection algorith depends in 
+#  high degree of these files, since is the way that the nodes are going to ve evaluated.
+
+
+# Orinignal Network file on json cytoscape format (end cyjs), 
+# it should have object data and elements, elements should have nodes and edges. 
+oNetwork: "/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs"
+# This file is the expression data, It has a column gene, and a column per comparison and the value of that comparison
+# depends on what is looked for, we recomend the stat obtained with DSeq2, but if you need log fold change or another 
+# value 
+path_DDS_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv"
+# This file will asign the gene to a tissue, we recommend sources like the Protein Atlas. Normalize the values are a good idea.
+# It must have the first column Gene (capital G) and the tissues. 
+path_tissue_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv"
+
+    

@@ -193,12 +193,12 @@ if __name__ == '__main__':
     import pathlib
     import os
 
-    file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network.cyjs")
+    file = pathlib.Path("/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs")
     path_DDS_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv"
     path_tissue_data = "/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv"
     dds_df = pd.read_csv(path_DDS_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
     file_name = os.path.basename(file)
-    for n in [0.9, 0.1, 0.2, 0.8]:
+    for n in [0.5, 0.7]:
         name = file_name.split(".")[0] + f"_cutoff_{n}"
         full_flow_genes_tf(file, name, dds_df=dds_df, tissue_df=tissue_df, cutoff=n)
