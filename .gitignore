@@ -26,8 +26,10 @@ network/Sessions/*
 *.png
 *.gif
 *.png
-network/.ipynb_checkpoints/mirnas_influence_00-checkpoint.ipynb
+network/.ipynb_checkpoints/*
 network/.ipynb_checkpoints/mirnas_influence_01-checkpoint.ipynb
 network/.ipynb_checkpoints/mirnas_influence_02-checkpoint.ipynb
 network/.ipynb_checkpoints/mirnas_influence_03_90-checkpoint.ipynb
 .virtual_documents/*
+network/data/inmune_genes_symbol.txt
+network/.virtual_documents/Untitled.ipynb
