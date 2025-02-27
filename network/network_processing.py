@@ -58,10 +58,17 @@ def create_graph_from_dictionaries(nodes, relationship, edges):
 
 
 def draw_graph(G):
+    """
+    This function will draw the graph in a matplotlib window. It is not working... I think
+    :param G: The networkx object
+    :return: None
+    """
     color_map = []
 
     for node, data in G.nodes(data=True):
         if data['type'] == 'mirna':
+            # color map pink
+            #color_map.append()
             color_map.append(0.25)  # blue color
         elif data['type'] == 'gene':
             color_map.append(0.7)  # yellow color
@@ -75,6 +82,11 @@ def is_bipartite(G):
 
 
 def filter_by_degree(G):
+    """
+    This function will filter the nodes by degree
+    :param G: The networkx object
+    :return: The networkx object with the nodes filtered
+    """
     graph = G.copy()
     centrality = nx.degree(G)
     c = list(centrality)
@@ -368,7 +380,7 @@ def add_tissue_to_nodes(graph, tissues_df):
         add_tissue_to_node(graph=graph, node_name=index, tissues=dict(row))
 
 
-def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
+def extract_genes_from_pathways(pathway_file:str, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
     """
     This function takes a fiile that cointains
@@ -402,6 +414,16 @@ def extract_genes_from_pathways(pathway_file, threshold_feature='Combined score'
 
 
 def add_pathways_to_nodes(graph, pathway_file):
+    """
+    This function will add the pathway to the node. Currently it takes the string directory where the pathways are.
+    It will call the funtion extract_genes_from_pathways to get the pathways and then add them to the nodes to 
+    generate the dictorionary of the pathways. That dictionary is added to the node with add_pathway_to_node
+
+    :param graph: The networkx graph object with the format of mirKat network (see Documentation)
+    :param pathway_file: Path to the file with the pathways. See Documentation for the format
+    :return: None
+
+    """
 
     gene_pathway_dic = extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
                                                    id_feature='Features', pathway_feature='Term', threshold_value=10)
@@ -437,6 +459,19 @@ def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, int
 
 
 def select_next_valid_node(i, path_length, graph, neighbors) -> str:
+    """
+    This function will select the next node to go in the random walk.
+    The node must have at least one neighbor to continue the path.
+    It will check that data property exists and that the node has 
+    the pathways property.
+
+
+    :param i:
+    :param path_length:
+    :param graph:
+    :param neighbors:
+    :return:
+    """
     next_node = random.choice(neighbors)
     #return next_node
     if i < (path_length - 1):
@@ -452,6 +487,17 @@ def select_next_valid_node(i, path_length, graph, neighbors) -> str:
 
 
 def get_random_path(G, start_node, path_length):
+    """
+    This function will get a random path of a certain length from a starting node in a graph.
+    The path will be a list of nodes in the order they were visited.
+    
+    :param G: The graph to be traversed. This node should have the format of mirKat network (see Documentation)
+    :param start_node: The starting node of the path
+    :param path_length: The length of the path
+
+    :return: A list of nodes in the order they were visited including the start node
+
+    """
     path = [start_node]
     current_node = start_node
 
@@ -659,6 +705,12 @@ def get_tissue_system_edges(organs):
 
 
 def create_my_graph(query):
+    """
+    This function will create a graph from a query in the database
+    :param query: The query to get the relationships
+    :return: The networkx object
+    """
+
     relationships = sql.get_query(query=query)
     genes = list(relationships['mrna'])
     mirnas = list(relationships['mirna_mature'])
@@ -714,6 +766,20 @@ def set_positions(network):
 
 
 def add_mirna_relationships(network):
+    """
+    This function will add the mirna relationships to the network.
+    It will get the node names, that at the point are the gene names, and get the mirna relationships
+    through a sql call done in get_mirna_mrna_relationships. Up to now, the query is stablished and \
+    cannot be changed but it is expected to be changed in the future.
+    It will use the relationships to add the nodes (mirnas) and the edges to the network. The weigths of the edges
+    are set to -1. 
+    
+    :param network: The networkx object
+    :return: None
+    
+    """
+
+
     genes = get_nodes_names(network)
     relationships, mirnas, scores = get_mirna_mrna_relationships(genes)
     for idx, mirna in enumerate(mirnas):
@@ -727,6 +793,22 @@ def add_mirna_relationships(network):
 
 
 def add_edge_from_relationships(network, edges, scores=None, relationship_type="pm"):
+    """
+    This function will add the edges to the network.
+     It will add the nodes if they are not present in the network. The edge properties are set to:
+        shared_interaction, shared_name, interaction, selected, weight
+    From those, weight is the most important since that will be used to calculate the influence of the nodes.
+
+
+
+    :param network: The networkx object
+    :param edges: The list of tuples with the relationships
+    :param scores: The scores of the relationships
+    :param relationship_type: The type of the relationship
+    :return
+
+    """
+
     # edges, scores = get_mirna_tissue_edges(mirnas=mirnas)
     if scores is None:
         scores = [1] * len(edges)
@@ -757,6 +839,19 @@ def add_edge_from_relationships(network, edges, scores=None, relationship_type="
 
 
 def add_tissue_relationship(network):
+    """
+    This function will add the tissue relationships to the network.
+    This function will take (for now) the tissues as a new node and add the edges to the network.
+    The tissues are taken from the mirna_tissues table in the database. The relationships are added to the network
+    with the add_edge_from_relationships function. The weigths of the edges are set to -1.
+
+    This function will probably be retired. 
+
+
+    :param network: The networkx object
+    :return: None
+    """
+
     nodes = get_nodes_names(network)
     relationships, organs, scores = get_mirna_tissue_edges(nodes)
     for idx, organ in enumerate(organs):
@@ -767,6 +862,20 @@ def add_tissue_relationship(network):
 
 
 def add_organ_system_relationship(network):
+
+    """
+    This function will add the organ-system relationships to the network.
+    This function will take (for now) the organs as a new node and add the edges to the network.
+    The organs are taken from the mirna_tissues table in the database. The relationships are added to the network
+    with the add_edge_from_relationships function. The weigths of the edges are set to -1.
+
+    This function will probably be retired.
+
+    :param network: The networkx object
+    :return: None
+
+    
+    """
     nodes = [x for x, y in network.nodes(data=True) if y['type'] == 'organ']
     relationships, systems = get_tissue_system_edges(nodes)
     for idx, system_n in enumerate(systems):
@@ -780,6 +889,11 @@ def weight_nodes(graph, tissues=None):
     """
     This function will add a weigh to each node. This will consist in the sum of the absolute values of the DDS
     times the muscle value
+
+    For now the node's weight is trivial, but this is the  functtion that I will change in 
+    https://karenguerrero.atlassian.net/browse/MML-328
+    MML-328: Modify the scoring to work dynamically  and not only on one comparison 
+
     :param graph:
     :return:
     """
