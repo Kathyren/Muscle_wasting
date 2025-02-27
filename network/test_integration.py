@@ -171,17 +171,17 @@ def test_full_flow_pageRank(monkeypatch):
 def test_full_flow_genes_tf(monkeypatch):
 
     graph = nx.load_graph("small_graph.pkl")
-    monkeypatch.setattr(mp, "get_cytoscape_network",  lambda *args, **kwargs: graph )
-    monkeypatch.setattr(
-        nx, 'remove_nodes_low_centrality_pageRank', lambda graph, cutoff: graph.subgraph(['SCN4A', 'CLCN1', 'hsa-miR-211-5p'])
-    )
+    #monkeypatch.setattr(mp, "get_cytoscape_network",  lambda *args, **kwargs: graph )
+    #monkeypatch.setattr(
+    #    nx, 'remove_nodes_low_centrality_pageRank', lambda graph, cutoff: graph.subgraph(['SCN4A', 'CLCN1', 'hsa-miR-211-5p'])
+    #)
     monkeypatch.setattr(
         main_pipeline, 'save_as_cjsn', lambda *args, **kwargs: None
      )
-    monkeypatch.setattr(
-        nx, 'set_positions', lambda *args, **kwargs: None
-    )
-    name_n = "Selected_genes_testing"
+    #monkeypatch.setattr(
+    #    nx, 'set_positions', lambda *args, **kwargs: None
+    #)
+    name_n = "ALDOA_test"
 
     with open("settings/metadata.yml", 'r') as file:
         config_data = yaml.safe_load(file)
@@ -197,12 +197,13 @@ def test_full_flow_genes_tf(monkeypatch):
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
 
-    network = mp.full_flow_genes_tf(cytoscape_network="test_integration_01.cyjs",
+    network = mp.full_flow_genes_tf(cytoscape_network="test_networks/ALDOA_LDHA.cyjs",
                                     name= name_n,  
                                     dds_df= dds_df,
                                     tissue_df=tissue_df,
                                     tf_file=tf_file, 
                                     pathway_file=pathway_file,
                                     cutoff=0.5)
+    print(network)
     assert network.nodes() == graph.subgraph([0, 1, 2]).nodes(), f"The nodes expected where a smaller version"
 

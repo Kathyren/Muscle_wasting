@@ -9,6 +9,12 @@ from os import path
 import py4cytoscape as py4
 import node_evaluation as ne
 import argparse
+# Set base directory as the MUSCLE_WASTING/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Set the working directory to the main
+os.chdir(BASE_DIR)
+
 
 
 
@@ -139,7 +145,7 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
 
 
 def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
-                       tissue_df=None, tf_file=None, pathway_file=None, cutoff=0.5):
+                       tissue_df=None, tf_file=None, pathway_file=None, cutoff=0.5, path = "network/"):
     """
     :param pathway_file:
     :param tf_file:
@@ -159,7 +165,8 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         px2 = "mirnas_"
     else:
         px1 = px2 = ""
-    if not os.path.exists(f"Networks_pkl/metadata_{px2}_{name}.pkl"):
+    if not os.path.exists(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl"):
+
         network = get_network(px1, px2, cytoscape_network, save_name=name)
         ntp.add_pathways_to_nodes(graph=network,
                                   pathway_file=pathway_file)
@@ -171,16 +178,16 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
             ntp.add_DDS_data(network, dds_df=dds_df)
 
         ntp.weight_nodes(graph=network)
-        ntp.save_graph(network, f"Networks_pkl/metadata_{px2}_{name}.pkl")
+        ntp.save_graph(network, f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     else:
-        network = ntp.load_graph(f"Networks_pkl/metadata_{px2}_{name}.pkl")
+        network = ntp.load_graph(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     network = ntp.set_positions(network)
 
     network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weigth='weigh', cutoff=cutoff)
     n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
-    ntp.save_graph(network, f"Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
-    save_as_cjsn(network, f'Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs')
+    ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
+    save_as_cjsn(network, f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs')
 
     return network
 
