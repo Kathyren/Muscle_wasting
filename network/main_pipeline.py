@@ -196,7 +196,7 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
-def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, ranks):
+def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, ranks, open_cytoscape):
     if file is None:
         file = config_data.oNetwork
     if path_tissue_data is None:
@@ -239,6 +239,7 @@ if __name__ == "__main__":
     parser.add_argument("--TF_enrichment_data",  type=float, help="Path to the gene TF enrichment data file.")
     parser.add_argument("--Cutoff", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
     parser.add_argument("--output", type=str, help="Path to the output directory.")
+    parser.add_argument("--open_cytoscape", type=bool, help="Open the Cytoscape session after processing.", default=False)
     
     args = parser.parse_args()
     if args.config:
@@ -253,6 +254,8 @@ if __name__ == "__main__":
     Pathway_enrichment = args.Pathway_enrichment if args.Pathway_enrichment else config_data.get("path_pathway_file")
     TF_enrichment = args.TF_enrichment if args.TF_enrichment else config_data.get("path_tf_file")
     Cutoff = args.Cutoff if args.Cutoff else config_data.get("page_rank_cutoff", [0.5, 0.7])
+    output = args.output if args.output else config_data.get("output")
+    open_cytoscape_ = args.open_cytoscape if args.open_cytoscape else config_data.get("open_cytoscape", False)
     print(f"Running main pipeline with the following parameters:\n"
           f"Network: {network}\n"
           f"DE_data: {DE_data}\n"
@@ -261,7 +264,11 @@ if __name__ == "__main__":
           f"Pathway_enrichment: {Pathway_enrichment}\n"
           f"TF_enrichment: {TF_enrichment}\n"
           f"Cutoff: {Cutoff}\n"
-          f"Output: {args.output}")
-    # main(config_data)
+          f"Output: {output}\n"
+          f"Open Cytoscape: {open_cytoscape_}")
+    main(config_data=config_data, file=network, path_dds_data=DE_data,
+          path_tissue_data=Tissue_expression, pathway_file=Pathway_enrichment, 
+          tf_file=TF_enrichment, ranks=Cutoff, open_cytoscape=open_cytoscape_)
+
 
     
