@@ -197,7 +197,7 @@ def test_full_flow_genes_tf(monkeypatch):
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
 
-    network = mp.full_flow_genes_tf(cytoscape_network="test_networks/ALDOA_LDHA.cyjs",
+    network, _ = mp.full_flow_genes_tf(cytoscape_network="test_networks/ALDOA_LDHA.cyjs",
                                     name= name_n,  
                                     dds_df= dds_df,
                                     tissue_df=tissue_df,

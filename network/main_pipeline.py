@@ -184,12 +184,13 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     network = ntp.set_positions(network)
 
     network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weigth='weigh', cutoff=cutoff)
-    n_mirnas = ntp.get_n_mirs(network)
+    #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
-    save_as_cjsn(network, f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs')
+    cytoscape_file = f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs'
+    save_as_cjsn(network, cytoscape_file)
 
-    return network
+    return network, cytoscape_file
 
 
 def open_cytoscape(file_name):
@@ -216,12 +217,14 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_fi
     
     for n in ranks:
         name = f"{file_name.split('.')[0]}_cutoff_{n}"
-        full_flow_genes_tf(file, name, 
+        network, cytoscape_file = full_flow_genes_tf(file, name, 
                            dds_df=dds_df, 
                            tissue_df=tissue_df,
                            tf_file=tf_file, 
                            pathway_file=pathway_file,
                            cutoff=n)
+        if open_cytoscape:
+            open_cytoscape(cytoscape_file)
 
 def load_config(config_path):
     with open(config_path, 'r') as file:
