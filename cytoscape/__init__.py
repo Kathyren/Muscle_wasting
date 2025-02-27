@@ -116,6 +116,7 @@ def format_cytoscape_json(cytoscape_json):
     This function takes the Json file and takes the edges and nodes separately
     and format in a way that I can feed to the networkX graph.
 
+    :param cytoscape_json: json file with the cytoscape data
     :return: the list of dictionaries of the nodes, the list of dictionaries of the edges (metadata n stuff)
     and the list of tuples with the relationships
     """
