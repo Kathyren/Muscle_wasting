@@ -188,6 +188,29 @@ def test_add_other_data():
             assert metadata['tissue'] == tissue_dummy_df.loc[node].to_dict(), f"The node {node} should have a tissue property with value True"
 
 
-
+def test_weight_nodes():
+    graph = network_processing.load_graph("network/test_networks/mirnas_ALDOA_test.pkl")
+    dds_df_dummy = pd.read_csv("network/test_networks/dummy_data/dds_file.csv", index_col=0)
+    network_processing.add_DDS_data(graph=graph, dds_df=dds_df_dummy)
+    patwhay_df_dummy = "network/test_networks/dummy_data/pathway_file.csv"
+    network_processing.add_pathways_to_nodes(graph=graph, pathway_file=patwhay_df_dummy)
+    tf_file = "network/test_networks/dummy_data/tf_file.csv"
+    network_processing.add_TF_data_from_file(graph=graph, tf_file=tf_file)
+    tissue_file = "network/test_networks/dummy_data/tissue_file.csv"
+    tissue_dummy_df = pd.read_csv(tissue_file, index_col=0)
+    network_processing.add_other_data(graph=graph, data_df=tissue_dummy_df, name='tissue')
+    cell_type_file = "network/test_networks/dummy_data/cell_type_file.csv"
+    cell_type_dummy_df = pd.read_csv(cell_type_file, index_col=0)
+    network_processing.add_other_data(graph=graph, data_df=cell_type_dummy_df, name='cell_type')
+    coeficients = {'dds': 0.5, 'pathways_svd': 0.3, 'tf': 0.1, 'tissue': 0.05, 'cell_type': 0.05, 'miR_enhancement': 1}
+    network_processing.weight_nodes(graph=graph, coeficients=coeficients)
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    for node in test_nodes:
+        weigth = test_nodes[node]['data']['weigh']
+        if node in ['ALDOA', 'NT5E']:
+            assert weigth > 0
+        if test_nodes[node]['type'] == 'mirna':
+            assert weigth == coeficients['miR_enhancement'], f"The node {node} should have a weigh property with the correct value"
 def test_end():
     pass

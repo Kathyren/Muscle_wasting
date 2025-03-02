@@ -1010,25 +1010,30 @@ def weight_nodes(graph, coeficients: dict):
     ## The default value is 1.
     ## The final value is the sum of all the values.
     ## The final value is stored in the node as 'weigh'
-    if tissues is None:
-        tissues = ['skeletal muscle']
-    for node, data in graph.nodes(data=True):
-        if 'data' not in data:
-            continue
-        total_w = 0
-        if 'node_type' in data['data']:
-            total_w += miR_w
-        if 'yo' in data['data']:
-            total_w += yo_w * abs(data['data']['yo'])
-        if 'mo' in data['data']:
-            total_w += mo_w * abs(data['data']['mo'])
-        if 'ym' in data['data']:
-            total_w += ym_w * abs(data['data']['ym'])
-        if 'tissue_expr' in data['data']:
-            for tissue in tissues:
-                total_w += tissue_w * (eval(data['data']['tissue_expr'])[tissue]) / len(tissues)
+    ## A spatial coeficient miR_enhenchment is added if the node is a mirna. It should be 
+    ## in the dictionary. If not, the default value is 1.
 
-        graph.nodes[node]['data']['weigh'] = total_w
+    if coeficients is None:
+        coeficients = {'dds': 1, 'pathways': 1, 'pathways_svd': 1, 'tf': 1, 'tissue_expr': 1, 'cell_type': 1}
+    if 'miR_enhancement' not in coeficients:
+        coeficients['miR_enhancement'] = 1
+
+    for node, data in graph.nodes(data=True):
+        added_coef = []
+        weight = 0
+        if 'data' in data and 'metadata' in data['data']:
+
+            for key, value in coeficients.items():
+                if key in data['data']['metadata']:
+                    if key != 'pathways':
+                        if key == 'pathways_svd':
+                            weight+= value * data['data']['metadata'][key]
+                        else:
+                            weight += value * sum(abs(x) for x in data['data']['metadata'][key].values())
+                        added_coef.append(key)
+        if data['type'] == 'mirna':
+            weight += coeficients['miR_enhancement']
+        graph.nodes[node]['data']['weigh'] = weight
 
 
 
