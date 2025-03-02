@@ -989,7 +989,7 @@ def add_other_data(graph, data_df:DataFrame, name:str):
 
     pass
 
-def weight_nodes(graph, coeficients: dict):
+def weight_nodes(graph, coefficients: dict):
     """
     This function will add a weigh to each node. This will consist in the sum of the absolute values of the DDS
     times the muscle value
@@ -1013,17 +1013,17 @@ def weight_nodes(graph, coeficients: dict):
     ## A spatial coeficient miR_enhenchment is added if the node is a mirna. It should be 
     ## in the dictionary. If not, the default value is 1.
 
-    if coeficients is None:
-        coeficients = {'dds': 1, 'pathways': 1, 'pathways_svd': 1, 'tf': 1, 'tissue_expr': 1, 'cell_type': 1}
-    if 'miR_enhancement' not in coeficients:
-        coeficients['miR_enhancement'] = 1
+    if coefficients is None:
+        coefficients = {'dds': 1, 'pathways': 1, 'pathways_svd': 1, 'tf': 1, 'tissue_expr': 1, 'cell_type': 1}
+    if 'miR_enhancement' not in coefficients:
+        coefficients['miR_enhancement'] = 1
 
     for node, data in graph.nodes(data=True):
         added_coef = []
         weight = 0
         if 'data' in data and 'metadata' in data['data']:
 
-            for key, value in coeficients.items():
+            for key, value in coefficients.items():
                 if key in data['data']['metadata']:
                     if key != 'pathways':
                         if key == 'pathways_svd':
@@ -1032,7 +1032,7 @@ def weight_nodes(graph, coeficients: dict):
                             weight += value * sum(abs(x) for x in data['data']['metadata'][key].values())
                         added_coef.append(key)
         if data['type'] == 'mirna':
-            weight += coeficients['miR_enhancement']
+            weight += coefficients['miR_enhancement']
         graph.nodes[node]['data']['weigh'] = weight
 
 

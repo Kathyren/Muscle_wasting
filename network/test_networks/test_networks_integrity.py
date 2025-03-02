@@ -1,4 +1,7 @@
 import sys
+
+from ipykernel.pickleutil import cell_type
+
 sys.path.append('../')
 #from .. import network_processing as nx
 #from .. import main_pipeline as mp
@@ -17,7 +20,7 @@ def test_full_flow_genes_tf(monkeypatch):
     monkeypatch.setattr(
         mp, 'save_as_cjsn', lambda *args, **kwargs: None
      )
-    name_n = "ALDOA_test"
+    name_n = "ALDOA_test_no_save"
 
     with open("network/settings/metadata.yml", 'r') as file:
         config_data = yaml.safe_load(file)
@@ -27,11 +30,15 @@ def test_full_flow_genes_tf(monkeypatch):
     path_dds_data = config_data['path_DDS_data']
     pathway_file = config_data['path_pathway_file']
     tf_file = config_data['path_tf_file']
+    cell_type_file = config_data['path_cell_type_data']
+    coefficents = config_data['coefficients']    
 
 
     import pandas as pd
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
+    cell_type_df = pd.read_csv(cell_type_file, index_col=0).fillna(0)
+
 
     network, _ = mp.full_flow_genes_tf(cytoscape_network="network/test_networks/ALDOA_LDHA.cyjs",
                                     name= name_n,
@@ -39,6 +46,8 @@ def test_full_flow_genes_tf(monkeypatch):
                                     tissue_df=tissue_df,
                                     tf_file=tf_file,
                                     pathway_file=pathway_file,
+                                    cell_type=cell_type_df,
+                                    coefficients=coefficents,
                                     cutoff=0.5)
     print(network)
     assert len(network.nodes()) == 17, f"The test network ALDOA should have 6 genes to start and 11 mirnas."
@@ -203,7 +212,7 @@ def test_weight_nodes():
     cell_type_dummy_df = pd.read_csv(cell_type_file, index_col=0)
     network_processing.add_other_data(graph=graph, data_df=cell_type_dummy_df, name='cell_type')
     coeficients = {'dds': 0.5, 'pathways_svd': 0.3, 'tf': 0.1, 'tissue': 0.05, 'cell_type': 0.05, 'miR_enhancement': 1}
-    network_processing.weight_nodes(graph=graph, coeficients=coeficients)
+    network_processing.weight_nodes(graph=graph, coefficients=coeficients)
     test_nodes = dict(graph.nodes(data=True))
     print(test_nodes)
     for node in test_nodes:

@@ -145,7 +145,7 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
 
 
 def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
-                       tissue_df=None, tf_file=None, pathway_file=None, cutoff=0.5, path = "network/"):
+                       tissue_df=None, tf_file=None, pathway_file=None, cell_type=None, coefficients={},cutoff=0.5, path = "network/"):
     """
     :param pathway_file:
     :param tf_file:
@@ -168,16 +168,25 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     if not os.path.exists(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl"):
 
         network = get_network(px1, px2, cytoscape_network, save_name=name)
-        ntp.add_pathways_to_nodes(graph=network,
-                                  pathway_file=pathway_file)
-        ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
-        ntp.add_tissue_to_nodes(graph=network,
-                                tissues_df=tissue_df)
+        #ntp.add_pathways_to_nodes(graph=network,
+        #                          pathway_file=pathway_file)
+        #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
+        #ntp.add_tissue_to_nodes(graph=network,
+        #                        tissues_df=tissue_df)
         ntp.mark_miR_nodes(graph=network)
         if dds_df is not None:
             ntp.add_DDS_data(network, dds_df=dds_df)
+        if tf_file is not None:
+            #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
+            ntp.add_TF_data_from_file(graph=network,tf_file=tf_file)
+        if tissue_df is not None:
+            ntp.add_other_data(graph=network, data_df=tissue_df, name='tissue')
+        if pathway_file is not None:
+            ntp.add_pathways_to_nodes(graph=network, pathway_file=pathway_file)
+        if cell_type is not None:
+            ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
 
-        ntp.weight_nodes(graph=network)
+        ntp.weight_nodes(graph=network, coefficients=coefficients)
         ntp.save_graph(network, f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     else:
         network = ntp.load_graph(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
@@ -197,7 +206,7 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
-def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, ranks, open_cytoscape):
+def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, cell_type, ranks, open_cytoscape=False):
     if file is None:
         file = config_data.oNetwork
     if path_tissue_data is None:
@@ -210,6 +219,8 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_fi
         tf_file = config_data.path_tf_file
     if ranks is None:
         ranks = config_data.page_rank_cutoff
+    if cell_type is None:
+        cell_type = config_data.path_cell_type_data
 
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
@@ -222,9 +233,12 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_fi
                            tissue_df=tissue_df,
                            tf_file=tf_file, 
                            pathway_file=pathway_file,
+                           cell_type= cell_type,
+                           coefficients=config_data.coefficients,
                            cutoff=n)
         if open_cytoscape:
             open_cytoscape(cytoscape_file)
+        return network
 
 def load_config(config_path):
     with open(config_path, 'r') as file:
