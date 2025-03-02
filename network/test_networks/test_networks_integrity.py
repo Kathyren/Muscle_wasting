@@ -128,3 +128,66 @@ def test_get_cytoscape_network(monkeypatch):
     assert len(network.edges()) == 0, f"The network should have 0 edges"
     assert network.nodes['NT5E']['type'] == 'gene', f"The node NT5E should have type gene"
     assert network.nodes['ALDOA']['type'] == 'gene', f"The node ALDOA should have type gene"
+
+def test_add_dds_to_node():
+    graph = network_processing.load_graph("network/test_networks/original_ALDOA_test.pkl")
+    dds_df_dummy = pd.read_csv("network/test_networks/dummy_data/dds_file.csv", index_col=0)
+    network_processing.add_DDS_data(graph=graph, dds_df=dds_df_dummy)
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    for node in test_nodes:
+        if node in dds_df_dummy.index:
+            metadata = test_nodes[node]['data']['metadata']
+            node_name = test_nodes[node]['data']['name']
+            assert 'dds' in metadata, f"The node {node} should have a dds property"
+
+            # metadata['dds'] is a dictionary
+            assert type(metadata['dds']) == dict, f"The node {node} should have a dictionary as dds values"
+            # metadata['dds'] should have the same values as the dds_df_dummy
+            assert metadata['dds'] == dds_df_dummy.loc[node_name].to_dict(), (f"The node {node} should "
+                                                              f"have the correct dds values")
+
+def test_add_pathways_to_nodes():
+    graph = network_processing.load_graph("network/test_networks/original_ALDOA_test.pkl")
+    pathway_df_dummy = "network/test_networks/dummy_data/pathway_file.csv"
+    network_processing.add_pathways_to_nodes(graph=graph, pathway_file=pathway_df_dummy)
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    for node in test_nodes:
+        if node in ['ALDOA', 'NT5E']:
+            metadata = test_nodes[node]['data']['metadata']
+            assert 'pathways' in metadata, f"The node {node} should have a dds property"
+            assert len(metadata['pathways']) >0
+            assert len(metadata['pathways']) < 3
+            assert 'pathways_svd' in metadata
+
+def test_add_TF_data_from_file():
+    graph = network_processing.load_graph("network/test_networks/original_ALDOA_test.pkl")
+    tf_file = "network/test_networks/dummy_data/tf_file.csv"
+    tf_dummy_df = pd.read_csv(tf_file, index_col=0)
+    network_processing.add_TF_data_from_file(graph=graph, tf_file=tf_file)
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    for node in test_nodes:
+        if node in ['ALDOA', 'NT5E']:
+            metadata = test_nodes[node]['data']['metadata']
+            assert 'tf' in metadata, f"The node {node} should have a TF property"
+            assert metadata['tf'] == tf_dummy_df.loc[node].to_dict(), f"The node {node} should have a TF property with value True"
+
+def test_add_other_data():
+    graph = network_processing.load_graph("network/test_networks/original_ALDOA_test.pkl")
+    tissue_file = "network/test_networks/dummy_data/tissue_file.csv"
+    tissue_dummy_df = pd.read_csv(tissue_file, index_col=0)
+    network_processing.add_other_data(graph=graph, data_df=tissue_dummy_df, name='tissue')
+    test_nodes = dict(graph.nodes(data=True))
+    print(test_nodes)
+    for node in test_nodes:
+        if node in ['ALDOA', 'NT5E']:
+            metadata = test_nodes[node]['data']['metadata']
+            assert 'tissue' in metadata, f"The node {node} should have a tissue property"
+            assert metadata['tissue'] == tissue_dummy_df.loc[node].to_dict(), f"The node {node} should have a tissue property with value True"
+
+
+
+def test_end():
+    pass

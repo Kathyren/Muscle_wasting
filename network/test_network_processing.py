@@ -40,3 +40,5 @@ def test_use_example():
     print(nx.info(graph))
 
     # draw_graph(graph)
+def test_add_dds():
+    pass

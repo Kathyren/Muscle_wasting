@@ -8,6 +8,9 @@ import pandas as pd
 from networkx import neighbors
 import sys
 import os
+
+from pandas.core.interchange.dataframe_protocol import DataFrame
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database_analysis import sql_operations as sql
@@ -258,6 +261,43 @@ def mark_TF_nodes_from_file(graph, TF_file):
 
     pass
 
+def add_TF_data_from_file(graph, tf_file):
+    """
+    This function takes a fiile that cointains the TF and a score value from each condition and 
+    will add them to their respective nodes, similar to add_DDS_data
+    It will add in metadata the dictionary of conditions and the values of the TF
+
+    :param graph:
+    :param TF_file: The file with the TF and the score values. The index is the TF name and the 
+    columns are the conditions. 
+    :return:
+    """
+    if tf_file is None:
+        return None
+    tf_df = pd.read_csv(tf_file, index_col=0)
+    for index, row in tf_df.iterrows():
+        add_tf_to_node(graph=graph, node_name=index, tf=dict(row))
+
+    pass
+
+def add_tf_to_node(graph, node_name, tf: dict):
+    """
+    This function will add as metadata to the node a list of tf
+    :param graph:
+    :param node:
+    :param dds: A dictionary with the Enriched score TF values
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            for tf, value in tf.items():
+                if not 'metadata' in graph.nodes[node]['data']:
+                        graph.nodes[node]['data']['metadata']={}
+                if 'tf' in graph.nodes[node]['data']['metadata']:
+                    graph.nodes[node]['data']['metadata']['tf'][tf]=value
+                else:
+                    graph.nodes[node]['data']['metadata']['tf'] = {tf:value}
+                
 
 def mark_miR_nodes(graph):
     """
@@ -347,10 +387,16 @@ def add_dds_to_node(graph, node_name, dds: dict):
     for node, data in graph.nodes(data=True):
         if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
             for dd, value in dds.items():
+                if not 'metadata' in graph.nodes[node]['data']:
+                        graph.nodes[node]['data']['metadata']={}
+                if 'dds' in graph.nodes[node]['data']['metadata']:
+                    graph.nodes[node]['data']['metadata']['dds'][dd]=value
+                else:
+                    graph.nodes[node]['data']['metadata']['dds'] = {dd:value}
                 graph.nodes[node]['data'][dd] = value
 
 
-def add_tissue_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
+def add_metadata_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
     """
     This function will add the tissue data to the node.
     :param graph: The networkx graph object
@@ -361,9 +407,9 @@ def add_tissue_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
     """
     for node, data in graph.nodes(data=True):
         if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
-            for index, value in tissues.items():
-                tissues[index] = float(value)
-            graph.nodes[node]['data'][name] = str(tissues)
+            if not 'metadata' in graph.nodes[node]['data']:
+                graph.nodes[node]['data']['metadata'] = {}
+            graph.nodes[node]['data']['metadata'][name] = tissues
 
 
 def add_tissue_to_nodes(graph, tissues_df):
@@ -377,12 +423,13 @@ def add_tissue_to_nodes(graph, tissues_df):
     """
     filtered_tissues_df = tissues_df[tissues_df.index.isin(graph.nodes)]
     for index, row in filtered_tissues_df.iterrows():
-        add_tissue_to_node(graph=graph, node_name=index, tissues=dict(row))
+        add_metadata_to_node(graph=graph, node_name=index, tissues=dict(row))
 
 
-def extract_genes_from_pathways(pathway_file:str, threshold_feature='Combined score',
+def extract_genes_from_pathways(pathway_df:DataFrame, threshold_feature='Combined score',
                                 id_feature='Features', pathway_feature='Term', threshold_value=50):
     """
+    Soon to be deprecated
     This function takes a fiile that cointains
     id term set size overlap ratio p_value fdr p-vale odds ratio combine score and features
 
@@ -394,15 +441,17 @@ def extract_genes_from_pathways(pathway_file:str, threshold_feature='Combined sc
     :param threshold_value:
     :return:
     """
-    pathway_df = pd.read_csv(pathway_file)
-    pathway_df = pathway_df[pathway_df[threshold_feature] > threshold_value]
+    #pathway_df = pd.read_csv(pathway_file)
+    #pathway_df = pathway_df[pathway_df[threshold_feature] > threshold_value]
     feature_dict = {}
 
     # Iterate through each row in the dataframe
     for index, row in pathway_df.iterrows():
         # Split the Features column by ';' to get individual features
-        features = row[id_feature].split(';')
-
+        features = row[id_feature].split(',')
+        features = row[id_feature].replace("'", "").replace(" ","")
+        # Now features is a string like "['a','b','c']". COnvert to the list
+        features = features[1:-1].split(',')
         # Iterate through each feature
         for feature in features:
             if feature:  # Ignore empty strings
@@ -424,14 +473,46 @@ def add_pathways_to_nodes(graph, pathway_file):
     :return: None
 
     """
-
-    gene_pathway_dic = extract_genes_from_pathways(pathway_file, threshold_feature='Combined score',
-                                                   id_feature='Features', pathway_feature='Term', threshold_value=10)
+    all_pathway_df = pd.read_csv(pathway_file)
+    gene_pathway_dic = extract_genes_from_pathways(all_pathway_df, threshold_feature='Combined score',
+                                                   id_feature='genes', pathway_feature='Term', threshold_value=10)
     for gene, pathways in gene_pathway_dic.items():
-        add_pathway_to_node(graph, gene, pathways)
+        _, svd, _ = get_SVD_pathways(pathway_df=all_pathway_df.drop(columns=['genes']),
+                                     pathways_list=pathways)
+        add_pathway_to_node(graph, gene, pathways, svd=svd)
+    return graph
+
+def get_SVD_pathways(pathway_df:DataFrame, pathways_list:list, pathway_column = 'Term'):
+    """
+     # Pathways have the list of pathways that the gene belongs
+        # the pathway file will have the dataframe of the combinations
+        # and the combined score of the pathways on each combination.
+        # I can use pathways to get the sub dataframe of the pathway_file
+        # and use that to calculate the Singular Value Decomposition (SVD)
+        # and add that value
+
+    This function will get the SVD of the pathways in the list.
+    Will get the subset of pathways form pathway list (holded in "term" column) 
+    and calculate the SVD of the subset of pathways.
+
+    :param pathway_df: The dataframe with the pathways. The genes column should be already removed
+    :param pathways_list: The list of pathways to calculate the SVD
+    :param pathway_column: The column where the pathways are
+    :return: The singular vector of the pathways,
+      the singular value and the singular vector of the conditions
+    """
+    subset_pathways = pathway_df[pathway_df[pathway_column].isin(pathways_list)]
+    subset_pathways.set_index(pathway_column, inplace=True)
+    U, Sigma, VT = np.linalg.svd(subset_pathways, full_matrices=False)
+    # Sigma is returned as a 1D array; convert to diagonal matrix
+    # Sigma[0] the largest singular value (dominant pattern)
+    # U[:,0] First pathway singular vector (importance of each pathway)
+    # VT[0,:] First condition singular vector (importance of each condition)
+    return U[:,0], Sigma[0], VT[0,:]
 
 
-def add_pathway_to_node(graph, node_name, pathways):
+
+def add_pathway_to_node(graph, node_name, pathways, svd = 0):
     """
     This function will add as metadata to the node a list of pathways
     :param graph:
@@ -440,9 +521,13 @@ def add_pathway_to_node(graph, node_name, pathways):
     :return:
     """
     for node, data in graph.nodes(data=True):
-        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+        if ('data' in data and 'id' in data['data'] and
+                data['data']['name'] == node_name):
             graph.nodes[node]['data']['pathways'] = pathways
-
+            if not 'metadata' in graph.nodes[node]['data']:
+                graph.nodes[node]['data']['metadata'] = {}
+            graph.nodes[node]['data']['metadata']['pathways'] = pathways
+            graph.nodes[node]['data']['metadata']['pathways_svd'] = svd
 
 def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, interest_genes: list):
     """
@@ -885,7 +970,26 @@ def add_organ_system_relationship(network):
     add_edge_from_relationships(network=network, edges=relationships, relationship_type='os')
 
 
-def weight_nodes(graph, tissues=None):
+def add_other_data(graph, data_df:DataFrame, name:str):
+    """
+
+    :param graph:
+    :param data_df: Index must be the node (gene name) and the columns the properties.
+    :param name: String with the name of that metadata property, examples are cell_type or tissue
+    :return: 
+    """
+    if data_df is None:
+        return None
+    if name is None:
+        return None
+    filtered_tissues_df = data_df[data_df.index.isin(graph.nodes)]
+    for index, row in filtered_tissues_df.iterrows():
+        add_metadata_to_node(graph=graph, node_name=index, tissues=dict(row), name=name)
+
+
+    pass
+
+def weight_nodes(graph, coeficients: dict):
     """
     This function will add a weigh to each node. This will consist in the sum of the absolute values of the DDS
     times the muscle value
@@ -897,6 +1001,15 @@ def weight_nodes(graph, tissues=None):
     :param graph:
     :return:
     """
+
+    ## Check the data avaialbe in ['data']['metadata']. We
+    ## should have dds, pathways, pathways_svd, tf, tissue_expr and cell_type.
+    ## Some of them might be empty, in that case, they are ignored. 
+    ## There formula is the sum of their absolute values times a coeficient. 
+    ## The coeficient is a dictionary with the name of the data as key and the value as the coeficient.
+    ## The default value is 1.
+    ## The final value is the sum of all the values.
+    ## The final value is stored in the node as 'weigh'
     if tissues is None:
         tissues = ['skeletal muscle']
     for node, data in graph.nodes(data=True):

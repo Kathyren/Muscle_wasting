@@ -1,4 +1,7 @@
+import math
+
 import pandas as pd
+import os
 from networkx import is_bipartite
 from cytoscape.enum_network_sources import NetworkSource
 
@@ -102,7 +105,8 @@ cytoscape_nodes = [{
     },
     "selected": False
 }]
-graph = load_graph("small_graph.pkl")
+
+graph = load_graph("network/small_graph.pkl")
 
 
 
@@ -300,7 +304,7 @@ def test_extract_nodes_from_pathways():
 
 
 def test_add_pathway_to_node(monkeypatch):
-    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    graph = load_graph("network/graph0_tf_network_cutoff_0.pkl")
     test_node = dict(graph.nodes(data=True))
 
     node_name = 'BGLAP'
@@ -313,13 +317,18 @@ def test_add_pathway_to_node(monkeypatch):
 
 
 def test_add_dds_to_node():
-    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
+    graph = load_graph("network/graph0_tf_network_cutoff_0.pkl")
     row_dict = {'yo': -0.266, 'ym': None, 'mo': None, 'ml_c': None, 'ml_s': None}
     node = 'CFH'
     add_dds_to_node(graph=graph, node_name=node, dds=dict(row_dict))
     test_nodes = dict(graph.nodes(data=True))
     dds = test_nodes[node]
     assert dds['data']['yo'] == -0.266
+    # check if the property metadata is in the node
+    assert 'data' in dds
+    assert 'metadata' in dds['data']
+    assert 'dds' in dds['data']['metadata']
+    assert dds['data']['metadata']['dds'] == row_dict
     pass
 
 
@@ -332,13 +341,53 @@ def test_add_dds_to_node_non_existent():
     assert node not in test_nodes
 
 
+def test_extract_genes_from_pathways():
+    pathway_file = 'network/test_networks/dummy_data/pathway_file.csv'
+    pathway_df = pd.read_csv(pathway_file)
+    feature_dict = network_processing.extract_genes_from_pathways(pathway_df=pathway_df , id_feature = 'genes')
+    assert len(feature_dict['MYC']) == 2
+    assert len(feature_dict['NT5E']) == 1
+    assert feature_dict['NT5E'][0] == 'GOBP_ACETYL_COA_BIOSYNTHETIC_PROCESS_FROM_PYRUVATE'
+    pass
+
 def test_add_pathways_to_nodes():
-    graph = load_graph("graph0_tf_network_cutoff_0.pkl")
-    pathway_file = 'test_enr_pathways.csv'
+    graph = load_graph("network/graph0_tf_network_cutoff_0.pkl")
+    pathway_file = 'network/test_networks/dummy_data/pathway_file.csv'
     add_pathways_to_nodes(graph, pathway_file)
     test_nodes = dict(graph.nodes(data=True))
+    #t2 = dict(g2.nodes(data=True))
     print(test_nodes)
-    assert len(test_nodes['MYC']['pathways']) == 2
+    assert len(test_nodes['MYC']['data']['pathways']) == 2
+    # assert metadata in data
+    assert 'metadata' in test_nodes['MYC']['data']
+    assert 'pathways' in test_nodes['MYC']['data']['metadata']
+    assert len(test_nodes['MYC']['data']['metadata']['pathways']) == 2
+    
+
+def test_get_SVD_to_node():
+    pathway_df = pd.read_csv('network/test_networks/dummy_data/pathway_file.csv')
+    pathway_list = ['GOBP_ACETYL_COA_BIOSYNTHETIC_PROCESS_FROM_PYRUVATE', 
+                    'GOBP_ACETYL_COA_BIOSYNTHETIC_PROCESS_FROM_PYRUVATE']
+    pathway_df = pathway_df.drop(columns=['genes'])
+    pv, svd, cv = network_processing.get_SVD_pathways(pathway_df=pathway_df, pathways_list=pathway_list)
+    print(pv)
+    print(svd)
+    assert pv == [-1]
+    assert math.ceil(svd)==394
+
+
+def test_add_tf_to_node():
+    graph = load_graph("network/graph0_tf_network_cutoff_0.pkl")
+    row_dict = {'yo': -0.266, 'ym': None, 'mo': None, 'ml_c': None, 'ml_s': None}
+    node = 'CFH'
+    network_processing.add_tf_to_node(graph=graph, node_name=node, tf=dict(row_dict))
+    test_nodes = dict(graph.nodes(data=True))
+    tf = test_nodes[node]
+    # check if the property metadata is in the node
+    assert 'data' in tf
+    assert 'metadata' in tf['data']
+    assert 'tf' in tf['data']['metadata']
+    assert tf['data']['metadata']['tf'] == row_dict
 
 
 def test_add_DDS_data():
@@ -418,3 +467,4 @@ def test_random_walk_leave_pathway():
     print(x)
     assert len(a)>=1
     assert len(a)<=n_distance
+
