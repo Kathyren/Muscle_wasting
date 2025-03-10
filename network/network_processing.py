@@ -1020,7 +1020,7 @@ def weight_nodes(graph, coefficients: dict):
 
     for node, data in graph.nodes(data=True):
         added_coef = []
-        weight = 0
+        weight = 1
         if 'data' in data and 'metadata' in data['data']:
 
             for key, value in coefficients.items():
@@ -1037,7 +1037,19 @@ def weight_nodes(graph, coefficients: dict):
 
 
 
-
+def weight_edges(graph: nx.Graph, node_weight: str= 'weigh', mir_enhancer=0):
+    """
+    The weight of the edges is the sum of the weights of the nodes, divided by 2.
+    :param graph:
+    :return:
+    """
+    for u, v, data in graph.edges(data=True):
+        if not 'weightScore' in graph[u][v] or graph[u][v]['weightScore'] is None:
+            graph[u][v]['weightScore'] = 1
+        graph[u][v]['weightScore'] = graph[u][v]['weightScore'] * (abs(graph.nodes[u]['data'][node_weight]) + abs(graph.nodes[v]['data'][node_weight])) / 2
+        if 'type' in graph.nodes[u] and 'type' in graph.nodes[v]:
+            if graph.nodes[u]['type'] == 'miR' or graph.nodes[v]['type'] == 'miR' or graph.nodes[u]['type'] == 'mirna' or graph.nodes[v]['type'] == 'mirna':
+                graph[u][v]['weightScore'] += mir_enhancer
 
 
 DDS_w =1
