@@ -305,5 +305,13 @@ def test_main(monkeypatch):
     hsa_edges = network.edges('hsa-miR-122-5p', data=True)
     hsa_node = network.nodes()['hsa-miR-122-5p']
     print(hsa_node)
+
+def test_separate_metadata():
+    graph = network_processing.load_graph("network/Networks_pkl/complete_n_tf_mirnas__ALDOA_LDHA_cutoff_0.5.pkl")
+
+    network_processing.separate_metadata(graph)
+
+    node_NT5E =graph.nodes()['NT5E']
+    assert 'dds_yo_file' in node_NT5E['data']
 def test_end():
     pass

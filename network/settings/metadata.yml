@@ -25,6 +25,6 @@ path_cell_type_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/proportio
 path_pathway_file: "/home/karen/Documents/GitHub/Muscle_wasting/data/join_pathway.csv"
 path_tf_file: "/home/karen/Documents/GitHub/Muscle_wasting/data/join_tf.csv"
 
-page_rank_cutoff: [0.5]
+page_rank_cutoff: [0.5, 0.8, 0.9]
 
-coefficients: {'dds': 0.5, 'tissue': 0.5, 'cellular': 0.5, 'pathway_svd': 0.5, 'tf': 0.5, 'miR_enhancement':50}
+coefficients: {'dds': 0.5, 'tissue': 0.5, 'cellular': 0.5, 'pathway_svd': 0.5, 'tf': 0.5, 'miR_enhancement':15}

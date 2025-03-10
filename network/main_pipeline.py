@@ -217,10 +217,11 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     else:
         ntp.weight_edges(graph=network, node_weight='weigh')
 
-    network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weigth='weightScore', cutoff=cutoff)
+    network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weight='weightScore', cutoff=cutoff)
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
+    ntp.separate_metadata(graph=network)
     cytoscape_file = f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs'
     save_as_cjsn(network, cytoscape_file)
 
@@ -272,7 +273,7 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
                            cutoff=n)
         if open_cytoscape_:
             open_cytoscape(cytoscape_file)
-        return network
+    return network
 
 def load_config(config_path):
     with open(config_path, 'r') as file:

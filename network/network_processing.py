@@ -297,7 +297,11 @@ def add_tf_to_node(graph, node_name, tf: dict):
                     graph.nodes[node]['data']['metadata']['tf'][tf]=value
                 else:
                     graph.nodes[node]['data']['metadata']['tf'] = {tf:value}
-                
+            ## If all elements in graph.nodes[node]['data']['metadata']['tf'] are 
+            # more than 0, then change graph.nodes[node]['type'] to 'TF'
+            if all(value > 0 for value in graph.nodes[node]['data']['metadata']['tf'].values()):
+                graph.nodes[node]['data']['node_type'] = 'TF'
+            
 
 def mark_miR_nodes(graph):
     """
@@ -393,7 +397,7 @@ def add_dds_to_node(graph, node_name, dds: dict):
                     graph.nodes[node]['data']['metadata']['dds'][dd]=value
                 else:
                     graph.nodes[node]['data']['metadata']['dds'] = {dd:value}
-                graph.nodes[node]['data'][dd] = value
+                #graph.nodes[node]['data'][dd] = value
 
 
 def add_metadata_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
@@ -621,7 +625,7 @@ def random_walk(graph, node_name, distance, sample_size) -> list:
     return paths
 
 
-def remove_nodes_low_centrality_pageRank(graph, weigth=None, cutoff=0.75):
+def remove_nodes_low_centrality_pageRank(graph, weight=None, cutoff=0.75):
     """
     This function will calculate a centrality
 
@@ -637,18 +641,41 @@ def remove_nodes_low_centrality_pageRank(graph, weigth=None, cutoff=0.75):
     # bc = list(nx.betweenness_centrality(graph).values())
     # lc = list(nx.load_centrality(graph).values())
     #    ec = list(nx.eigenvector_centrality(G).values())
-    cc_t = nx.pagerank(graph, weight=weigth)
-    cc = list(cc_t.values())
-    x = np.quantile(cc, cutoff)
-    delete_nodes = []
-    delete_edges = []
-    for node in cc_t.items():
-        if node[1] < x:
-            delete_nodes.append(node[0])
-            delete_edges.extend(graph.edges(node[0]))
-    graph.remove_edges_from(delete_edges)
-    graph.remove_nodes_from(delete_nodes)
+    #cc_t = nx.pagerank(graph, weight=weigth)
+    #cc = list(cc_t.values())
+    #x = np.quantile(cc, cutoff)
+    #delete_nodes = []
+    #delete_edges = []
+    #for node in cc_t.items():
+    #    if node[1] < x:
+    #        delete_nodes.append(node[0])
+    #        delete_edges.extend(graph.edges(node[0]))
+    #graph.remove_edges_from(delete_edges)
+    #graph.remove_nodes_from(delete_nodes)
     # draw_graph(graph)
+
+    #return graph
+    pagerank_scores = nx.pagerank(graph, weight=weight)
+    pagerank_values = list(pagerank_scores.values())
+    pagerank_threshold = np.quantile(pagerank_values, cutoff)
+
+    # Nodes to remove: Below threshold and NOT miR/mirna
+    nodes_to_remove = [node for node, score in pagerank_scores.items()
+                       if score <= pagerank_threshold and graph.nodes[node].get('type') not in {'miR', 'mirna'}]
+
+    graph.remove_nodes_from(nodes_to_remove)
+
+    # Step 2: Compute in-degree + out-degree centrality for remaining miR/mirna nodes
+    degree_centrality = {node: graph.in_degree(node) + graph.out_degree(node)
+                         for node in graph.nodes if graph.nodes[node].get('type') in {'miR', 'mirna'}}
+
+    if degree_centrality:  # Avoid issues if no miR/mirna nodes remain
+        centrality_values = list(degree_centrality.values())
+        centrality_threshold = np.quantile(centrality_values, cutoff)
+
+        # Nodes to remove: Below degree centrality threshold
+        nodes_to_remove_mir = [node for node, score in degree_centrality.items() if score <= centrality_threshold]
+        graph.remove_nodes_from(nodes_to_remove_mir)
 
     return graph
 
@@ -1050,7 +1077,25 @@ def weight_edges(graph: nx.Graph, node_weight: str= 'weigh', mir_enhancer=0):
         if 'type' in graph.nodes[u] and 'type' in graph.nodes[v]:
             if graph.nodes[u]['type'] == 'miR' or graph.nodes[v]['type'] == 'miR' or graph.nodes[u]['type'] == 'mirna' or graph.nodes[v]['type'] == 'mirna':
                 graph[u][v]['weightScore'] += mir_enhancer
+        graph[u][v]['data']['weightScore']=graph[u][v]['weightScore']
 
+def separate_metadata(graph):
+    """
+    This function will take metadata and separate them in values on data
+    :param graph:
+    :return:
+    """
+
+    for node, data in graph.nodes(data=True):
+        if 'metadata' in graph.nodes[node]['data']:
+            metadata = graph.nodes[node]['data']['metadata']
+            for key, value in metadata.items():
+                if isinstance(value, dict):
+                    for i,j in value.items():
+                        graph.nodes[node]['data'][f'{key}_{i}']=j
+                else:
+                    graph.nodes[node]['data'][f'{key}'] = value
+    pass
 
 DDS_w =1
 yo_w = 1
