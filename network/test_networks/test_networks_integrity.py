@@ -1,7 +1,5 @@
 import sys
 
-from ipykernel.pickleutil import cell_type
-
 sys.path.append('../')
 #from .. import network_processing as nx
 #from .. import main_pipeline as mp
