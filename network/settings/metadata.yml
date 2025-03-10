@@ -8,19 +8,23 @@ oNetwork: "/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_
 # This file is the expression data, It has a column gene, and a column per comparison and the value of that comparison
 # depends on what is looked for, we recomend the stat obtained with DSeq2, but if you need log fold change or another 
 # value 
-path_DDS_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv"
+#path_DDS_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/normalize_DDS.csv"
+path_DDS_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/join_dds.csv"
 # This file will asign the gene to a tissue, we recommend sources like the Protein Atlas. Normalize the values are a good idea.
 # It must have the first column Gene (capital G) and the tissues. 
 path_tissue_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue.csv"
 # This file will asign the gene to a cellular component, we recommend sources like the Protein Atlas. Normalize the values are a good idea.
 # It must have the first column Gene (capital G) and the cellular component.
-path_cellular_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/gene_cellular.csv"
+path_cell_type_data: "/home/karen/Documents/GitHub/Muscle_wasting/data/proportion_cell_type_div.csv"
 # This is the metadata depending from the DDS, thisfile should be the output of mirKar-pre processing. 
 # It should tell me the enriched pathways and the enrriched TF and the 
 
 # This is the metadata depending from the DDS, thisfile should be the output of mirKar-pre processing.
-path_pathway_file: "data/enr_pvals_RNAseq_abundances_adjusted_combat_inmose_young.vs.old_filtered.csv"
+#path_pathway_file: "data/enr_pvals_RNAseq_abundances_adjusted_combat_inmose_young.vs.old_filtered.csv"
 
-path_tf_file: "data/tf_actsRNAseq_abundances_adjusted_combat_inmose_young.vs.old.csv"
+path_pathway_file: "/home/karen/Documents/GitHub/Muscle_wasting/data/join_pathway.csv"
+path_tf_file: "/home/karen/Documents/GitHub/Muscle_wasting/data/join_tf.csv"
 
 page_rank_cutoff: [0.5]
+
+coefficients: {'dds': 0.5, 'tissue': 0.5, 'cellular': 0.5, 'pathway_svd': 0.5, 'tf': 0.5, 'miR_enhancement':50}
