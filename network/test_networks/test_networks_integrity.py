@@ -52,6 +52,42 @@ def test_full_flow_genes_tf(monkeypatch):
     print(network)
     assert len(network.nodes()) == 17, f"The test network ALDOA should have 6 genes to start and 11 mirnas."
 
+def test_remove_nodes(monkeypatch):
+
+        monkeypatch.setattr(
+            mp, 'save_as_cjsn', lambda *args, **kwargs: None
+        )
+        name_n = "ALDOA_test_no_save"
+
+        with open("network/settings/metadata.yml", 'r') as file:
+            config_data = yaml.safe_load(file)
+
+        file = config_data["oNetwork"]
+        path_tissue_data = config_data['path_tissue_data']
+        path_dds_data = config_data['path_DDS_data']
+        pathway_file = config_data['path_pathway_file']
+        tf_file = config_data['path_tf_file']
+        cell_type_file = config_data['path_cell_type_data']
+        coefficents = config_data['coefficients']
+
+        import pandas as pd
+        dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
+        tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
+        cell_type_df = pd.read_csv(cell_type_file, index_col=0).fillna(0)
+
+        network, _ = mp.full_flow_genes_tf(cytoscape_network="network/test_networks/ALDOA_LDHA.cyjs",
+                                           name=name_n,
+                                           dds_df=dds_df,
+                                           tissue_df=tissue_df,
+                                           tf_file=tf_file,
+                                           pathway_file=pathway_file,
+                                           cell_type=cell_type_df,
+                                           coefficients=coefficents,
+                                           cutoff=0.01)
+        print(network)
+        assert len(network.nodes()) == 17, f"The test network ALDOA should have 6 genes to start and 11 mirnas."
+
+
 def test_nodes_integrity(monkeypatch):
     graph = network_processing.load_graph("network/test_networks/original_ALDOA_test.pkl")
     monkeypatch.setattr(mp, "get_cytoscape_network",  lambda *args, **kwargs: graph )
@@ -221,5 +257,53 @@ def test_weight_nodes():
             assert weigth > 0
         if test_nodes[node]['type'] == 'mirna':
             assert weigth == coeficients['miR_enhancement'], f"The node {node} should have a weigh property with the correct value"
+
+def test_weight_nodes():
+    graph = network_processing.load_graph("network/test_networks/mirnas_ALDOA_test.pkl")
+    dds_df_dummy = pd.read_csv("network/test_networks/dummy_data/dds_file.csv", index_col=0)
+    network_processing.add_DDS_data(graph=graph, dds_df=dds_df_dummy)
+    patwhay_df_dummy = "network/test_networks/dummy_data/pathway_file.csv"
+    network_processing.add_pathways_to_nodes(graph=graph, pathway_file=patwhay_df_dummy)
+    tf_file = "network/test_networks/dummy_data/tf_file.csv"
+    network_processing.add_TF_data_from_file(graph=graph, tf_file=tf_file)
+    tissue_file = "network/test_networks/dummy_data/tissue_file.csv"
+    tissue_dummy_df = pd.read_csv(tissue_file, index_col=0)
+    network_processing.add_other_data(graph=graph, data_df=tissue_dummy_df, name='tissue')
+    cell_type_file = "network/test_networks/dummy_data/cell_type_file.csv"
+    cell_type_dummy_df = pd.read_csv(cell_type_file, index_col=0)
+    network_processing.add_other_data(graph=graph, data_df=cell_type_dummy_df, name='cell_type')
+    coeficients = {'dds': 0.5, 'pathways_svd': 0.3, 'tf': 0.1, 'tissue': 0.05, 'cell_type': 0.05, 'miR_enhancement': 1}
+    network_processing.weight_nodes(graph=graph, coefficients=coeficients)
+    network_processing.weight_edges(graph=graph,node_weight='weigh', mir_enhancer=coeficients['miR_enhancement'])
+    test_edges = graph.edges('hsa-miR-122-5p', data=True)
+    print(test_edges)
+    x = list(test_edges)
+    print(x)
+    score = x[0][2]['weightScore']
+    assert score > 70
+
+
+def test_main(monkeypatch):
+    graph = network_processing.load_graph("network/test_networks/mirnas_ALDOA_test.pkl")
+    monkeypatch.setattr(mp, "get_network", lambda *args, **kwargs: graph)
+    with open("network/settings/metadata.yml", 'r') as file:
+        config_data = yaml.safe_load(file)
+    network = "/home/karen/Documents/GitHub/Muscle_wasting/network/test_networks/ALDOA_LDHA.cyjs"
+    DE_data =config_data.get("path_DDS_data")
+    Tissue_expression = config_data.get(
+        "path_tissue_data")
+    Cell_type = config_data.get("path_cell_type_data")
+    Pathway_enrichment = config_data.get("path_pathway_file")
+    TF_enrichment = config_data.get("path_tf_file")
+    Cutoff = config_data.get("page_rank_cutoff", [0.5, 0.7])
+    output = config_data.get("output")
+    open_cytoscape_ = config_data.get("open_cytoscape", False)
+    network = mp.main(config_data=config_data,file=network, path_dds_data=DE_data,
+            path_tissue_data=Tissue_expression,
+            pathway_file=Pathway_enrichment,tf_file=TF_enrichment,
+            cell_type_file=Cell_type, ranks=Cutoff, open_cytoscape_=open_cytoscape_)
+    hsa_edges = network.edges('hsa-miR-122-5p', data=True)
+    hsa_node = network.nodes()['hsa-miR-122-5p']
+    print(hsa_node)
 def test_end():
     pass
