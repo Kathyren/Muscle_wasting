@@ -1,16 +1,22 @@
 ### This file is the mail pipeline for my priject
+import sys
+import os.path
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pandas as pd
 import pytest
 import yaml
 import cytoscape as ct
 import network_processing as ntp
-import os.path
+
 from os import path
 import py4cytoscape as py4
 import node_evaluation as ne
 import argparse
+
 # Set base directory as the MUSCLE_WASTING/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # Set the working directory to the main
 os.chdir(BASE_DIR)
@@ -145,7 +151,8 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
 
 
 def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
-                       tissue_df=None, tf_file=None, pathway_file=None, cell_type=None, coefficients={},cutoff=0.5, path = "network/"):
+                       tissue_df=None, tf_file=None, pathway_file=None, cell_type=None,
+                         coefficients={},cutoff=0.5, path = "network/"):
     """
     :param pathway_file:
     :param tf_file:
@@ -165,6 +172,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         px2 = "mirnas_"
     else:
         px1 = px2 = ""
+    network=None
     if not os.path.exists(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl"):
 
         network = get_network(px1, px2, cytoscape_network, save_name=name)
@@ -186,13 +194,30 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         if cell_type is not None:
             ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
 
-        ntp.weight_nodes(graph=network, coefficients=coefficients)
+
         ntp.save_graph(network, f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     else:
         network = ntp.load_graph(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
+    #if dds_df is not None:
+    #        ntp.add_DDS_data(network, dds_df=dds_df)
+    #if tf_file is not None:
+    #    #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
+    #    ntp.add_TF_data_from_file(graph=network,tf_file=tf_file)
+    #if tissue_df is not None:
+    #    ntp.add_other_data(graph=network, data_df=tissue_df, name='tissue')
+    #if pathway_file is not None:
+    #    ntp.add_pathways_to_nodes(graph=network, pathway_file=pathway_file)
+    #if cell_type is not None:
+    #    ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
     network = ntp.set_positions(network)
+    ntp.weight_nodes(graph=network, coefficients=coefficients)
+    if 'miR_enhancement' in coefficients.keys():
+        ntp.weight_edges(graph=network, node_weight='weigh',
+                         mir_enhancer= coefficients['miR_enhancement'])
+    else:
+        ntp.weight_edges(graph=network, node_weight='weigh')
 
-    network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weigth='weigh', cutoff=cutoff)
+    network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weigth='weightScore', cutoff=cutoff)
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
@@ -206,7 +231,9 @@ def open_cytoscape(file_name):
     py4.open_session(file_name)
 
 
-def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_file, cell_type, ranks, open_cytoscape=False):
+def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
+          tf_file, cell_type_file, ranks, open_cytoscape_=False, name_output=None):
+    
     if file is None:
         file = config_data.oNetwork
     if path_tissue_data is None:
@@ -219,12 +246,19 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_fi
         tf_file = config_data.path_tf_file
     if ranks is None:
         ranks = config_data.page_rank_cutoff
-    if cell_type is None:
-        cell_type = config_data.path_cell_type_data
+    if cell_type_file is None:
+        cell_type_file = config_data.path_cell_type_data
 
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
-    file_name = os.path.basename(file)
+    print(f"cell_type_file: {cell_type_file}")
+    #print(f"config_data.path_cell_type_data: {config_data.path_cell_type_data}")
+
+    cell_type_df = pd.read_csv(cell_type_file, encoding="latin1", index_col=0).fillna(0)
+    if name_output is None:
+        file_name = os.path.basename(file)
+    else:
+        file_name = name_output
     
     for n in ranks:
         name = f"{file_name.split('.')[0]}_cutoff_{n}"
@@ -233,10 +267,10 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file, tf_fi
                            tissue_df=tissue_df,
                            tf_file=tf_file, 
                            pathway_file=pathway_file,
-                           cell_type= cell_type,
-                           coefficients=config_data.coefficients,
+                           cell_type= cell_type_df,
+                           coefficients=config_data.get('coefficients'),
                            cutoff=n)
-        if open_cytoscape:
+        if open_cytoscape_:
             open_cytoscape(cytoscape_file)
         return network
 
@@ -252,9 +286,10 @@ if __name__ == "__main__":
     parser.add_argument("--DE_data", type=str, help="Path to the normalized DeSeq2DataSet file.")
     parser.add_argument("--Tissue_expression_data", type=str, help="Path to the gene tissue data file.")
     parser.add_argument("--Cell_type_data", type=str, help="Path to the gene cell type data file.")
-    parser.add_argument("--Pathway_enrichment_data", type=str, help="Path to the gene pathway enrichment data file.")
-    parser.add_argument("--TF_enrichment_data",  type=float, help="Path to the gene TF enrichment data file.")
+    parser.add_argument("--Pathway_enrichment", type=str, help="Path to the gene pathway enrichment data file.")
+    parser.add_argument("--TF_enrichment",  type=float, help="Path to the gene TF enrichment data file.")
     parser.add_argument("--Cutoff", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
+    parser.add_argument("--network_name", type=str, help="Name of the network.")
     parser.add_argument("--output", type=str, help="Path to the output directory.")
     parser.add_argument("--open_cytoscape", type=bool, help="Open the Cytoscape session after processing.", default=False)
     
@@ -262,17 +297,20 @@ if __name__ == "__main__":
     if args.config:
         config_data = load_config(args.config)
     else:
-        config_data = load_config("settings/metadata.yml")
+        config_data = load_config("network/settings/metadata.yml")
     # Override config values with provided CLI arguments (if any)
     network = args.network if args.network else config_data.get("oNetwork")
     DE_data = args.DE_data if args.DE_data else config_data.get("path_DDS_data")
-    Tissue_expression = args.Tissue_expression if args.Tissue_expression else config_data.get("path_tissue_data")
-    Cell_type = args.Cell_type if args.Cell_type else config_data.get("path_cell_type_data")
+    Tissue_expression = args.Tissue_expression_data if args.Tissue_expression_data else config_data.get("path_tissue_data")
+    Cell_type = args.Cell_type_data if args.Cell_type_data else config_data.get("path_cell_type_data")
     Pathway_enrichment = args.Pathway_enrichment if args.Pathway_enrichment else config_data.get("path_pathway_file")
     TF_enrichment = args.TF_enrichment if args.TF_enrichment else config_data.get("path_tf_file")
     Cutoff = args.Cutoff if args.Cutoff else config_data.get("page_rank_cutoff", [0.5, 0.7])
     output = args.output if args.output else config_data.get("output")
     open_cytoscape_ = args.open_cytoscape if args.open_cytoscape else config_data.get("open_cytoscape", False)
+    coef = config_data.get("coefficients")
+    name = args.network_name if args.network_name else os.path.basename(network)
+    print(coef)
     print(f"Running main pipeline with the following parameters:\n"
           f"Network: {network}\n"
           f"DE_data: {DE_data}\n"
@@ -285,7 +323,8 @@ if __name__ == "__main__":
           f"Open Cytoscape: {open_cytoscape_}")
     main(config_data=config_data, file=network, path_dds_data=DE_data,
           path_tissue_data=Tissue_expression, pathway_file=Pathway_enrichment, 
-          tf_file=TF_enrichment, ranks=Cutoff, open_cytoscape=open_cytoscape_)
+          tf_file=TF_enrichment, cell_type_file=Cell_type, ranks=Cutoff,
+         open_cytoscape_=open_cytoscape_, name_output=name)
 
 
     
