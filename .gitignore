@@ -42,3 +42,4 @@ database_analysis/sql_operations.py
 *.png
 *-checkpoint.ipynb
 mirna_scoring/notebooks/.virtual_documents/*
+*#
