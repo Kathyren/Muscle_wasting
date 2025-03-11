@@ -3,7 +3,7 @@ sys.path.append('../')
 sys.path.append('../network')
 from walking_network import *
 import networkx as nx
-
+import pandas as pd
 
 def test_traverse_and_update():
     graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/sub_network_nodes.pkl'
@@ -44,7 +44,14 @@ def test_start_mir_path():
     assert PKM==[-1]
     assert 'influence' not in nodes['NT5E']['data'], f"No mirna influences NT5E"
 
+def test_evaluate_pathway_influence():
+    influence_data = pd.DataFrame(columns=['ALDOA', 'PKM'], data=[[[-1], [-1]]], index=['hsa-miR-122-5p']).T
+    mir = 'hsa-miR-122-5p'
+    influence_data =
+    pass
 
+def test_evaluate_pathway_influence:
+    pass
 def test_register_path():
     graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/sub_network_nodes.pkl'
     graph = nx.read_gpickle(graph_pkl)

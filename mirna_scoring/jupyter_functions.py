@@ -157,7 +157,9 @@ def sum_lengths(row):
 
 def get_minra_influence(test_mir, df):
     """
+    This function gets the list of influcne of a particylar mirna
 
+    this function does not have any sense....
     :param test_mir:
     :param df:
     :return:

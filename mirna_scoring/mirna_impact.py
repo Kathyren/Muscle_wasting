@@ -4,6 +4,80 @@ from scipy.spatial.distance import cityblock
 import walking_network as wn
 import jupyter_functions as jf
 
+
+class mirna_network:
+    def __init__(self, network):
+        self.network = network
+        self.miR_nodes = get_mirna_nodes(network)
+        self.influence_df = mirnas_influence_on_genes(self.miR_nodes, network)
+        self.mirna_pathway_influence_df = None # get_mirna_pathway_influence_df(network, self.paths)
+        self.mirna_de_influence_df = None
+        self.pathway_list = None
+        self.frequency_pathways =None
+        self.top_pathways = None
+        self.upRegulated={}
+        self.downRegulated={}
+        self.paths_mirnas = None
+        pass
+    def save_influence_df(self, name):
+        self.influence_df.to_csv(name)
+    def set_paths_mirnas(self, steps=5,sample_size =10 ):
+        """
+        This function takes the network and gets for each of the
+        mirnas the random walks.
+        :param steps:
+        :param sample_size:
+        :return:
+        """
+        self.paths_mirnas = get_paths(network=self.network,nodes_start=self.miR_nodes, steps=steps,sample_size=sample_size)
+    def set_pathway_influences(self):
+        self.mirna_pathway_influence_df = \
+            get_mirna_pathway_influence_df(self.network, self.paths_mirnas)
+    def set_de_influences(self):
+        self.mirna_de_influence_df =\
+            get_mirna_dde_influence_df(self.network, self.paths_mirnas)
+    def set_up_down_regulated(self, condition):
+        upRegulated, downRegulated = get_up_down_regulated(self.network, condition)
+        self.upRegulated[condition] = upRegulated
+        self.downRegulated[condition] = downRegulated
+    def get_up_regulated(self, condition):
+        if condition in self.upRegulated:
+            return self.upRegulated[condition]
+        else:
+            self.set_up_down_regulated(condition=condition)
+        return self.upRegulated[condition]
+    def get_down_regulated(self, condition):
+        if condition in self.downRegulated:
+            return self.downRegulated[condition]
+        else:
+            self.set_up_down_regulated(condition=condition)
+        return self.downRegulated[condition]
+    def run_RandomWalks(self, steps:int=5, sample_size=10):
+        self.mirna_pathway_influence_df = get_mirna_pathway_influence_df(self.network, self.paths_mirnas)
+
+        self.mirs_all_infliences = get_mirnas_with_de_count(self.mirna_de_influence_df)
+        self.pathway_list = get_pathway_list(self.network)
+        self.frequency_pathways = get_frequency_pathways(self.pathway_list)
+        self.top_pathways = get_most_frequent_pathways(self.frequency_pathways)
+        self.df = get_influences_df(self.network)
+        return self.paths, self.mirna_pathway_influence_df, self.mirna_de_influence_df, self.mirs_all_infliences, self.pathway_list, self.frequency_pathways, self.top_pathways, self.df
+    
+    def get_most_impactful_interactions(self, interest_mirna:str):
+        order_most_df = get_most_impactful_interactions(self.df, interest_mirna)
+        return order_most_df
+    def get_impact_data(self):
+        return get_impact_data(self.df)
+    def order_length_mirna(self, interest_mirna:str):
+        return order_length_mirna(self.df, interest_mirna)
+    def order_impact_mirna(self, interest_mirna:str):
+        return order_impact_mirna(self.df, interest_mirna)
+    def get_mirnas_similarity(self, interest_mirna:str):
+        return get_mirnas_similarity(self.df, interest_mirna)
+    def get_mirna_nodes(self):
+        return self.miR_nodes
+    def get_influences_df(self):
+        return self.influence_df
+    
 def get_impact_data(df):
     """
 
@@ -87,7 +161,7 @@ def get_influences_df(network):
         node = network.nodes[node_name]
         if 'influence' in node['data']:
             influence = node['data']['influence']
-            if type(influence) == dict and 'hsa-' not in node['data']['name']:
+            if type(influence) == dict and 'mirna' not in node['type']:
                 influences[node['data']['name']] = influence
     df = pd.DataFrame(influences)
     return df
@@ -102,7 +176,7 @@ def mirnas_influence_on_genes(miR_nodes, network):
     influences = get_influences_df(network)
     influences = influences[influences.index.isin(miR_nodes)]
     influences = influences.fillna("").apply(list)
-    influences.to_csv(f"mirna_influence_{len(miR_nodes)}_genes.csv")
+
     return influences
 
 def get_up_down_regulated(network, condition):
@@ -149,6 +223,7 @@ def get_paths(network, nodes_start:list, steps:int=5, sample_size=10):
     :param sample_size:
     :return: Dictionary with the node_starts and their respective paths
     """
+    steps = steps + 1
     mirPaths = {}
     for mir in nodes_start:
         p = wn.get_pathways(graph=network, mirna=mir, n_distance=steps, sample_size=sample_size)
@@ -159,6 +234,7 @@ def get_paths(network, nodes_start:list, steps:int=5, sample_size=10):
         mirPaths[mir] = unique_list
 
     return mirPaths
+
 def get_mirna_influence(mirPaths, network):
     mirInfluence = {}
     for mir, path in mirPaths.items():
