@@ -33,7 +33,8 @@ def get_impact_data(df):
     """
     From the list of impact, it just sums the numbers and
      return a dataframe where each value is an integer
-    :param df:
+    :param df: The impact dataframe (the one with [1,-1, ...]) columns mirnas
+    rows genes
     :return:
     """
     color_data = pd.DataFrame(index=df.index, columns=df.columns)
@@ -171,7 +172,8 @@ def get_minra_influence(test_mir, df):
 
 def get_mirnas_similar_impact(df):
     """
-    This calculates the manhattan distance of the microRNAs impact on the genes. Getting the
+    This calculates the manhattan distance of the microRNAs impact on the genes.
+     Getting the
     similarity of the mirnas given thei impact
     :param df:
     :return:

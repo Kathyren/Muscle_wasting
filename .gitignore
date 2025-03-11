@@ -40,3 +40,5 @@ network/.virtual_documents/Untitled.ipynb
 database_analysis/sql_operations.py
 *.jpg
 *.png
+*-checkpoint.ipynb
+mirna_scoring/notebooks/.virtual_documents/*
