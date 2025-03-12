@@ -47,7 +47,8 @@ def test_start_mir_path():
 def test_evaluate_pathway_influence():
     influence_data = pd.DataFrame(columns=['ALDOA', 'PKM'], data=[[[-1], [-1]]], index=['hsa-miR-122-5p']).T
     mir = 'hsa-miR-122-5p'
-    influence_data =
+    influence_data = [{'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['KEGG_GLYCOLYSIS_GLUCONEOGENESIS', 'KEGG_PYRUVATE_METABOLISM'],'ym': 0, 'yo': 0},
+                      {'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['GOBP_SMALL_MOLECULE_METABOLIC_PROCESS', 'KEGG_GLYCOLYSIS_GLUCONEOGENESIS'], 'ym': 0, 'yo': 0}]
     pass
 
 def test_evaluate_pathway_influence:
@@ -61,7 +62,9 @@ def test_register_path():
     p = register_path(graph, node, strat_node, visited_edges=[])
     print(p)
 
+def test_evaluate_path_influence():
 
+    pass
 def initialize_invariant(graph):
     for node in graph.nodes:
         assert graph.nodes[node]['data']['influence'] == [1], "Initialization invariant failed"
