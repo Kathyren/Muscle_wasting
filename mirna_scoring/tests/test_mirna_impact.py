@@ -32,9 +32,6 @@ def test_get_minra_influence():
     assert mir_influence.equals(tr)
 
 
-def test_get_mirna_influence():
-    
-    pass
 def test_get_impact_data_trivial_case():
     influence_df = pd.DataFrame(columns=['ALDOA', 'PKM'], data=[[[-1], [-1]]], index=['hsa-miR-122-5p'])
     int_df =  get_impact_data(influence_df)
@@ -63,6 +60,9 @@ def test_get_paths():
     assert [test_mir, 'ALDOA'] in mir_paths
 
     pass
+
+
+
 def test_get_mirna_pathway_influence_df():
     test_mir = 'hsa-miR-122-5p'
     graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/ALDOA_LDHA_influence.pkl'
@@ -72,6 +72,20 @@ def test_get_mirna_pathway_influence_df():
     print(path_pathway)
     assert path_pathway.shape == (1,10)
     pass
+
+
+def test_get_mirna_influence():
+    test_mir = 'hsa-miR-122-5p'
+    paths = {test_mir: [[test_mir, 'PKM'], [test_mir, 'ALDOA']]}
+    graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/ALDOA_LDHA_influence.pkl'
+    graph = nx.read_gpickle(graph_pkl)
+    mirInfluence = mi.get_mirna_influence(mirPaths=paths, network=graph)
+    print(mirInfluence)
+    pass
+
+
+
+
 def test_get_mirnas_similar_impact():
     pass
 def test_cluster_mirnas():
