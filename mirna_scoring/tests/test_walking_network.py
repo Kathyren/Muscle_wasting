@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 sys.path.append('../network')
-from walking_network import *
+from mirna_scoring.walking_network import *
 import networkx as nx
 import pandas as pd
 
@@ -51,7 +51,7 @@ def test_evaluate_pathway_influence():
                       {'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['GOBP_SMALL_MOLECULE_METABOLIC_PROCESS', 'KEGG_GLYCOLYSIS_GLUCONEOGENESIS'], 'ym': 0, 'yo': 0}]
     pass
 
-def test_evaluate_pathway_influence:
+def test_evaluate_pathway_influence():
     pass
 def test_register_path():
     graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/sub_network_nodes.pkl'

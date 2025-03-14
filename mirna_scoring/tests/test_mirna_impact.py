@@ -201,7 +201,11 @@ def test_get_up_down_regulated():
     graph = nx.read_gpickle(graph_pkl)
     u, d = mi.get_up_down_regulated(network=graph, condition='yo_file')
     print (u)
+    assert u == {'ALDOA': 5.810481285595966, 'DNM1L': 2.8448790256653225,
+                 'GAPDH': 6.441244380391132, 'LDHA': 6.986902151280292,
+                 'PKM': 4.794770137419901}
     print(d)
+    assert d == {'NT5E': -3.514083056569358}
 
 def test_get_mirnas_similar_impact():
     pass
