@@ -1,27 +1,60 @@
+from distutils.core import setup_keywords
+
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
-from scipy.spatial.distance import cityblock
-import walking_network as wn
-import jupyter_functions as jf
+import mirna_scoring.walking_network as wn
+import mirna_scoring.jupyter_functions as jf
 
 
 class mirna_network:
     def __init__(self, network):
         self.network = network
         self.miR_nodes = get_mirna_nodes(network)
-        self.influence_df = mirnas_influence_on_genes(self.miR_nodes, network)
-        self.mirna_pathway_influence_df = None # get_mirna_pathway_influence_df(network, self.paths)
-        self.mirna_de_influence_df = None
-        self.pathway_list = None
-        self.frequency_pathways =None
-        self.top_pathways = None
+        self.influence_df = mirnas_influence_on_genes(miR_nodes=self.miR_nodes, network=network) # [[1,1][1,-1]]
+        self.influence_sum_df = self.get_impact_data() # [2, 0]
+        self.mirnas_paths = None
+        #self.mirna_pathway_influence_df = None # get_mirna_pathway_influence_df(network, self.paths)
+        self.mirnas_influences = {}
+        #self.mirna_de_influence_df = None
+        self.pathway_list = self.get_pathway_list()
+        self.frequency_pathways = get_frequency_pathways(self.pathway_list)
+        #self.top_pathways = None
         self.upRegulated={}
         self.downRegulated={}
-        self.paths_mirnas = None
+        self.available_combinations=self.get_all_available_combinations()
+        self.measurements=None
+        self.best_mirnas= {}
+        self.mirna_distance_matrix=None
         pass
+    # ------ Functions to initialized -----
+    def get_impact_data(self):
+        return get_impact_data(self.influence_df)
+    def get_pathway_list(self):
+        """
+            Get all the pathways of the network
+            :param network:
+            :return:
+            """
+        pathway_list = []
+        for node in self.network.nodes:
+            node = self.network.nodes[node]
+            if 'pathways' in node['data']:
+                p = node['data']['pathways']
+                pathway_list.extend(p)
+        return pathway_list
+    def get_all_available_combinations(self):
+        all_conditions = []
+        for node_name in self.network.nodes:
+            node = self.network.nodes[node_name]
+            if 'data' in node and 'metadata' in node['data']:
+                if 'dds' in node['data']['metadata']:
+                    all_conditions = node['data']['metadata']['dds'].keys()
+        return list(all_conditions)
+
+    # ------ Functions to run -------
     def save_influence_df(self, name):
         self.influence_df.to_csv(name)
-    def set_paths_mirnas(self, steps=5,sample_size =10 ):
+    def set_mirnas_paths(self, steps=5,sample_size =10 ):
         """
         This function takes the network and gets for each of the
         mirnas the random walks.
@@ -29,13 +62,21 @@ class mirna_network:
         :param sample_size:
         :return:
         """
-        self.paths_mirnas = get_paths(network=self.network,nodes_start=self.miR_nodes, steps=steps,sample_size=sample_size)
+        self.mirnas_paths = get_paths(network=self.network,nodes_start=self.miR_nodes, steps=steps,sample_size=sample_size)
+        return self.mirnas_path
     def set_pathway_influences(self):
-        self.mirna_pathway_influence_df = \
-            get_mirna_pathway_influence_df(self.network, self.paths_mirnas)
+        mirna_pathway_influence_df = \
+            get_mirna_pathway_influence_df(self.network, self.mirnas_paths)
+        self.mirnas_influences['pathway_influences'] = mirna_pathway_influence_df
     def set_de_influences(self):
-        self.mirna_de_influence_df =\
-            get_mirna_dde_influence_df(self.network, self.paths_mirnas)
+        mirna_de_influence_df =\
+            get_mirna_dde_influence_df(self.network, self.mirnas_paths)
+        self.mirnas_influences['DE_influences'] = mirna_de_influence_df
+    def set_all_conditions_up_down_regulated(self):
+        all_conditions = self.available_combinations
+        for condition in all_conditions:
+            self.set_up_down_regulated(condition)
+        pass
     def set_up_down_regulated(self, condition):
         upRegulated, downRegulated = get_up_down_regulated(self.network, condition)
         self.upRegulated[condition] = upRegulated
@@ -52,32 +93,168 @@ class mirna_network:
         else:
             self.set_up_down_regulated(condition=condition)
         return self.downRegulated[condition]
-    def run_RandomWalks(self, steps:int=5, sample_size=10):
-        self.mirna_pathway_influence_df = get_mirna_pathway_influence_df(self.network, self.paths_mirnas)
-
-        self.mirs_all_infliences = get_mirnas_with_de_count(self.mirna_de_influence_df)
-        self.pathway_list = get_pathway_list(self.network)
-        self.frequency_pathways = get_frequency_pathways(self.pathway_list)
-        self.top_pathways = get_most_frequent_pathways(self.frequency_pathways)
-        self.df = get_influences_df(self.network)
-        return self.paths, self.mirna_pathway_influence_df, self.mirna_de_influence_df, self.mirs_all_infliences, self.pathway_list, self.frequency_pathways, self.top_pathways, self.df
-    
+    def reset_paths(self, steps=5, sample_size=10):
+        self.mirnas_paths = get_paths(network=self.network,
+                                      nodes_start=self.miR_nodes,
+                                      steps=steps, sample_size=sample_size)
+    def get_frequency_pathways(self):
+        return self.frequency_pathways
+    def get_top_pathways(self):
+        return get_most_frequent_pathways(self.frequency_pathways)
     def get_most_impactful_interactions(self, interest_mirna:str):
-        order_most_df = get_most_impactful_interactions(self.df, interest_mirna)
+        order_most_df = get_most_impactful_interactions(self.influence_df, interest_mirna)
         return order_most_df
-    def get_impact_data(self):
-        return get_impact_data(self.df)
     def order_length_mirna(self, interest_mirna:str):
-        return order_length_mirna(self.df, interest_mirna)
+        return order_length_mirna(self.influence_df, interest_mirna)
     def order_impact_mirna(self, interest_mirna:str):
-        return order_impact_mirna(self.df, interest_mirna)
-    def get_mirnas_similarity(self, interest_mirna:str):
-        return get_mirnas_similarity(self.df, interest_mirna)
+        return order_impact_mirna(self.influence_df, interest_mirna)
+    def set_mirnas_similarity(self):
+        df_numeric = self.influence_sum_df.apply(pd.to_numeric, errors='coerce')
+        dist_matrix = pdist(df_numeric, metric='cityblock')
+        dist_matrix = squareform(dist_matrix)
+        self.mirna_distance_matrix = pd.DataFrame(dist_matrix,
+                                                  index=df_numeric.index,
+                                                  columns=df_numeric.index)
+    def get_mirnas_similarity(self):
+        """
+        get the mirna distance of influence
+        :return:
+        """
+        if self.mirna_distance_matrix is None:
+            self.set_mirnas_similarity()
+        return self.mirna_distance_matrix
+
     def get_mirna_nodes(self):
         return self.miR_nodes
     def get_influences_df(self):
         return self.influence_df
-    
+    def get_scores(self):
+        return self.mirnas_influences
+    def get_best_inhibitor_in_comparison(self, comparison):
+        if comparison in self.available_combinations:
+           return self.mirnas_influences['inhibitors'][comparison].idxmax()
+        else:
+            raise Exception(f"No such comparison as {comparison}")
+    def get_best_activator_in_comparison(self, comparison):
+        if comparison in self.available_combinations:
+           return self.mirnas_influences['activators'][comparison].idxmax()
+        else:
+            raise Exception(f"No such comparison as {comparison}")
+    def get_most_pathway_key_word_mirna(self):
+        self.mirnas_influences['pathways']['participation'].idxmax()
+    # ----- Functions for scoring -----
+    def set_measurements(self, comparisons=None, dds_threshold = 0 ):
+        if comparisons is None:
+            comparisons= self.available_combinations
+        self.measurements = self.calculate_measurements(comparisons=comparisons, dds_threshold=dds_threshold)
+    def set_up_regulated_dds_score(self):
+        self.mirnas_influences['activators'] = pd.DataFrame(self.calculate_up_regulated_dds_score())
+    def set_down_regulated_dds_score(self):
+        self.mirnas_influences['inhibitors'] = pd.DataFrame(self.calculate_down_regulated_dds_score())
+    def set_pathway_score(self):
+        self.mirnas_influences['pathway_svd'] = self.calculate_pathway_score()
+    def set_quantity_score(self):
+        self.mirnas_influences['de_count'] = self.calculate_quantity_score()
+    def set_weight_score(self):
+        self.mirnas_influences['gene_weight'] = self.measurements['weight']
+
+
+    def calculate_measurements(self, comparisons=None, dds_threshold=0):
+        if comparisons is None:
+            comparisons = self.available_combinations
+        influence_weight = self.influence_sum_df.copy()  # This is the sum of the weights of the nodes it impact
+        # multiplied by the times it reaches.
+        influence_quantity = self.influence_sum_df.copy()
+        influence_pathway = self.influence_sum_df.copy()
+        n_mirnas = len(self.influence_sum_df)
+        dataframe_dict = {}
+        for gene in self.influence_sum_df.columns:
+            gene_node = self.network.nodes[gene]
+            weight = gene_node['data']['weigh']
+            weight_score = weight * self.influence_sum_df[gene]
+            influence_weight[gene] = weight_score
+            if 'pathways_svd' in gene_node['data']['metadata']:
+                pathway_sdv = gene_node['data']['metadata']['pathways_svd']
+            else:
+                pathway_sdv = 0
+            pathway_score = pathway_sdv * self.influence_sum_df[gene]
+            influence_pathway[gene] = pathway_score
+            quantity = 0
+            if 'dds' in gene_node['data']['metadata'] :
+                dds = gene_node['data']['metadata']['dds']
+                for comparison in comparisons:
+                    comp = dds[comparison]
+                    if comparison in dataframe_dict:
+                        dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
+                    else:
+                        dataframe_dict[comparison] = {}
+                        dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
+                    if abs(comp) > dds_threshold:
+                        quantity += 1
+            # quantity is lower 0, max the amount of comparisons
+            influence_quantity[gene] = quantity * n_mirnas
+        for combination, series in dataframe_dict.items():
+            series_df = pd.DataFrame(series)
+            dataframe_dict[combination] = series_df
+        dataframe_dict['weight'] = influence_weight
+        dataframe_dict['quantity'] = influence_quantity
+        dataframe_dict['pathways'] = influence_pathway
+
+        return dataframe_dict
+    def calculate_up_regulated_dds_score(self):
+        up_regulated_genes = self.upRegulated
+        if self.measurements is None:
+            self.measurements = self.calculate_measurements()
+        return self.calculate_dds_score(up_regulated_genes)
+    def calculate_down_regulated_dds_score(self):
+        down_regulated_genes = self.downRegulated
+        if self.measurements is None:
+            self.measurements = self.calculate_measurements()
+        return self.calculate_dds_score(down_regulated_genes)
+    def calculate_dds_score(self, up_genes):
+        dds_scores= {}
+        for comparison in self.available_combinations:
+            dds = self.measurements[comparison]
+            genes = up_genes[comparison].keys()
+            genes = [g for g in genes if g in dds.columns]
+            dds = dds[genes]
+            dds_score = dds.sum(axis=1)
+            dds_scores[comparison] = dds_score
+        return dds_scores
+    def calculate_pathway_score(self):
+        pathway_df = self.measurements['pathways']
+        pathway_score = pathway_df.sum(axis=1)
+        return pathway_score
+    def calculate_quantity_score(self):
+        """
+        Amount of DE reached (if a gene is DE in two conditions, then it counts for 2)
+        :return:
+        """
+        quantity_df = self.measurements['quantity']
+        return quantity_df.sum(axis=1)
+    def get_random_walk_pathway_influence(self, steps=5, sample_size=10, pathway_keywords=None):
+        if self.mirnas_paths is None:
+            self.reset_paths(steps=steps, sample_size=sample_size)
+        if pathway_keywords is None:
+            pathway_keywords = self.available_combinations
+        mir_pathway_influence_df = get_mirna_pathway_influence_df(network=self.network,
+                                                                  mirPaths=self.mirnas_paths,
+                                                                  pathway_keywords=pathway_keywords)
+        self.mirnas_influences['pathways']= mir_pathway_influence_df
+        return mir_pathway_influence_df
+
+
+
+
+
+
+
+
+
+
+
+
+
 def get_impact_data(df):
     """
 
@@ -191,13 +368,15 @@ def get_up_down_regulated(network, condition):
     down_regulation_YO = {}
     for node_name in network.nodes:
         node = network.nodes[node_name]
-        if condition in node['data']:
-            regulation = node['data'][condition]
-            regulation_YO[node['data']['name']] = regulation
-            if regulation > 0:
-                up_regulation_YO[node['data']['name']] = regulation
-            elif regulation < 0:
-                down_regulation_YO[node['data']['name']] = regulation
+        if 'metadata' in node['data']:
+            metadata = node['data']['metadata']
+            if 'dds' in metadata and condition in metadata['dds']:
+                regulation = metadata['dds'][condition]
+                regulation_YO[node_name] = regulation
+                if regulation > 0:
+                    up_regulation_YO[node_name] = regulation
+                elif regulation < 0:
+                    down_regulation_YO[node_name] = regulation
     return up_regulation_YO, down_regulation_YO
 
 def get_up_down_regulated_df(df, network, condition):
@@ -235,16 +414,22 @@ def get_paths(network, nodes_start:list, steps:int=5, sample_size=10):
 
     return mirPaths
 
-def get_mirna_influence(mirPaths, network):
+def get_mirna_influence(mirPaths:dict, network):
+    """
+    For each mirna in mirPaths, get what is their accumulated influence
+    :param mirPaths:
+    :param network:
+    :return: dictionary with the mirs and the accumulated influence
+    """
     mirInfluence = {}
     for mir, path in mirPaths.items():
         influence = wn.get_influence(network, path)
         mirInfluence[mir] = influence
     return mirInfluence
-def get_mirna_pathway_influence_df(network, mirPaths ):
+def get_mirna_pathway_influence_df(network, mirPaths, pathway_keywords=None):
     """
-    This funtion will take the mirPath calcualted prevously
-    and just sum how many times it landed on a gene with a specific pathwy
+    This function will take the mirPath calculated previously
+    and just sum how many times it landed on a gene with a specific pathway
     It will return a dataframe with the pathways in the rows and how many times it landed on a specific
     pathway.
     :param network:
@@ -254,7 +439,7 @@ def get_mirna_pathway_influence_df(network, mirPaths ):
     mirInfluence = get_mirna_influence(mirPaths=mirPaths, network=network)
     mir_pathway_influence = {}
     for mir, influence_data in mirInfluence.items():
-        pi = wn.evaluate_pathway_influence(influence_data)
+        pi = wn.evaluate_pathway_influence(influence_mir_data=influence_data, pathway_keywords=pathway_keywords)
         mir_pathway_influence[mir] = pi
     mir_pathway_influence_df = pd.DataFrame(mir_pathway_influence).T
     return mir_pathway_influence_df
@@ -275,6 +460,11 @@ def get_mirnas_with_de_count(mir_de_influence_df, min_val = 0 ):
     return mirs_all_infliences
 
 def get_pathway_list(network):
+    """
+    Get all the pathways of the network
+    :param network:
+    :return:
+    """
     pathway_list = []
     for node in network.nodes:
         if 'pathways' in node['data']:

@@ -47,11 +47,13 @@ def test_start_mir_path():
 def test_evaluate_pathway_influence():
     influence_data = pd.DataFrame(columns=['ALDOA', 'PKM'], data=[[[-1], [-1]]], index=['hsa-miR-122-5p']).T
     mir = 'hsa-miR-122-5p'
-    influence_data = [{'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['KEGG_GLYCOLYSIS_GLUCONEOGENESIS', 'KEGG_PYRUVATE_METABOLISM'],'ym': 0, 'yo': 0},
+    pathway_eval_dict = evaluate_pathway_influence(influence_data=influence_data,pathway_keywords=['ATP'])
+    print(pathway_eval_dict)
+    influence_data_ex = [{'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['KEGG_GLYCOLYSIS_GLUCONEOGENESIS', 'KEGG_PYRUVATE_METABOLISM'],'ym': 0, 'yo': 0},
                       {'m_l': 0, 'm_s': 0, 'mo': 0, 'pathways': ['GOBP_SMALL_MOLECULE_METABOLIC_PROCESS', 'KEGG_GLYCOLYSIS_GLUCONEOGENESIS'], 'ym': 0, 'yo': 0}]
     pass
 
-def test_evaluate_pathway_influence():
+def test_evaluate_pathway_influence_enrichment():
     pass
 def test_register_path():
     graph_pkl = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/sub_network_nodes.pkl'

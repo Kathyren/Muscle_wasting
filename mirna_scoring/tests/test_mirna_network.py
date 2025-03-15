@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 import mirna_scoring.mirna_impact as mi
@@ -79,3 +80,17 @@ def test_calculate_measurements():
         print(measurement.shape)
         assert measurement.shape==(1,2), f"There is one microRNA and 2 genes, all dataframes should be the same outlet"
 
+
+def test_all_scorings():
+    my_network.set_all_conditions_up_down_regulated()
+    up = my_network.calculate_up_regulated_dds_score()
+    my_network.set_up_regulated_dds_score()
+    down = my_network.calculate_down_regulated_dds_score()
+    my_network.set_down_regulated_dds_score()
+    pathways_sdv = my_network.calculate_pathway_score()
+    my_network.set_pathway_score()
+    pathway_count = my_network.get_random_walk_pathway_influence(pathway_keywords=['ATP'])
+    all = my_network.get_scores()
+    assert pd.DataFrame(up).equals(all['activators'])
+    assert pd.DataFrame(down).equals(all['inhibitors'])
+    print (up)

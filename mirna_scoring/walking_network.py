@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../../network')
 
-import network_processing as nx
+import network.network_processing as nx
 
 pathway_keywords = ["ATP", "MITOCHONDRI", "RESPIRAT", "METABOLI", "OXIDATIVE_PHOSPHORYLATION",
                     "NONALCOHOLIC_FATTY_LIVER", "MUSCLE", "ELECTRON"]
@@ -111,9 +111,10 @@ def join_paths(graph, paths: dict):
     return subgraph
 
 
-def evaluate_pathway_influence(influence_data: list, pathway_keywords=None):
+def evaluate_pathway_influence(influence_mir_data: list, pathway_keywords=None):
     """
 
+    :param pathway_keywords:
     :param influence_data:
     :return:
     """
@@ -124,7 +125,7 @@ def evaluate_pathway_influence(influence_data: list, pathway_keywords=None):
     all_pathways = []
     for pathway in pathway_keywords:
         pathway_repetitions = 0
-        for data in influence_data:
+        for data in influence_mir_data:
             pathway_list = data['pathways']
             pathway_repetitions += sum(1 for s in pathway_list if pathway in s)
             all_pathways.extend(pathway_list)
