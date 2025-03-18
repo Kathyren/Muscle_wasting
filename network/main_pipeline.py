@@ -183,15 +183,23 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         #                        tissues_df=tissue_df)
         ntp.mark_miR_nodes(graph=network)
         if dds_df is not None:
+            dds_df = dds_df.div(dds_df.sum(axis=1), axis=0)
             ntp.add_DDS_data(network, dds_df=dds_df)
         if tf_file is not None:
-            #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
-            ntp.add_TF_data_from_file(graph=network,tf_file=tf_file)
+            #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file) 0-1
+            tf_df = pd.read_csv(tf_file, index_col=0)
+            # normalize the dataframe
+
+            #tf_df = (tf_df - tf_df.min()) / (tf_df.max() - tf_df.min())
+            ntp.add_TF_data_from_df(graph=network,tf_df=tf_df)
         if tissue_df is not None:
             ntp.add_other_data(graph=network, data_df=tissue_df, name='tissue')
         if pathway_file is not None:
-            ntp.add_pathways_to_nodes(graph=network, pathway_file=pathway_file)
+            # normalize the dataframe
+            pathway_df = pd.read_csv(pathway_file, index_col=0)
+            ntp.add_pathways_to_nodes_from_df(graph=network, all_pathway_df=pathway_df)
         if cell_type is not None:
+            
             ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
 
 
@@ -221,7 +229,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
-    ntp.separate_metadata(graph=network)
+    ntp.separate_metadata(graph=network )
     cytoscape_file = f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs'
     save_as_cjsn(network, cytoscape_file)
 

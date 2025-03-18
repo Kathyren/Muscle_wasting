@@ -280,6 +280,27 @@ def add_TF_data_from_file(graph, tf_file):
 
     pass
 
+def add_TF_data_from_df(graph, tf_df):
+    """
+    This function takes a fiile that cointains the TF and a score value from each condition and 
+    will add them to their respective nodes, similar to add_DDS_data
+    It will add in metadata the dictionary of conditions and the values of the TF
+
+    :param graph:
+    :param TF_file: The file with the TF and the score values. The index is the TF name and the 
+    columns are the conditions. 
+    :return:
+    """
+    max_abs_tf = tf_df.abs().max()  # Get max absolute value for each column
+    tf_df_normalized = tf_df / max_abs_tf
+
+
+    for index, row in tf_df_normalized.iterrows():
+        add_tf_to_node(graph=graph, node_name=index, tf=dict(row))
+    for index, row in tf_df.iterrows():
+        add_tf_to_node_original(graph=graph, node_name=index, tf=dict(row))
+    pass
+
 def add_tf_to_node(graph, node_name, tf: dict):
     """
     This function will add as metadata to the node a list of tf
@@ -301,7 +322,30 @@ def add_tf_to_node(graph, node_name, tf: dict):
             # more than 0, then change graph.nodes[node]['type'] to 'TF'
             if all(value > 0 for value in graph.nodes[node]['data']['metadata']['tf'].values()):
                 graph.nodes[node]['data']['node_type'] = 'TF'
-            
+
+
+def add_tf_to_node_original(graph, node_name, tf: dict):
+    """
+    This function will add as metadata to the node a list of tf
+    :param graph:
+    :param node:
+    :param dds: A dictionary with the Enriched score TF values
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            for tf, value in tf.items():
+                if not 'metadata' in graph.nodes[node]['data']:
+                    graph.nodes[node]['data']['metadata'] = {}
+                if 'tf_original' in graph.nodes[node]['data']['metadata']:
+                    graph.nodes[node]['data']['metadata']['tf_original'][tf] = value
+                else:
+                    graph.nodes[node]['data']['metadata']['tf_original'] = {tf: value}
+            ## If all elements in graph.nodes[node]['data']['metadata']['tf'] are
+            # more than 0, then change graph.nodes[node]['type'] to 'TF'
+            if all(value > 0 for value in graph.nodes[node]['data']['metadata']['tf_original'].values()):
+                graph.nodes[node]['data']['node_type'] = 'TF'
+
 
 def mark_miR_nodes(graph):
     """
@@ -374,15 +418,22 @@ def add_DDS_data(graph, dds_df):
     :param dds_df:
     :return:
     """
-    for index, row in dds_df.iterrows():
+    #max_abs_dds = max(abs(dds_df.max().max()), abs(dds_df.min().min()))
+    #dds_df_normalized = dds_df / max_abs_dds
+    max_abs_dds = dds_df.abs().max()  # Get max absolute value for each column
+    dds_df_normalized = dds_df / max_abs_dds
+    for index, row in dds_df_normalized.iterrows():
         add_dds_to_node(graph=graph, node_name=index, dds=dict(row))
+    for index, row in dds_df.iterrows():
+        add_dds_to_node_original(graph=graph, node_name=index, dds=dict(row))
 
     pass
 
 
 def add_dds_to_node(graph, node_name, dds: dict):
     """
-    This function will add as metadata to the node a list of pathways
+    This function will add as metadata to the node the DDS values. NORMALIZED
+    :param node_name:
     :param graph:
     :param node:
     :param dds: A dictionary with the Dseq2DataSet values (stat or log2FoldChange)
@@ -397,7 +448,31 @@ def add_dds_to_node(graph, node_name, dds: dict):
                     graph.nodes[node]['data']['metadata']['dds'][dd]=value
                 else:
                     graph.nodes[node]['data']['metadata']['dds'] = {dd:value}
+
                 #graph.nodes[node]['data'][dd] = value
+
+
+def add_dds_to_node_original(graph, node_name, dds: dict):
+    """
+    This function will add as metadata to the node the DDS data
+    without normalize
+    :param node_name:
+    :param graph:
+    :param node:
+    :param dds: A dictionary with the Dseq2DataSet values (stat or log2FoldChange)
+    :return:
+    """
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'id' in data['data'] and data['data']['name'] == node_name:
+            for dd, value in dds.items():
+                if not 'metadata' in graph.nodes[node]['data']:
+                    graph.nodes[node]['data']['metadata'] = {}
+                if 'dds_original' in graph.nodes[node]['data']['metadata']:
+                    graph.nodes[node]['data']['metadata']['dds_original'][dd] = value
+                else:
+                    graph.nodes[node]['data']['metadata']['dds_original'] = {dd: value}
+
+                # graph.nodes[node]['data'][dd] = value
 
 
 def add_metadata_to_node(graph, node_name, tissues: dict, name='tissue_expr'):
@@ -486,6 +561,33 @@ def add_pathways_to_nodes(graph, pathway_file):
         add_pathway_to_node(graph, gene, pathways, svd=svd)
     return graph
 
+def add_pathways_to_nodes_from_df(graph, all_pathway_df):
+    """
+    This function will add the pathway to the node. Currently it takes the string directory where the pathways are.
+    It will call the funtion extract_genes_from_pathways to get the pathways and then add them to the nodes to 
+    generate the dictorionary of the pathways. That dictionary is added to the node with add_pathway_to_node
+
+    :param graph: The networkx graph object with the format of mirKat network (see Documentation)
+    :param pathway_file: Path to the file with the pathways. See Documentation for the format
+    :return: None
+
+    """
+
+    genes = all_pathway_df['genes']
+    pathway_df = all_pathway_df.drop(columns=['genes'])
+    # Normalize from 0 to 1
+    pathway_df = (pathway_df - pathway_df.min()) / (pathway_df.max() - pathway_df.min())
+    pathway_df['genes'] = genes
+    pathway_df['Term'] = pathway_df.index
+    all_pathway_df = pathway_df
+    gene_pathway_dic = extract_genes_from_pathways(all_pathway_df, threshold_feature='Combined score',
+                                                   id_feature='genes', pathway_feature='Term', threshold_value=10)
+    for gene, pathways in gene_pathway_dic.items():
+        _, svd, _ = get_SVD_pathways(pathway_df=all_pathway_df.drop(columns=['genes']),
+                                     pathways_list=pathways)
+        add_pathway_to_node(graph, gene, pathways, svd=svd)
+    return graph
+
 def get_SVD_pathways(pathway_df:DataFrame, pathways_list:list, pathway_column = 'Term'):
     """
      # Pathways have the list of pathways that the gene belongs
@@ -507,6 +609,8 @@ def get_SVD_pathways(pathway_df:DataFrame, pathways_list:list, pathway_column = 
     """
     subset_pathways = pathway_df[pathway_df[pathway_column].isin(pathways_list)]
     subset_pathways.set_index(pathway_column, inplace=True)
+    # remove nan columns
+    subset_pathways = subset_pathways.dropna(axis=1)
     U, Sigma, VT = np.linalg.svd(subset_pathways, full_matrices=False)
     # Sigma is returned as a 1D array; convert to diagonal matrix
     # Sigma[0] the largest singular value (dominant pattern)
