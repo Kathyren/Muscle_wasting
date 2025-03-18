@@ -209,7 +209,9 @@ def evaluate_node_quality(graph):
             if isinstance(data['data'], dict):
                 missing_keys = required_keys - data['data'].keys()
                 for key in missing_keys:
-                    data['data'][key] = None  # or any default value you prefer
+                    data['data'][key] = None
+                if 'metadata' not in data['data'] and data['type']!='mirna':
+                    nodes_to_remove.append(node)
             else:
                 nodes_to_remove.append(node)
         else:

@@ -243,7 +243,7 @@ class mirna_network:
                 pathway_sdv = gene_node['data']['metadata']['pathways_svd']
             else:
                 pathway_sdv = 0
-            pathway_score = pathway_sdv * self.influence_sum_df[gene]
+            pathway_score = pathway_sdv * abs(self.influence_sum_df[gene])
             influence_pathway[gene] = pathway_score
             quantity = 0
             if 'dds' in gene_node['data']['metadata'] :
@@ -449,8 +449,8 @@ def get_up_down_regulated(network, condition):
         node = network.nodes[node_name]
         if 'data' in node and 'metadata' in node['data']:
             metadata = node['data']['metadata']
-            if 'dds' in metadata and condition in metadata['dds']:
-                regulation = metadata['dds'][condition]
+            if 'dds_original' in metadata and condition in metadata['dds_original']:
+                regulation = metadata['dds_original'][condition]
                 regulation_YO[node_name] = regulation
                 if regulation > 0:
                     up_regulation_YO[node_name] = regulation
