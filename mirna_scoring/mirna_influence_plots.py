@@ -107,8 +107,7 @@ def plot_pathway_frequency(frequency_pathways):
     plt.show()
 
 def plot_pathways_keyword_heatmap(mir_pathway_influence_df):
-    mir_pathway_influence_df['participation'] = mir_pathway_influence_df.drop(
-        columns=["Different_pathways", "Total"]).sum(axis=1)
+
     mir_pathway_influence_df_n0 = mir_pathway_influence_df[mir_pathway_influence_df['participation'] > 0]
     mir_pathway_influence_df_n0 = mir_pathway_influence_df_n0.drop(
         columns=["Different_pathways", "Total", "participation"])

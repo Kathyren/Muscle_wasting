@@ -6,6 +6,23 @@ import mirna_scoring.walking_network as wn
 import mirna_scoring.jupyter_functions as jf
 
 
+def count_de_gene(gene_node, comparisons=None, dds_threshold=0):
+    """
+    for each gene, count how many times it is DE (max is the amount of comparisons)
+    :return:
+    """
+    quantity = 0
+    if 'dds' in gene_node['data']['metadata'] :
+        dds = gene_node['data']['metadata']['dds']
+        for comparison in comparisons:
+            comp = dds[comparison]
+            # if comp is greater than the threshold, then it will be counted, otherwise it will be 0
+            if abs(comp) > dds_threshold:
+                quantity += 1
+    # quantity is lower 0, max the amount of comparisons
+    return quantity
+
+
 class mirna_network:
     def __init__(self, network):
         self.network = network
@@ -25,6 +42,7 @@ class mirna_network:
         self.measurements=None
         self.best_mirnas= {}
         self.mirna_distance_matrix=None
+        self.mirna_scores={}
         pass
     # ------ Functions to initialized -----
     def get_impact_data(self):
@@ -63,7 +81,7 @@ class mirna_network:
         :return:
         """
         self.mirnas_paths = get_paths(network=self.network,nodes_start=self.miR_nodes, steps=steps,sample_size=sample_size)
-        return self.mirnas_path
+        return self.mirnas_paths
     def set_pathway_influences(self):
         mirna_pathway_influence_df = \
             get_mirna_pathway_influence_df(self.network, self.mirnas_paths)
@@ -148,15 +166,63 @@ class mirna_network:
             comparisons= self.available_combinations
         self.measurements = self.calculate_measurements(comparisons=comparisons, dds_threshold=dds_threshold)
     def set_up_regulated_dds_score(self):
+        """
+        Set the mirna influence and calculate the score
+        :return: none
+        """
         self.mirnas_influences['activators'] = pd.DataFrame(self.calculate_up_regulated_dds_score())
+        dds_scores = self.mirnas_influences['activators'].copy()
+        # change the name of the columns adding the prefix 'up_'
+        dds_scores.columns = ['up_'+col for col in dds_scores.columns]
+        # add each combination (column) into a value on mirna_scores, no longer under activators
+        for column in dds_scores.columns:
+            self.mirna_scores[column] = dds_scores[column]
+
+    def quick_get_all_scores(self, steps=5, sample_size=10, dds_threshold=0, pathway_keywords=[]):
+        """
+
+        :param steps:
+        :param sample_size:
+        :param dds_threshold:
+        :param pathway_keywords:
+        :return:
+        """
+        self.set_all_conditions_up_down_regulated()
+        self.set_measurements()
+        self.set_up_regulated_dds_score()
+        self.set_down_regulated_dds_score()
+        self.set_quantity_score(dds_threshold=dds_threshold)
+        self.set_weight_score()
+        self.get_random_walk_pathway_influence(steps=steps,
+                                               sample_size=sample_size,
+                                               pathway_keywords=pathway_keywords)
+        self.set_pathway_score()
+        scores = pd.DataFrame(self.mirna_scores)
+        return scores
+
+
+
     def set_down_regulated_dds_score(self):
         self.mirnas_influences['inhibitors'] = pd.DataFrame(self.calculate_down_regulated_dds_score())
+        dds_scores = self.mirnas_influences['inhibitors'].copy()
+        # change the name of the columns adding the prefix 'down_'
+        dds_scores.columns = ['down_' + col for col in dds_scores.columns]
+        # add each combination (column) into a value on mirna_scores, no longer under inhibitors
+        for column in dds_scores.columns:
+            self.mirna_scores[column] = dds_scores[column]
     def set_pathway_score(self):
+        self.mirnas_influences['pathways']['participation'] = self.mirnas_influences['pathways'].drop(
+            columns=["Different_pathways", "Total"]).sum(axis=1)
+        pathway_score = self.mirnas_influences['pathways']['participation']
+        self.mirna_scores['pathway_counts'] = pathway_score
         self.mirnas_influences['pathway_svd'] = self.calculate_pathway_score()
-    def set_quantity_score(self):
-        self.mirnas_influences['de_count'] = self.calculate_quantity_score()
+        self.mirna_scores['pathway_svd'] = self.mirnas_influences['pathway_svd']
+    def set_quantity_score(self, dds_threshold=0):
+        self.mirnas_influences['de_count'] = self.calculate_quantity_score(dds_threshold)
     def set_weight_score(self):
-        self.mirnas_influences['gene_weight'] = self.measurements['weight']
+        weight_score = self.measurements['weight']
+        score = weight_score.sum(axis=1)
+        self.mirna_scores['gene_weight'] = score
 
 
     def calculate_measurements(self, comparisons=None, dds_threshold=0):
@@ -184,15 +250,21 @@ class mirna_network:
                 dds = gene_node['data']['metadata']['dds']
                 for comparison in comparisons:
                     comp = dds[comparison]
+                    # if comp is greater than the threshold, then it will be counted, otherwise it will be 0                        
                     if comparison in dataframe_dict:
                         dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
                     else:
                         dataframe_dict[comparison] = {}
                         dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
-                    if abs(comp) > dds_threshold:
-                        quantity += 1
+                quantity = count_de_gene(gene_node=gene_node,
+                 comparisons=comparisons, dds_threshold=dds_threshold)
+
             # quantity is lower 0, max the amount of comparisons
-            influence_quantity[gene] = quantity * n_mirnas
+            # if abs(self.influence_sum_df[gene]) is >0, then 1, otherwise 0
+            affects_gene = self.influence_sum_df[gene].apply(lambda x: 1 if abs(x) > 0 else 0)
+            quantity = quantity * affects_gene
+
+            influence_quantity[gene] = abs(quantity)
         for combination, series in dataframe_dict.items():
             series_df = pd.DataFrame(series)
             dataframe_dict[combination] = series_df
@@ -201,11 +273,13 @@ class mirna_network:
         dataframe_dict['pathways'] = influence_pathway
 
         return dataframe_dict
+
     def calculate_up_regulated_dds_score(self):
         up_regulated_genes = self.upRegulated
         if self.measurements is None:
             self.measurements = self.calculate_measurements()
         return self.calculate_dds_score(up_regulated_genes)
+
     def calculate_down_regulated_dds_score(self):
         down_regulated_genes = self.downRegulated
         if self.measurements is None:
@@ -225,18 +299,20 @@ class mirna_network:
         pathway_df = self.measurements['pathways']
         pathway_score = pathway_df.sum(axis=1)
         return pathway_score
-    def calculate_quantity_score(self):
+    def calculate_quantity_score(self, dds_threshold=0):
         """
         Amount of DE reached (if a gene is DE in two conditions, then it counts for 2)
         :return:
         """
+        if 'quantity' not in self.measurements:
+            self.calculate_measurements()
         quantity_df = self.measurements['quantity']
         return quantity_df.sum(axis=1)
     def get_random_walk_pathway_influence(self, steps=5, sample_size=10, pathway_keywords=None):
         if self.mirnas_paths is None:
             self.reset_paths(steps=steps, sample_size=sample_size)
         if pathway_keywords is None:
-            pathway_keywords = self.available_combinations
+            pathway_keywords = []
         mir_pathway_influence_df = get_mirna_pathway_influence_df(network=self.network,
                                                                   mirPaths=self.mirnas_paths,
                                                                   pathway_keywords=pathway_keywords)
