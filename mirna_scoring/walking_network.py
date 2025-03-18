@@ -42,6 +42,7 @@ def register_path(graph, node, mir:str, visited_edges=None, path=[]):
 def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
     if visited_edges is None:
         visited_edges = []
+
     node_values = node['data']['influence'][mir]
     node_name = node['data']['name']
     for neighbor in graph.successors(node_name):
@@ -50,6 +51,8 @@ def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
         if edge in visited_edges:
             break
         visited_edges.append(edge)
+        if 'data' not in edge:
+            print(f"here, {edge}")
         edge['weight'] = edge['data']['weight']
         weight = edge['weight']
         if node_name == neighbor:

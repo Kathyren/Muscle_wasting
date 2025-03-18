@@ -291,10 +291,11 @@ def add_TF_data_from_df(graph, tf_df):
     columns are the conditions. 
     :return:
     """
-    max_abs_tf = tf_df.abs().max()  # Get max absolute value for each column
-    tf_df_normalized = tf_df / max_abs_tf
-
-
+    #max_abs_tf = tf_df.abs().max()  # Get max absolute value for each column
+    #tf_df_normalized = tf_df / max_abs_tf
+    tf_df_normalized = (tf_df.abs() - tf_df.abs().min()) / (tf_df.abs().max() - tf_df.abs().min())
+    # replace nan with 0
+    tf_df_normalized.fillna(0, inplace=True)
     for index, row in tf_df_normalized.iterrows():
         add_tf_to_node(graph=graph, node_name=index, tf=dict(row))
     for index, row in tf_df.iterrows():
@@ -420,8 +421,11 @@ def add_DDS_data(graph, dds_df):
     """
     #max_abs_dds = max(abs(dds_df.max().max()), abs(dds_df.min().min()))
     #dds_df_normalized = dds_df / max_abs_dds
-    max_abs_dds = dds_df.abs().max()  # Get max absolute value for each column
-    dds_df_normalized = dds_df / max_abs_dds
+    #max_abs_dds = dds_df.abs().max()  # Get max absolute value for each column
+    #dds_df_normalized = dds_df.abs() / max_abs_dds
+    dds_df_normalized = (dds_df.abs() - dds_df.abs().min()) / (dds_df.abs().max() - dds_df.abs().min())
+    # replace nan with 0
+    dds_df_normalized.fillna(0, inplace=True)
     for index, row in dds_df_normalized.iterrows():
         add_dds_to_node(graph=graph, node_name=index, dds=dict(row))
     for index, row in dds_df.iterrows():
@@ -567,8 +571,9 @@ def add_pathways_to_nodes_from_df(graph, all_pathway_df):
     It will call the funtion extract_genes_from_pathways to get the pathways and then add them to the nodes to 
     generate the dictorionary of the pathways. That dictionary is added to the node with add_pathway_to_node
 
+
     :param graph: The networkx graph object with the format of mirKat network (see Documentation)
-    :param pathway_file: Path to the file with the pathways. See Documentation for the format
+    :param all_pathway_df: Path to the file with the pathways. See Documentation for the format
     :return: None
 
     """
@@ -579,6 +584,8 @@ def add_pathways_to_nodes_from_df(graph, all_pathway_df):
     pathway_df = (pathway_df - pathway_df.min()) / (pathway_df.max() - pathway_df.min())
     pathway_df['genes'] = genes
     pathway_df['Term'] = pathway_df.index
+    # repalce nan with 0
+    pathway_df.fillna(0, inplace=True)
     all_pathway_df = pathway_df
     gene_pathway_dic = extract_genes_from_pathways(all_pathway_df, threshold_feature='Combined score',
                                                    id_feature='genes', pathway_feature='Term', threshold_value=10)
@@ -1120,7 +1127,7 @@ def add_other_data(graph, data_df:DataFrame, name:str):
 
     pass
 
-def weight_nodes(graph, coefficients: dict):
+def weight_nodes(graph, coefficients: dict=None):
     """
     This function will add a weigh to each node. This will consist in the sum of the absolute values of the DDS
     times the muscle value
@@ -1129,6 +1136,7 @@ def weight_nodes(graph, coefficients: dict):
     https://karenguerrero.atlassian.net/browse/MML-328
     MML-328: Modify the scoring to work dynamically  and not only on one comparison 
 
+    :param coefficients:
     :param graph:
     :return:
     """
@@ -1150,21 +1158,35 @@ def weight_nodes(graph, coefficients: dict):
         coefficients['miR_enhancement'] = 1
 
     for node, data in graph.nodes(data=True):
+        #if node =='REL':
+        #    print('stop')
         added_coef = []
         weight = 1
         if 'data' in data and 'metadata' in data['data']:
 
             for key, value in coefficients.items():
                 if key in data['data']['metadata']:
-                    if key != 'pathways':
+                    if key not in  ['pathways', 'dds_original']:
                         if key == 'pathways_svd':
                             weight+= value * data['data']['metadata'][key]
                         else:
                             weight += value * sum(abs(x) for x in data['data']['metadata'][key].values())
                         added_coef.append(key)
-        if data['type'] == 'mirna':
-            weight += coefficients['miR_enhancement']
+        if 'type' in data:
+            if data['type'] == 'mirna':
+                # THE WEIGTH ON the node will the the average of all the direct neighbors
+                weight += coefficients['miR_enhancement']
+        else:
+            data['type'] = 'none'
         graph.nodes[node]['data']['weigh'] = weight
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'type' in data and data['type'] == 'mirna':
+            # get nodes that are not mirnas
+
+            neighboring_nodes = list(graph.successors(node))
+            neighbors_weigths = [graph.nodes[n]['data']['weigh'] for n in neighboring_nodes if 'data' in graph.nodes[n] and 'weigh' in graph.nodes[n]['data']]
+            if neighbors_weigths:
+                graph.nodes[node]['data']['weigh'] = np.mean(neighbors_weigths)
 
 
 
@@ -1181,7 +1203,10 @@ def weight_edges(graph: nx.Graph, node_weight: str= 'weigh', mir_enhancer=0):
         if 'type' in graph.nodes[u] and 'type' in graph.nodes[v]:
             if graph.nodes[u]['type'] == 'miR' or graph.nodes[v]['type'] == 'miR' or graph.nodes[u]['type'] == 'mirna' or graph.nodes[v]['type'] == 'mirna':
                 graph[u][v]['weightScore'] += mir_enhancer
-        graph[u][v]['data']['weightScore']=graph[u][v]['weightScore']
+        if 'data' in graph[u][v]:
+            graph[u][v]['data']['weightScore']=graph[u][v]['weightScore']
+        else:
+            graph[u][v]['data']={'weightScore':graph[u][v]['weightScore']}
 
 def separate_metadata(graph):
     """

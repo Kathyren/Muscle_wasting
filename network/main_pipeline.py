@@ -202,10 +202,12 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
             
             ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
 
-
+        print(f"Saving on {path}Networks_pkl/metadata_{px2}_{name}.pkl  reading it")
         ntp.save_graph(network, f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     else:
+        print(f"The nerwork is saved on {path}Networks_pkl/metadata_{px2}_{name}.pkl  reading it")
         network = ntp.load_graph(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
+
     #if dds_df is not None:
     #        ntp.add_DDS_data(network, dds_df=dds_df)
     #if tf_file is not None:

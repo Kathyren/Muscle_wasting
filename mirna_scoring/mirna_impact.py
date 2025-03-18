@@ -56,7 +56,7 @@ class mirna_network:
         pathway_list = []
         for node in self.network.nodes:
             node = self.network.nodes[node]
-            if 'pathways' in node['data']:
+            if 'data' in node and 'pathways' in node['data']:
                 p = node['data']['pathways']
                 pathway_list.extend(p)
         return pathway_list
@@ -412,19 +412,22 @@ def get_influences_df(network):
     influences = {}
     for node_name in network.nodes:
         node = network.nodes[node_name]
-        if 'influence' in node['data']:
+        if 'data' in node and 'influence' in node['data']:
             influence = node['data']['influence']
             if type(influence) == dict and 'mirna' not in node['type']:
                 influences[node['data']['name']] = influence
+        else:
+            pass
+            #print(f"Node {node_name} does not have data or influence, it has {node}")
     df = pd.DataFrame(influences)
     return df
 
-def mirnas_influence_on_genes(miR_nodes, network):
+def mirnas_influence_on_genes(miR_nodes:list, network):
     for mir in miR_nodes:
-        try:
+       # try:
             wn.start_mir_path(network, mir)
-        except KeyError as ke:
-            print(ke)
+        #except KeyError as ke:
+        #    print(f"Error: mirna {mir} does not have {ke}")
 
     influences = get_influences_df(network)
     influences = influences[influences.index.isin(miR_nodes)]
@@ -444,7 +447,7 @@ def get_up_down_regulated(network, condition):
     down_regulation_YO = {}
     for node_name in network.nodes:
         node = network.nodes[node_name]
-        if 'metadata' in node['data']:
+        if 'data' in node and 'metadata' in node['data']:
             metadata = node['data']['metadata']
             if 'dds' in metadata and condition in metadata['dds']:
                 regulation = metadata['dds'][condition]
@@ -543,7 +546,7 @@ def get_pathway_list(network):
     """
     pathway_list = []
     for node in network.nodes:
-        if 'pathways' in node['data']:
+        if 'data' in node and 'pathways' in node['data']:
             p = node['data']['pathways']
             pathway_list.extend(p)
     return pathway_list

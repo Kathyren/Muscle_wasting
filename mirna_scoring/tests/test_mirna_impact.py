@@ -218,3 +218,8 @@ def test_calculate_measurements():
 def test_get_mirna_impact_pathway_rw():
     pass
 
+def test_mirnas_influence_on_genes():
+    network_path = "/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_pkl/metadata_mirnas__Sarcopenia_relevant_normalize_cutoff_0.9.pkl"
+    network = nx.read_gpickle(network_path)
+    mirna = ['hsa-miR-16-5p']
+    influence = mi.mirnas_influence_on_genes(network=network, miR_nodes=mirna)
