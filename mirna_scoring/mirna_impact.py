@@ -238,6 +238,19 @@ class mirna_network:
                         dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
                 quantity = count_de_gene(gene_node=gene_node,
                  comparisons=comparisons, dds_threshold=dds_threshold)
+            elif 'dds' in gene_node['data']['metadata'] :
+                dds = gene_node['data']['metadata']['dds']
+                for comparison in comparisons:
+                    comp = dds[comparison]
+                    # if comp is greater than the threshold, then it will be counted, otherwise it will be 0
+                    if comparison in dataframe_dict:
+                        dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
+                    else:
+                        dataframe_dict[comparison] = {}
+                        dataframe_dict[comparison][gene] = comp * self.influence_sum_df[gene]
+                quantity = count_de_gene(gene_node=gene_node,
+                 comparisons=comparisons, dds_threshold=dds_threshold)
+
 
             # quantity is lower 0, max the amount of comparisons
             # if abs(self.influence_sum_df[gene]) is >0, then 1, otherwise 0

@@ -129,6 +129,13 @@ def get_up_down_regulated(network, condition):
                     up_regulation_YO[node_name] = regulation
                 elif regulation < 0:
                     down_regulation_YO[node_name] = regulation
+            elif 'dds' in metadata and condition in metadata['dds']:
+                regulation = metadata['dds'][condition]
+                regulation_YO[node_name] = regulation
+                if regulation > 0:
+                    up_regulation_YO[node_name] = regulation
+                elif regulation < 0:
+                    down_regulation_YO[node_name] = regulation
     return up_regulation_YO, down_regulation_YO
 
 def get_up_down_regulated_df(df, network, condition):

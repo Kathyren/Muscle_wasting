@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import seaborn as sns
-from scipy.spatial.distance import pdist, squareform
-from scipy.spatial.distance import cityblock
+import networkx as nx
+from pyvis.network import Network
+import math
 
 def convert_to_int_list(lst):
     """
@@ -107,10 +108,12 @@ def plot_pathway_frequency(frequency_pathways):
     plt.show()
 
 def plot_pathways_keyword_heatmap(mir_pathway_influence_df):
-
+    if 'participation' not in mir_pathway_influence_df:
+        mir_pathway_influence_df['participation'] = mir_pathway_influence_df.drop(
+            columns=["Different_pathways", "Total"]).sum(axis=1)
     mir_pathway_influence_df_n0 = mir_pathway_influence_df[mir_pathway_influence_df['participation'] > 0]
     mir_pathway_influence_df_n0 = mir_pathway_influence_df_n0.drop(
-        columns=["Different_pathways", "Total", "participation"])
+        columns=["Different_pathways", "Total", "participation"], errors='ignore')
     mir_pathway_influence_df_n0 = mir_pathway_influence_df_n0.loc[:, (mir_pathway_influence_df_n0 != 0).any(axis=0)]
     sns.heatmap(mir_pathway_influence_df_n0, cmap="YlOrBr", annot=True)
 
@@ -128,3 +131,166 @@ def plot_mirnas_similarirty(dist_df):
     sns.heatmap(sorted_df, annot=False, cmap='coolwarm')  # , linewidths=0.5)#, linecolor='black')
     plt.title('Sorted Distance Matrix Heatmap')
     plt.show()
+
+
+def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/sub_plots/'):
+    """
+    Draws a network with selected nodes.
+
+    Parameters:
+        G (networkx.Graph): The graph to visualize.
+        node_list (list): List of nodes to include in the visualization.
+        interactive (bool): Whether to display an interactive graph in a Jupyter Notebook.
+        save_path (str, optional): If provided, saves the static graph as an image.
+        :param G: NetworkX networks
+        :param node_list:  The list of the names of the nodes to print
+        :param save_path: The path where the network.html will be saved.
+        :param interactive:
+        :param name:
+    """
+    # Create a subgraph with only selected nodes
+    subG = G.subgraph(node_list).copy()
+
+    if interactive:
+        net = Network(notebook=True, height="600px", width="100%", cdn_resources="in_line")
+
+        for node, data in subG.nodes(data=True):
+            node_color = "#FA9FB5" if data.get("type") == "mirna" else "lightblue"
+            size = 40 if data.get("type") == "mirna" else 20
+            net.add_node(node, label=str(node), color=node_color, size=size)
+            # net.add_node(node, label=str(node), color="lightblue", size=10)
+        # Remove conflicting attributes (e.g., "source", "target")
+        for u, v, data in subG.edges(data=True):
+            for attr in ["source", "target", "position"]:
+                if attr in data:
+                    del data[attr]
+
+            weight = data.get("weight", 1)  # Use edge weight if available
+            edge_color = "red" if weight == -1 else "blue"  # Color edges based on weight
+
+            net.add_edge(u, v, color=edge_color, arrows="to", width=2)
+            # net.add_edge(u, v, value=weight, arrows="to")  # <-- Ensures arrows
+
+        # Create an interactive Pyvis graph
+        net.force_atlas_2based(gravity=-100, central_gravity=0.1, spring_length=150, spring_strength=0.001, damping=0.9)
+
+        # net.from_nx(subG)
+        net.show(f"{save_path}/{name}.html", notebook=False)
+        return net.show(f"{save_path}/{name}.html")  # Displays inline in Jupyter
+
+    else:
+        # Static visualization using Matplotlib
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(subG)  # Layout for positioning
+        nx.draw(subG, pos, with_labels=True, node_color="skyblue", edge_color="gray", node_size=500, font_size=10)
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        plt.show()
+
+
+def generate_html_table(df):
+    """
+    Generates an HTML table from the given DataFrame, dynamically adjusting to the columns.
+
+    Parameters:
+    - df: DataFrame containing the data for the table.
+
+    Returns:
+    - A string containing the HTML table representation.
+    """
+    # Start the HTML table
+    table_html = "<table id='data_table' border='1'><thead><tr>"
+
+    # Add column headers dynamically from DataFrame
+    for col in df.columns:
+        table_html += f"<th>{col}</th>"
+    table_html += "</tr></thead><tbody>"
+
+    # Populate the table with rows from the DataFrame
+    for _, row in df.iterrows():
+        table_html += "<tr>"
+        for col in df.columns:
+            table_html += f"<td>{row[col]}</td>"
+        table_html += "</tr>"
+
+    # Close the table
+    table_html += "</tbody></table>"
+
+    return table_html
+
+
+def make_dynamic_table(table_html):
+    """
+    Adds sorting functionality to the provided table HTML using DataTables.
+
+    Parameters:
+    - table_html: The HTML string of the table to which DataTables will be applied.
+
+    Returns:
+    - A string containing the HTML table with DataTables integration.
+    """
+    # Add DataTables library and JavaScript to enable sorting and other functionalities
+    dynamic_html = """
+    <h2>Data Table</h2>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    """
+
+    # Add the table HTML and DataTable initialization script
+    dynamic_html += table_html  # Append the table passed from generate_html_table
+    dynamic_html += """
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#data_table').DataTable();
+        });
+    </script>
+    """
+
+    return dynamic_html
+
+
+def prepare_table_from_network(network, selected_nodes):
+    """
+    :param network:
+    :param selected_nodes:
+    :return:
+    """
+    nodes_table = {}
+    for node in selected_nodes:
+        nodes_table[node] = {'Name': node}
+        node_data = network.nodes[node]
+        data = node_data['data']
+        weight = data['weigh']
+        nodes_table[node]['Weight'] = weight
+        dds = None
+        # print(data.keys())
+        if 'metadata' in data and 'dds_original' in data['metadata']:
+            dds = data['metadata']['dds_original']
+        elif 'metadata' in data and 'dds' in data['metadata']:
+            dds = data['metadata']['dds']
+        if dds:
+            for combination, stat in dds.items():
+                nodes_table[node][combination] = stat
+        if 'metadata' in data and 'pathways_svd' in data['metadata']:
+            pathway_svd = data['metadata']['pathways_svd']
+            nodes_table[node]['Pathway svd'] = pathway_svd
+        if 'metadata' in data and 'tissue' in data['metadata']:
+            sum = 0
+            for _, tissue in data['metadata']['tissue'].items():
+                sum += tissue
+            nodes_table[node]['Tissue presence'] = sum
+        else:
+            nodes_table[node]['Tissue presence'] = math.nan
+        if 'metadata' in data and 'cell_type' in data['metadata']:
+            sum = 0
+            for _, tissue in data['metadata']['cell_type'].items():
+                sum += tissue
+            nodes_table[node]['Cell type presence'] = sum
+        else:
+            nodes_table[node]['Cell type presence'] = math.nan
+
+    nodes_data = pd.DataFrame(nodes_table).T
+
+    return nodes_data
