@@ -1,6 +1,6 @@
 
-from score import *
-from mirna_impact_helper import *
+from mirna_scoring.score import *
+from mirna_scoring.mirna_impact_helper import *
 
 
 class mirna_network:
