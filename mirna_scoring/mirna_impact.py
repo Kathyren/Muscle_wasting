@@ -168,7 +168,7 @@ class mirna_network:
         :return:
         """
         self.set_all_conditions_up_down_regulated()
-        self.set_measurements()
+        self.set_measurements(dds_threshold=dds_threshold)
         self.set_up_regulated_dds_score()
         self.set_down_regulated_dds_score()
         self.set_quantity_score(dds_threshold=dds_threshold)
@@ -199,6 +199,7 @@ class mirna_network:
         self.mirna_scores['pathway_svd'] = self.mirnas_influences['pathway_svd']
     def set_quantity_score(self, dds_threshold=0):
         self.mirnas_influences['de_count'] = self.calculate_quantity_score(dds_threshold)
+        self.mirna_scores['de_count'] = self.mirnas_influences['de_count']
     def set_weight_score(self):
         weight_score = self.measurements['weight']
         score = weight_score.sum(axis=1)
@@ -298,7 +299,7 @@ class mirna_network:
         :return:
         """
         if 'quantity' not in self.measurements:
-            self.calculate_measurements()
+            self.calculate_measurements(dds_threshold=dds_threshold)
         quantity_df = self.measurements['quantity']
         return quantity_df.sum(axis=1)
     def get_random_walk_pathway_influence(self, steps=5, sample_size=10, pathway_keywords=None):

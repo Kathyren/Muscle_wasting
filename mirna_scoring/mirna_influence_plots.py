@@ -133,7 +133,7 @@ def plot_mirnas_similarirty(dist_df):
     plt.show()
 
 
-def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/sub_plots/'):
+def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/sub_plots'):
     """
     Draws a network with selected nodes.
 
@@ -176,7 +176,7 @@ def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/
 
         # net.from_nx(subG)
         net.show(f"{save_path}/{name}.html", notebook=False)
-        return net.show(f"{save_path}/{name}.html")  # Displays inline in Jupyter
+        return None  # Displays inline in Jupyter
 
     else:
         # Static visualization using Matplotlib
@@ -192,6 +192,9 @@ def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/
 def generate_html_table(df):
     """
     Generates an HTML table from the given DataFrame, dynamically adjusting to the columns.
+    - Floats are rounded to 3 decimal places.
+    - Integers are displayed without decimal points.
+    - Values < 0.001 are displayed in scientific notation.
 
     Parameters:
     - df: DataFrame containing the data for the table.
@@ -199,6 +202,23 @@ def generate_html_table(df):
     Returns:
     - A string containing the HTML table representation.
     """
+
+    def format_value(value):
+        """
+        Format the value based on the given rules:
+        - Round floats to 3 decimal places.
+        - Display integers without decimals.
+        - Use scientific notation for values < 0.001.
+        """
+        if isinstance(value, (int, float)):
+            if value < 0.001:
+                return f"{value:.1e}"  # Scientific notation
+            elif isinstance(value, int):
+                return f"{value}"  # No decimal places for integers
+            else:
+                return f"{value:.3f}"  # Round floats to 3 decimal places
+        return value  # For non-numeric values, return as is
+
     # Start the HTML table
     table_html = "<table id='data_table' border='1'><thead><tr>"
 
@@ -211,7 +231,9 @@ def generate_html_table(df):
     for _, row in df.iterrows():
         table_html += "<tr>"
         for col in df.columns:
-            table_html += f"<td>{row[col]}</td>"
+            # Apply formatting to each value
+            formatted_value = format_value(row[col])
+            table_html += f"<td>{formatted_value}</td>"
         table_html += "</tr>"
 
     # Close the table
@@ -294,3 +316,27 @@ def prepare_table_from_network(network, selected_nodes):
     nodes_data = pd.DataFrame(nodes_table).T
 
     return nodes_data
+
+def add_table_to_html_network(html_file, nodes_data):
+    table_html = generate_html_table(nodes_data)
+    dynamic_html = make_dynamic_table(table_html)
+    with open(html_file, "r") as file:
+        network_content = file.read()
+
+    # Inject the table at the end of the HTML content
+    network_content += dynamic_html
+
+    # Save the updated HTML
+    updated_html = html_file
+    with open(updated_html, "w") as file:
+        file.write(network_content)
+
+def generate_html_network_report(network, selected_nodes, name, save_path='mirna_scoring/sub_plots'):
+    nodes_data = prepare_table_from_network(network=network, selected_nodes=selected_nodes)
+    draw_network(G=network, node_list=selected_nodes,
+                 name=name, interactive=True, save_path=save_path)
+    html_file = f"{save_path}/{name}.html"
+    add_table_to_html_network(html_file=html_file, nodes_data=nodes_data)
+    print(f"Saved on {html_file}")
+    return html_file
+

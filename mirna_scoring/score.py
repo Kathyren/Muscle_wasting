@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import zscore
-
+import decoupler as dc
+import os
+from mirkitten.plot_GSEA_ORA import plot_ora_results
 
 def select_extreme_rows(df, x, method='zscore'):
     """
@@ -98,3 +100,16 @@ def count_de_gene(gene_node, comparisons=None, dds_threshold=0):
     return quantity
 
 
+def get_mirna_target_enriched(selected_genes, title, msigdb):
+    enriched = dc.get_ora_df(
+            df=selected_genes,
+            net=msigdb,
+            source='geneset',
+            target='genesymbol'
+        )
+    pathway_df = enriched[enriched['FDR p-value'] < 0.1]
+    pathway_df.index = pathway_df["Term"]
+    #pathway_df.set_index("Term", inplace=True)  # Set "Term" as index
+    enriched_pathways = pathway_df['Combined score']
+    return plot_ora_results(pathway_df, top_n=10, figsize=(12, 6), scale_odds_ratio=.5,
+                     fontsize_title=12, fontsize_subtitle=12, fontsize_text=10,title=title)

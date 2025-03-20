@@ -1,4 +1,4 @@
-### This file is the mail pipeline for my priject
+### This file is the mail pipeline for my project
 import sys
 import os.path
 
