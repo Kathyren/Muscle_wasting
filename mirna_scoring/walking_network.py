@@ -39,12 +39,13 @@ def register_path(graph, node, mir:str, visited_edges=None, path=[]):
         path = register_path(graph, neighbor_node, mir, visited_edges, path)
         paths.append(path)
     return paths
-def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
+def visit_all_neighbours(graph, node, mir:str, visited_edges=None, dist=0):
     if visited_edges is None:
         visited_edges = []
 
     node_values = node['data']['influence'][mir]
     node_name = node['data']['name']
+    dist = dist + 1
     for neighbor in graph.successors(node_name):
 
         edge = graph[node_name][neighbor]
@@ -55,10 +56,11 @@ def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
             print(f"here, {edge}")
         edge['weight'] = edge['data']['weight']
         weight = edge['weight']
+        # Consider how far was the effect of the mirna to the gene.
         if node_name == neighbor:
             effect = node_values[-1]
         else:
-            effect = node_values[-1] * weight
+            effect = node_values[-1] * weight * (1/dist)
         neighbor_node = graph.nodes[neighbor]
         if 'influence' in neighbor_node['data']:
             if mir in neighbor_node['data']['influence']:
@@ -68,7 +70,7 @@ def visit_all_neighbours(graph, node, mir:str, visited_edges=None):
                 neighbor_node['data']['influence'][mir] = [effect]
         else:
             neighbor_node['data']['influence'] = {mir: [effect]}
-        visit_all_neighbours(graph, neighbor_node, mir, visited_edges)
+        visit_all_neighbours(graph, neighbor_node, mir, visited_edges, dist=dist)
 def start_mir_path(graph, mir):
     node = graph.nodes[mir]
     node['data']['influence']= {mir:[1]}
