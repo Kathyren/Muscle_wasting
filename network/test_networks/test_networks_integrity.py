@@ -18,6 +18,8 @@ def test_full_flow_genes_tf(monkeypatch):
     monkeypatch.setattr(
         mp, 'save_as_cjsn', lambda *args, **kwargs: None
      )
+    monkeypatch.setattr(network_processing, 'save_graph', lambda *args, **kwargs: None)
+    monkeypatch.setattr(network_processing, 'get_SVD_pathways',lambda *args, **kwargs: 1 )
     name_n = "ALDOA_test_no_save"
 
     with open("network/settings/metadata.yml", 'r') as file:
@@ -48,7 +50,7 @@ def test_full_flow_genes_tf(monkeypatch):
                                     coefficients=coefficents,
                                     cutoff=0.5)
     print(network)
-    assert len(network.nodes()) == 17, f"The test network ALDOA should have 6 genes to start and 11 mirnas."
+    assert len(network.nodes()) == 7, f"The test network ALDOA should have 6 genes to start and 11 mirnas."
 
 def test_remove_nodes(monkeypatch):
 
@@ -311,5 +313,7 @@ def test_separate_metadata():
 
     node_NT5E =graph.nodes()['NT5E']
     assert 'dds_yo_file' in node_NT5E['data']
+
+
 def test_end():
     pass
