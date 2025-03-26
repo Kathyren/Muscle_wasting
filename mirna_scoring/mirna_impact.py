@@ -1,14 +1,18 @@
 
 from mirna_scoring.score import *
 from mirna_scoring.mirna_impact_helper import *
-
-
+import mirna_scoring.jupyter_functions as jf
+import mirna_scoring.mirna_influence_plots as mi_plot
+from itertools import chain
+from fractions import Fraction
 class mirna_network:
     def __init__(self, network):
         self.network = network
         self.miR_nodes = get_mirna_nodes(network)
         self.influence_df = mirnas_influence_on_genes(miR_nodes=self.miR_nodes, network=network) # [[1,1][1,-1]]
+        self.influence_df_paths=None
         self.influence_sum_df = self.get_impact_data() # [2, 0]
+        self.influence_sum_df_paths = None
         self.mirnas_paths = None
         #self.mirna_pathway_influence_df = None # get_mirna_pathway_influence_df(network, self.paths)
         self.mirnas_influences = {}
@@ -52,20 +56,30 @@ class mirna_network:
     # ------ Functions to run -------
     def save_influence_df(self, name):
         self.influence_df.to_csv(name)
-    def set_mirnas_paths(self, steps=5,sample_size =10 ):
+    def set_mirnas_paths(self, steps=5,sample_size =10, seed=42):
         """
         This function takes the network and gets for each of the
         mirnas the random walks.
+        :param seed:
         :param steps:
         :param sample_size:
         :return:
         """
-        self.mirnas_paths = get_paths(network=self.network,nodes_start=self.miR_nodes, steps=steps,sample_size=sample_size)
+        self.mirnas_paths = get_paths(network=self.network,nodes_start=self.miR_nodes,
+                                      steps=steps,sample_size=sample_size, seed=seed)
         return self.mirnas_paths
     def set_pathway_influences(self):
         mirna_pathway_influence_df = \
             get_mirna_pathway_influence_df(self.network, self.mirnas_paths)
         self.mirnas_influences['pathway_influences'] = mirna_pathway_influence_df
+
+    def set_genes_influences(self):
+        influences = {}
+        for mirna, paths in self.mirnas_paths.items():
+            nodes = list(chain.from_iterable(paths))
+            sub_network = self.network.subgraph(nodes)
+            influences[mirna] = mirnas_influence_on_genes(miR_nodes=self.mirnas_paths.keys(), network=sub_network)
+        return influences
     def set_de_influences(self):
         mirna_de_influence_df =\
             get_mirna_dde_influence_df(self.network, self.mirnas_paths)
@@ -91,10 +105,10 @@ class mirna_network:
         else:
             self.set_up_down_regulated(condition=condition)
         return self.downRegulated[condition]
-    def reset_paths(self, steps=5, sample_size=10):
+    def reset_paths(self, steps=5, sample_size=10, seed=42):
         self.mirnas_paths = get_paths(network=self.network,
                                       nodes_start=self.miR_nodes,
-                                      steps=steps, sample_size=sample_size)
+                                      steps=steps, sample_size=sample_size, seed=seed)
     def get_frequency_pathways(self):
         return self.frequency_pathways
     def get_top_pathways(self):
@@ -312,13 +326,199 @@ class mirna_network:
                                                                   pathway_keywords=pathway_keywords)
         self.mirnas_influences['pathways']= mir_pathway_influence_df
         return mir_pathway_influence_df
+    def get_minra_influence_as_fraction(self, mirna, gene):
+        # Get the float value
+        float_values = self.influence_df.loc[mirna][gene]
+        fractions = []
+        for float_value in float_values:
+            fraction = Fraction(float_value).limit_denominator(100)
+            fraction_str = f"{fraction.numerator}/{fraction.denominator}"
+            fractions.append(fraction_str)
 
 
+class mirna_evaluation:
 
+    def __init__(self,mirna_network:mirna_network,
+                session_name="Session_1",
+                base_directory= 'mirna_scoring/results/' ):
+        self.minas_cluster = None
+        self.mirna_network = mirna_network
+        self.mirna_scores = None
+        if base_directory[-1]!='/':
+            base_directory+='/'
+        self.directory = base_directory+session_name
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+            print("Directory created successfully!")
+        else:
+            print("Directory already exists!")
+        self.selected_mirnas = []
+        self.dist_df = self.mirna_network.get_mirnas_similarity()
+        self.pathway_df = None
+        self.clustered_mirnas = None
+        self.set_pathway_database()
 
+    def get_all_mirnas(self):
+        return self.mirna_network.miR_nodes
+    def score(self, steps=10, sample_size=10, dds_threshold=2, pathway_keywords=None):
+        if pathway_keywords is None:
+            pathway_keywords = []
+        self.scores= self.mirna_network.quick_get_all_scores(steps=steps, sample_size=sample_size,
+                                                             dds_threshold=dds_threshold,
+                                                             pathway_keywords=pathway_keywords)
+        return self.scores
+    def select_mirnas(self):
+        if self.scores is None:
+            raise Exception("There is need to score the mirnas before select them")
+        self.selected_mirnas=[]
+        top_rows_extreme, row_scores_extreme = select_extreme_rows(self.scores, x=5, method='iqr')
+        top_rows_ranked, row_scores_top = select_top_ranked_rows(self.scores, x=5)
+        top_rows_ranked_normalized, row_scores_normalized = select_top_normalized_rows(self.scores, x=5)
 
+        self.selected_mirnas.extend(top_rows_extreme.index)
+        self.selected_mirnas.extend(top_rows_ranked.index)
+        self.selected_mirnas.extend(top_rows_ranked_normalized.index)
 
+        for comparison in self.mirna_network.get_all_available_combinations():
+            mir = self.mirna_network.get_best_inhibitor_in_comparison(comparison)
+            self.selected_mirnas.append(mir)
+            mir = self.mirna_network.get_best_activator_in_comparison(comparison)
+            self.selected_mirnas.append(mir)
+        return self.selected_mirnas
 
+    def get_mirna_influence(self, mirna):
+        """
+        Get the genes and their influence
+        :return:
+        """
+        paths = self.mirna_network.mirnas_paths[mirna]
+        sub_network = []
+        for path in paths:
+            sub_network.extend(path)
+        impact = self.mirna_network.influence_sum_df.loc[mirna]
+        return sub_network, impact
+
+    def cluster_mirnas(self, n_clusters=None):
+        unique_mirnas = list(set(self.selected_mirnas))
+        if n_clusters is None:
+            n_clusters = len(unique_mirnas) // 3
+        mirna_clusters = jf.cluster_mirnas(dist_matrix_square=self.dist_df, n_clusters=n_clusters)
+        minas_cluster = mirna_clusters.sort_values(by=["Cluster"])['Cluster']
+        clustered_mirnas = {}
+        for mirna in unique_mirnas:
+            if mirna in minas_cluster.index:
+                cluster = minas_cluster[mirna]
+                if cluster not in clustered_mirnas:
+                    cluster = int(cluster)
+                    clustered_mirnas[cluster] = []
+                clustered_mirnas[cluster].append(mirna)
+        self.clustered_mirnas = clustered_mirnas
+        self.minas_cluster = minas_cluster
+        return clustered_mirnas
+    def set_pathway_database(self, sel_db=None):
+        if sel_db is None:
+            sel_db = ['go_molecular_function',
+                      'go_cellular_component',
+                      'go_biological_process',
+                      'reactome_pathways',
+                      'kegg_pathways', 'hallmark']
+        if "msigdb.csv" in os.listdir('mirkitten/data'):
+            self.msigdb = pd.read_csv('mirkitten/data/msigdb.csv', index_col=0)
+        else:
+            self.msigdb = dc.get_resource('MSigDB')
+        self.msigdb.index = self.msigdb['genesymbol']
+
+        msigdb = self.msigdb[self.msigdb['collection'].isin(sel_db)]
+        self.msigdb = msigdb[~msigdb.duplicated(['geneset', 'genesymbol'])]
+    def create_report_single_mirnas(self):
+        genes = []
+        for mirna in self.selected_mirnas:
+            g = self.create_report_single_mirna(mirna)
+            genes.extend(g)
+        return genes
+    def create_report_single_mirna(self, mirna):
+        genes = []
+        sub_network, impact = self.get_mirna_influence(mirna)
+
+        sub_network = list(set(sub_network))
+        # mi_plot.draw_network(G=my_network.network, node_list = sub_network, name= mirna, save_path='mirna_scoring/sub_plots')
+        html_file = mi_plot.generate_html_network_report(network=self.mirna_network.network, selected_nodes=sub_network,
+                                                         name=mirna, save_path=self.directory)
+        # fig, ax = get_plot_enriched(sub_network, f"Enriched pathways of targets of {mirna}")
+        fig, ax = get_mirna_target_enriched(selected_genes=sub_network,
+                                            title=f"Enriched pathways of targets of {mirna}", msigdb=self.msigdb)
+        image_file = html_file.split('/')[-1]
+        html_image_path = f'{image_file}_PathwayEnriched.png'
+        image_file = f'{self.directory}/{image_file}_PathwayEnriched.png'
+        fig.savefig(image_file, dpi=300, bbox_inches='tight')
+
+        with open(html_file, "r") as file:
+            html_content = file.read()
+
+        # Append the image tag to the HTML
+        html_content += f"""
+                    <h2>Enriched Pathways</h2>
+                    <img src="{html_image_path}" alt="Enriched Pathways">
+                    """
+
+        # Save the modified HTML file
+        with open(html_file, "w") as file:
+            file.write(html_content)
+        return genes
+
+    def create_report_clusters(self):
+        for cluster, mirnas in self.clustered_mirnas.items():
+            sub_network_cluster = []
+            impacts = []
+            for mirna in mirnas:
+                sub_network, impact = self.get_mirna_influence(mirna)
+                sub_network_cluster.extend(sub_network)
+                impacts.append(impact)
+            sub_network_cluster = list(set(sub_network_cluster))
+            impacts = pd.DataFrame(impacts)
+            genes = [gene for gene in sub_network_cluster if gene in impacts.columns]
+            impacts = impacts[genes]
+            impacts = impacts.reset_index()
+            mi_plot.generate_html_network_report(network=self.mirna_network.network, selected_nodes=sub_network_cluster,
+                                                 name=f"cluster_{cluster}", influences=impacts.round(3),
+                                                 save_path=self.directory)
+            # mi_plot.draw_network(G=my_network.network, node_list = sub_network_cluster, name= mirna+f"_cluster_{cluster}", save_path='mirna_scoring/sub_plots')
+            html_file = f"{self.directory}/cluster_{cluster}.html"
+            pathways_df = self.get_enriched_pathways(selected_genes=sub_network_cluster, fdr_threshold = 0.1)
+            fig, ax = plot_ora_results(pathways_df, top_n=10, figsize=(12, 6), scale_odds_ratio=.5,
+                     fontsize_title=12, fontsize_subtitle=12, fontsize_text=10,title=f"Enriched pathways of targets of cluster {cluster}")
+            image_file = html_file.split('/')[-1]
+            html_image_path = f'{image_file}_PathwayEnriched.png'
+            image_file = f'{self.directory}/{image_file}_PathwayEnriched.png'
+            fig.savefig(image_file, dpi=300, bbox_inches='tight')
+
+            with open(html_file, "r") as file:
+                html_content = file.read()
+
+            # Append the image tag to the HTML
+            html_content += f"""
+                <h2>Enriched Pathways</h2>
+                <img src="{html_image_path}" alt="Enriched Pathways">
+
+                <h4> Filter to see in cytoscape: </h4>
+                """
+            html_content += jf.get_cytoscape_filter_from_list(sub_network_cluster)
+
+            # Save the modified HTML file
+            with open(html_file, "w") as file:
+                file.write(html_content)
+
+    def get_enriched_pathways(self, selected_genes, fdr_threshold = 0.1):
+        enriched = dc.get_ora_df(
+            df=selected_genes,
+            net=self.msigdb,
+            source='geneset',
+            target='genesymbol'
+        )
+        pathway_df = enriched[enriched['FDR p-value'] < fdr_threshold]
+        pathway_df.index = pathway_df["Term"]
+        # pathway_df.set_index("Term", inplace=True)  # Set "Term" as index
+        return pathway_df
 
 
 

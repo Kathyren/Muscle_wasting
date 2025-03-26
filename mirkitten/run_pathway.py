@@ -1,9 +1,16 @@
 ### This will run the pathway analysis. It will ask as parameter the path to the yml
 # As optional, a string with the path of the pathways,
 # and the pvalue=0.05, threshold=None, interest='stat', pathway_pvalue=0.05.
+import sys
+import os.path
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+os.chdir(BASE_DIR)
+pwd = os.getcwd()
 import argparse
 import Pathway
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run the Pathways analysis")

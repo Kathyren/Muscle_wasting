@@ -2,6 +2,14 @@
 # as for run_DDS. It will also ask for pvalue, threshold, interest, and species='human', but these are optional.
 # Here we will check if the pavalue is > 0 and <=1, if the threshold is >=0, and if the interest is in ['stat', 'log2FoldChange']
 # but only if they are specifies, if no, no argument will be passed to the class.
+import sys
+import os.path
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+os.chdir(BASE_DIR)
+pwd = os.getcwd()
+
 import argparse
 import TF
 import pandas as pd

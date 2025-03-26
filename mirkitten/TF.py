@@ -23,8 +23,8 @@ class TranFact():
         return {dds: pd.read_csv(file, index_col=0) for dds, file in dds_dict.items()}
     
     def set_colletri(self, species='human'):
-        if species=='human' and "collectri" in os.listdir('/home/amore/work/data'):
-            collectri = pd.read_csv('collectri.csv')
+        if species=='human' and "collectri.csv" in os.listdir('data'):
+            collectri = pd.read_csv('data/collectri.csv', index_col=0)
         else:
             collectri = dc.get_collectri(organism=species, split_complexes=True)
         self.collectri = collectri
@@ -89,11 +89,6 @@ class TranFact():
         all_scores_tf_df.fillna(0, inplace=True)
 
         return all_scores_tf_df
-        
-        if isinstance(genes, pd.Series):  # If multiple values exist
-            gene_list.append(genes.tolist())
-        else:  # Single value case
-            gene_list.append([genes])
     
     def save_tf_df_of_combined_comparisons(self, path='results/tf_df_combined.csv'):
         tf_df = self.get_tf_df_of_combined_comparisons()

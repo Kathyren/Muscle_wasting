@@ -660,7 +660,7 @@ def get_interest_genes_and_neighbors(graph, n_neighbors: int, distance: int, int
     pass
 
 
-def select_next_valid_node(i, path_length, graph, neighbors) -> str:
+def select_next_valid_node(i, path_length, graph, neighbors, seed=42) -> str:
     """
     This function will select the next node to go in the random walk.
     The node must have at least one neighbor to continue the path.
@@ -674,6 +674,7 @@ def select_next_valid_node(i, path_length, graph, neighbors) -> str:
     :param neighbors:
     :return:
     """
+    np.random.seed(seed)
     next_node = random.choice(neighbors)
     #return next_node
     if i < (path_length - 1):
@@ -688,7 +689,7 @@ def select_next_valid_node(i, path_length, graph, neighbors) -> str:
     return next_node
 
 
-def get_random_path(G, start_node, path_length):
+def get_random_path(G, start_node, path_length, seed=24):
     """
     This function will get a random path of a certain length from a starting node in a graph.
     The path will be a list of nodes in the order they were visited.
@@ -712,7 +713,7 @@ def get_random_path(G, start_node, path_length):
         if not neighbors:
             break  # No more neighbors to explore, end the path here
 
-        next_node = select_next_valid_node(i, path_length, G, neighbors)
+        next_node = select_next_valid_node(i, path_length, G, neighbors, seed=seed)
 
         path.append(next_node)
         current_node = next_node
@@ -720,7 +721,7 @@ def get_random_path(G, start_node, path_length):
     return path
 
 
-def random_walk(graph, node_name, distance, sample_size) -> list:
+def random_walk(graph, node_name, distance, sample_size, seed=24) -> list:
     """
     This function takes  the graph, looks for the correspongng node and do the random path.
     :param graph:
@@ -733,7 +734,7 @@ def random_walk(graph, node_name, distance, sample_size) -> list:
         return []
     paths = []
     for i in range(sample_size):
-        path = get_random_path(graph, node_name, distance)
+        path = get_random_path(graph, node_name, distance,seed=seed)
         paths.append(path)
     return paths
 
@@ -743,6 +744,7 @@ def remove_nodes_low_centrality_pageRank(graph, weight=None, cutoff=0.75):
     This function will calculate a centrality
 
 
+    :param weight:
     :param cutoff: What is going to be the quartile of nodes that we are going to keep
     :param graph: A networkX graphThe graph without the un-relevant nodes
     :return:

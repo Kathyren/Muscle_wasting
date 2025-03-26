@@ -1,8 +1,14 @@
 import argparse
 import sys
 import os
-## print pwd
-os.system('pwd')
+
+import sys
+import os.path
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+os.chdir(BASE_DIR)
+pwd = os.getcwd()
 import DDS
 
 ## This is to run and get the DDS. The arguments are the yml file with the name of the comparisons and the path where the DDS file is

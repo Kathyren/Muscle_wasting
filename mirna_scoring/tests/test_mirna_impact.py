@@ -8,7 +8,7 @@ from mirna_scoring.jupyter_functions import *
 import mirna_scoring.mirna_impact as mi
 import networkx as nx
 from mirna_scoring.walking_network import count_influence, evaluate_path_influence, get_influence
-
+import network.network_processing as ntp
 
 def test_get_influences_df():
     """
@@ -223,3 +223,34 @@ def test_mirnas_influence_on_genes():
     network = nx.read_gpickle(network_path)
     mirna = ['hsa-miR-16-5p']
     influence = mi.mirnas_influence_on_genes(network=network, miR_nodes=mirna)
+
+def test_set_genes_influences():
+    network_path = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/ALDOA_LDHA_influence.pkl'
+    network = ntp.load_graph(network_path)
+    mirna_impact = mi.mirna_network(network=network)
+    mirna_impact.quick_get_all_scores(steps=10, sample_size=10, dds_threshold=2, pathway_keywords=['ATP', 'MUSCLE', "MYO"])
+    impacts = mirna_impact.set_genes_influences()
+    print(impacts)
+
+def test_set_genes_influences_long_chain():
+    #network_path = '/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/long_chain.cyjs'
+    #from network.main_pipeline import get_cytoscape_network
+    #network = get_cytoscape_network(network_path)
+    #ntp.save_graph(network, "/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/long_chain.pkl")
+    network_path = "/home/karen/Documents/GitHub/Muscle_wasting/mirna_scoring/tests/test_files/long_chain.pkl"
+    network = ntp.load_graph(network_path)
+    for u, v, d in network.edges(data=True):
+        if 'weightScore' not in  network[u][v] or np.isnan(network[u][v]['weightScore']):
+            network[u][v]['weightScore'] = 1.0
+    nan_edges = [(u, v, d['weightScore']) for u, v, d in network.edges(data=True) if np.isnan(d.get('weightScore', 0))]
+    isolated_nodes = [node for node in network.nodes if network.degree(node) == 0]
+
+    mirna_impact = mi.mirna_network(network=network)
+    mirna_impact.reset_paths(steps=5, sample_size=10)
+    impacts = mirna_impact.set_genes_influences()
+    assert len(impacts)==1, "There was only one mirna in the graph!"
+    AXIN2 = impacts['hsa-miR-34a-5p']['AXIN2'][0]
+    assert -1 in AXIN2
+    assert 0.25 in AXIN2
+    assert 1/3 in AXIN2
+    print(impacts)

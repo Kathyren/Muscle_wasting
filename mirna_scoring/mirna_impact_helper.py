@@ -12,7 +12,7 @@ def get_impact_data(df):
     """
     def convert_to_int_list(lst):
         if isinstance(lst, list):
-            return [int(x) for x in lst]
+            return [float(x) for x in lst]
         else:
             return []
 
@@ -151,7 +151,7 @@ def get_up_down_regulated_df(df, network, condition):
     df_down_yo = df[df.index.isin(down_regulation_YO.keys())]
     df_up_yo = df[df.index.isin(up_regulation_YO.keys())]
     return df_up_yo, df_down_yo
-def get_paths(network, nodes_start:list, steps:int=5, sample_size=10):
+def get_paths(network, nodes_start:list, steps:int=5, sample_size=10, seed=42):
     """
     This function will run for each node in node_start (idealy mirnas) the random walk in the network and
     get what are the nodes it went thorough
@@ -164,7 +164,7 @@ def get_paths(network, nodes_start:list, steps:int=5, sample_size=10):
     steps = steps + 1
     mirPaths = {}
     for mir in nodes_start:
-        p = wn.get_pathways(graph=network, mirna=mir, n_distance=steps, sample_size=sample_size)
+        p = wn.get_pathways(graph=network, mirna=mir, n_distance=steps, sample_size=sample_size, seed=seed)
         unique_set = set(tuple(lst) for lst in p)
 
         # Convert back to a list of lists

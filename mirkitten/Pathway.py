@@ -5,7 +5,7 @@ import decoupler as dc
 import sys
 from mirkitten import get_DE_genes_df
 import yaml
-
+from mirkitten import get_elbow_point_threshold
 
 
 class Pathways:
@@ -88,6 +88,11 @@ class Pathways:
         degs = DE_df.index
         pathway_df = self.run_ora(degs)
         pathway_df = pathway_df[pathway_df['p-value'] < self.pathway_pvalue]
+        if self.threshold is not None:
+            pathway_df = pathway_df[pathway_df['Combined score'] > self.threshold]
+        else:
+            threshold = get_elbow_point_threshold(df = pathway_df, interest='Combined score')
+            pathway_df = pathway_df[pathway_df['Combined score'] > threshold]
         pathway_df.set_index("Term", inplace=True)  # Set "Term" as index
         enriched_pathways = pathway_df['Combined score']
 

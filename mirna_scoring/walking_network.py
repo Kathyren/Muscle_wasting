@@ -1,8 +1,8 @@
 import sys
 sys.path.append('../../network')
-
-import network.network_processing as nx
-
+import numpy as np
+import network.network_processing as ntp
+import networkx as nx
 pathway_keywords = ["ATP", "MITOCHONDRI", "RESPIRAT", "METABOLI", "OXIDATIVE_PHOSPHORYLATION",
                     "NONALCOHOLIC_FATTY_LIVER", "MUSCLE", "ELECTRON"]
 compariosn = ['m_l', 'm_s', 'yo', 'ym', 'mo']
@@ -60,7 +60,7 @@ def visit_all_neighbours(graph, node, mir:str, visited_edges=None, dist=0):
         if node_name == neighbor:
             effect = node_values[-1]
         else:
-            effect = node_values[-1] * weight * (1/dist)
+            effect = float(np.sign(node_values[-1]) * weight * (1/dist))
         neighbor_node = graph.nodes[neighbor]
         if 'influence' in neighbor_node['data']:
             if mir in neighbor_node['data']['influence']:
@@ -170,8 +170,8 @@ def get_influence(graph, paths):
     return data_list
 
 
-def get_pathways(graph, mirna, n_distance=10, sample_size=100):
-    paths = nx.random_walk(graph=graph, node_name=mirna, distance=n_distance, sample_size=sample_size)
+def get_pathways(graph, mirna, n_distance=10, sample_size=100, seed=42):
+    paths = ntp.random_walk(graph=graph, node_name=mirna, distance=n_distance, sample_size=sample_size,seed=seed)
     return paths
 
 

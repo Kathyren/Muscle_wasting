@@ -152,7 +152,7 @@ def full_flow_pageRank(cytoscape_network, name, use_prefix=True, cutoff=0.5):
 
 def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
                        tissue_df=None, tf_file=None, pathway_file=None, cell_type=None,
-                         coefficients={},cutoff=0.5, path = "network/"):
+                         coefficients={},cutoff=0.5, path = "network"):
     """
     :param pathway_file:
     :param tf_file:
@@ -230,9 +230,12 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weight='weightScore', cutoff=cutoff)
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
-    ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
+    ntp.save_graph(network, f"network/Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
+    ntp.save_graph(network, f"{path}/{name}.pkl")
     ntp.separate_metadata(graph=network )
     cytoscape_file = f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs'
+    save_as_cjsn(network, cytoscape_file)
+    cytoscape_file = f'{path}/{name}.cyjs'
     save_as_cjsn(network, cytoscape_file)
 
     return network, cytoscape_file
@@ -243,7 +246,7 @@ def open_cytoscape(file_name):
 
 
 def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
-          tf_file, cell_type_file, ranks, open_cytoscape_=False, name_output=None):
+          tf_file, cell_type_file, ranks, open_cytoscape_=False, name_output=None, path= "network/"):
     
     if file is None:
         file = config_data.oNetwork
@@ -280,7 +283,7 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
                            pathway_file=pathway_file,
                            cell_type= cell_type_df,
                            coefficients=config_data.get('coefficients'),
-                           cutoff=n)
+                           cutoff=n, path=path)
         if open_cytoscape_:
             open_cytoscape(cytoscape_file)
     return network
