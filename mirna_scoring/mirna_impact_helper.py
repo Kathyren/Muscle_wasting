@@ -243,3 +243,15 @@ def get_most_frequent_pathways(frequency_pathways, n=20):
             top[key] = value
     return top
 
+collection_map = {
+    "GOBP": "Gene Ontology Biological Processes",
+    "HALLMARK": "HALLMARK",
+    "KEGG": "KEGG",
+    "REACTOME": "REACTOME",
+    "GOMF": "GO Molecular Functions",
+    "GOCC": "GO Cellular Component"
+}
+
+def get_collection(term):
+    prefix = term.split("_")[0]
+    return prefix

@@ -465,8 +465,22 @@ class mirna_evaluation:
         with open(html_file, "w") as file:
             file.write(html_content)
         return genes
-
-    def create_report_clusters(self):
+    def get_mirna_impact_in_cluster(self, mirnas):
+        sub_network_cluster = []
+        impacts = []
+        for mirna in mirnas:
+            sub_network, impact = self.get_mirna_influence(mirna)
+            sub_network_cluster.extend(sub_network)
+            impacts.append(impact)
+        sub_network_cluster = list(set(sub_network_cluster))
+        impacts = pd.DataFrame(impacts)
+        genes = [gene for gene in sub_network_cluster if gene in impacts.columns]
+        impacts = impacts[genes]
+        impacts = impacts.reset_index()
+        return impacts
+    def create_report_clusters(self, save_directory=None):
+        if save_directory is None:
+            save_directory = self.directory
         for cluster, mirnas in self.clustered_mirnas.items():
             sub_network_cluster = []
             impacts = []
@@ -481,27 +495,35 @@ class mirna_evaluation:
             impacts = impacts.reset_index()
             mi_plot.generate_html_network_report(network=self.mirna_network.network, selected_nodes=sub_network_cluster,
                                                  name=f"cluster_{cluster}", influences=impacts.round(3),
-                                                 save_path=self.directory)
+                                                 save_path=save_directory)
             # mi_plot.draw_network(G=my_network.network, node_list = sub_network_cluster, name= mirna+f"_cluster_{cluster}", save_path='mirna_scoring/sub_plots')
-            html_file = f"{self.directory}/cluster_{cluster}.html"
+            html_file = f"{save_directory}/cluster_{cluster}.html"
             pathways_df = self.get_enriched_pathways(selected_genes=sub_network_cluster, fdr_threshold = 0.1)
-            fig, ax = plot_ora_results(pathways_df, top_n=10, figsize=(12, 6), scale_odds_ratio=.5,
-                     fontsize_title=12, fontsize_subtitle=12, fontsize_text=10,title=f"Enriched pathways of targets of cluster {cluster}")
-            image_file = html_file.split('/')[-1]
-            html_image_path = f'{image_file}_PathwayEnriched.png'
-            image_file = f'{self.directory}/{image_file}_PathwayEnriched.png'
-            fig.savefig(image_file, dpi=300, bbox_inches='tight')
+            pathways_df.to_csv(f"{save_directory}/cluster_{cluster}_pathways.csv")
+            pathways_df = pathways_df[pathways_df['FDR p-value']<0.05]
+            pathways_df["collection"] = pathways_df["Term"].map(get_collection)
+            for collection in pathways_df["collection"].unique():
+                pathway_df = pathways_df[pathways_df['collection']==collection]
+                if len(pathway_df)>0:
+                    fig, ax = plot_ora_results(pathway_df, top_n=10, figsize=(12, 6), scale_odds_ratio=.5,
+                             fontsize_title=12, fontsize_subtitle=12, fontsize_text=10,title=f"{collection} enriched pathways of targets of cluster {cluster}")
+                    image_file = html_file.split('/')[-1]
+                    html_image_path = f'{image_file}_PathwayEnriched_{collection}.png'
+                    image_file = f'{save_directory}/{image_file}_PathwayEnriched_{collection}.png'
+                    fig.savefig(image_file, dpi=300, bbox_inches='tight')
 
-            with open(html_file, "r") as file:
-                html_content = file.read()
+                    with open(html_file, "r") as file:
+                        html_content = file.read()
 
-            # Append the image tag to the HTML
-            html_content += f"""
-                <h2>Enriched Pathways</h2>
-                <img src="{html_image_path}" alt="Enriched Pathways">
-
-                <h4> Filter to see in cytoscape: </h4>
-                """
+                    # Append the image tag to the HTML
+                    html_content += f"""
+                        <h2>Enriched Pathways {collection}</h2>
+                        <img src="{html_image_path}" alt="Enriched Pathways">
+        
+                        <h4> Filter to see in cytoscape: </h4>
+                        """
+                    with open(html_file, "w") as file:
+                        file.write(html_content)
             html_content += jf.get_cytoscape_filter_from_list(sub_network_cluster)
 
             # Save the modified HTML file

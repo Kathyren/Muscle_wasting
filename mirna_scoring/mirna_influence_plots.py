@@ -16,19 +16,19 @@ def convert_to_int_list(lst):
     :return:
     """
     if isinstance(lst, list):
-        return [int(x) for x in lst]
+        return [float(x) for x in lst]
     elif isinstance(lst, str):
         string = lst.replace('[', '').replace(']', '')
         string = string.split(',')
         if len(string) < 1:
             return []
-        return [int(x) if x != '' else 0 for x in string]
+        return [float(x) if x != '' else 0 for x in string]
     else:
         return [lst]
 
 
 
-def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5):
+def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5, dot_size=10):
     """
     This take the dataframe with the lists of [1,1,-1] type, and plots a dotplot
     with the size of the dot the len of the list and the color the sum
@@ -81,7 +81,7 @@ def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5):
 
     # plt.figure(figsize=(10, height_plot))
     scatter_plot = sns.scatterplot(data=plot_data, x='miRNA', y='Gene', size='Paths', hue='Influence', palette=cmap,
-                                   sizes=(x, y))
+                                   sizes=(x, y * dot_size))
     scatter_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
     if n_genes > 2:
         # Get the first two and last y-tick positions.
@@ -89,7 +89,7 @@ def plot_dotplot(df, gene_scale=0.3, mirna_scale=1.5):
 
         # Compute half the y-tick interval (for example).
         eps = (nexty - miny) / 2  # <-- Your choice.
-        plt.xticks(rotation=90)
+        plt.xticks(rotation=45)
         # Adjust the limits.
         ax.set_ylim(maxy + eps, miny - eps)
     # plt.tight_layout()
@@ -189,7 +189,7 @@ def draw_network(G, node_list, name, interactive=True, save_path='mirna_scoring/
         plt.show()
 
 
-def generate_html_table(df):
+def generate_html_table(df, table_id = "data_table"):
     """
     Generates an HTML table from the given DataFrame, dynamically adjusting to the columns.
     - Floats are rounded to 3 decimal places.
@@ -211,7 +211,7 @@ def generate_html_table(df):
         - Use scientific notation for values < 0.001.
         """
         if isinstance(value, (int, float)):
-            if value < 0.001:
+            if abs(value) < 0.001:
                 return f"{value:.1e}"  # Scientific notation
             elif isinstance(value, int):
                 return f"{value}"  # No decimal places for integers
@@ -220,7 +220,7 @@ def generate_html_table(df):
         return value  # For non-numeric values, return as is
 
     # Start the HTML table
-    table_html = "<table id='data_table' border='1'><thead><tr>"
+    table_html = f"<table id='{table_id}' border='1'><thead><tr>"
 
     # Add column headers dynamically from DataFrame
     for col in df.columns:
@@ -242,7 +242,7 @@ def generate_html_table(df):
     return table_html
 
 
-def make_dynamic_table(table_html):
+def make_dynamic_table(table_html, table_name="Table", table_id = "data_table"):
     """
     Adds sorting functionality to the provided table HTML using DataTables.
 
@@ -253,8 +253,8 @@ def make_dynamic_table(table_html):
     - A string containing the HTML table with DataTables integration.
     """
     # Add DataTables library and JavaScript to enable sorting and other functionalities
-    dynamic_html = """
-    <h2>Data Table</h2>
+    dynamic_html = f"""
+    <h2>{table_name}</h2>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -262,22 +262,16 @@ def make_dynamic_table(table_html):
 
     # Add the table HTML and DataTable initialization script
     dynamic_html += table_html  # Append the table passed from generate_html_table
-    dynamic_html += """
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('#data_table').DataTable();
-        });
-    </script>
-    """
+    dynamic_html += "<script type=\"text/javascript\">$(document).ready(function() {$('#"+table_id+"').DataTable();});</script>"
 
     return dynamic_html
 
 
-def prepare_table_from_network(network, selected_nodes):
+def prepare_table_from_network(network, selected_nodes)-> pd.DataFrame:
     """
     :param network:
     :param selected_nodes:
-    :return:
+    :return: dataframe
     """
     nodes_table = {}
     for node in selected_nodes:
@@ -317,9 +311,9 @@ def prepare_table_from_network(network, selected_nodes):
 
     return nodes_data
 
-def add_table_to_html_network(html_file, nodes_data):
-    table_html = generate_html_table(nodes_data)
-    dynamic_html = make_dynamic_table(table_html)
+def add_table_to_html_network(html_file, nodes_data, table_name="Table", table_id = "data_table"):
+    table_html = generate_html_table(nodes_data, table_id=table_id)
+    dynamic_html = make_dynamic_table(table_html, table_name=table_name, table_id=table_id)
     with open(html_file, "r") as file:
         network_content = file.read()
 
@@ -331,12 +325,15 @@ def add_table_to_html_network(html_file, nodes_data):
     with open(updated_html, "w") as file:
         file.write(network_content)
 
-def generate_html_network_report(network, selected_nodes, name, save_path='mirna_scoring/sub_plots'):
+
+def generate_html_network_report(network, selected_nodes, name,  influences=None, save_path='mirna_scoring/sub_plots'):
     nodes_data = prepare_table_from_network(network=network, selected_nodes=selected_nodes)
     draw_network(G=network, node_list=selected_nodes,
                  name=name, interactive=True, save_path=save_path)
     html_file = f"{save_path}/{name}.html"
-    add_table_to_html_network(html_file=html_file, nodes_data=nodes_data)
+    add_table_to_html_network(html_file=html_file, nodes_data=nodes_data, table_name="Genes relevance", table_id="data_table")
+    if influences is not None:
+        add_table_to_html_network(html_file=html_file, nodes_data=influences, table_name="MiRNAs influences", table_id="table_mirnas")
     print(f"Saved on {html_file}")
     return html_file
 
