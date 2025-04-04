@@ -44,3 +44,4 @@ database_analysis/sql_operations.py
 mirna_scoring/notebooks/.virtual_documents/*
 *#
 *.html
+UseCases/*
