@@ -45,3 +45,9 @@ mirna_scoring/notebooks/.virtual_documents/*
 *#
 *.html
 UseCases/*
+*.ipynb
+*.js
+*.svg
+*.ods
+*.css
+*.ipynb
