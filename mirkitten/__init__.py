@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from kneed import KneeLocator
+import logging
+# Set up logging to mitkitten.log
+logging.basicConfig(filename='mirkitten.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def get_DE_genes_df(dds:pd.DataFrame, pvalue:float=0.05, threshold=None, interest='stat'):
     """
@@ -8,6 +12,7 @@ def get_DE_genes_df(dds:pd.DataFrame, pvalue:float=0.05, threshold=None, interes
     """
     if threshold is None:
         threshold = get_elbow_point_threshold(df = dds, interest=interest)
+        logging.info(f'Using threshold: {threshold} for interest: {interest}')
     return dds[(dds['padj'] < pvalue) & (dds[interest] > threshold)]
 
 def get_elbow_point_threshold(df:pd.DataFrame, interest='stat'):

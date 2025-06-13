@@ -6,14 +6,17 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 import yaml
-
-class plot_RF:
+import logging
+#  set up logging to mirkitten.log
+logging.basicConfig(filename='mirkitten.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+class plot_TF:
     def __init__(self, comparison, tf_df):
         """
         Initialize the plot_RF class with experiment and metadata file paths.
         """
         self.comparison = comparison
-        self.tf_df = tf_df
+        self.tf_df = tf_df.T
+        logging.info(f'Initialized plot_TF with comparison: {comparison} and tf_df of shape: {tf_df.shape}')
     def plot_personalize_bars(self, title="", top=20, 
                             lFCs_thr=0.5, sig_thr=0.05,
                             sig = 'padj', title_fontsize=14, 
