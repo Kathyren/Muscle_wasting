@@ -51,3 +51,9 @@ UseCases/*
 *.ods
 *.css
 *.ipynb
+mirna_scoring/.ipynb_checkpoints/mirna_influence_plots-checkpoint.py
+mirna_scoring/.ipynb_checkpoints/jupyter_functions-checkpoint.py
+mirna_scoring/.ipynb_checkpoints/mirna_impact-checkpoint.py
+mirkitten/.ipynb_checkpoints/run_pathway-checkpoint.py
+mirkitten/.ipynb_checkpoints/Pathway-checkpoint.py
+mirkitten/data/.ipynb_checkpoints/dds_files-checkpoint.yml
