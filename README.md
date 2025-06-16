@@ -98,7 +98,7 @@ network = run_network_creation(tfs, degs)
 
 <h3>Author</h3>
 <p>
-  Valeria Guerrero‑Vazquez<br />
-  📧 <a href="mailto:GuerreroVazquez@gmail.com">GuerreroVazquez@gmail.com</a><br />
+  Karen Guerrero‑Vazquez<br />
+  📧 <a href="mailto:Karen.GuerreroVazquez@gmail.com">GuerreroVazquez.Karen@gmail.com</a><br />
   GitHub: <a href="https://github.com/GuerreroVazquez">GuerreroVazquez</a>
 </p>
