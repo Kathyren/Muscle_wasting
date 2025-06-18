@@ -48,3 +48,4 @@ def get_DE_genes(dds:pd.DataFrame, pvalue:float=0.05, threshold=None, interest='
     """
     de_df = get_DE_genes_df(dds, pvalue=pvalue, threshold=threshold, interest=interest)
     return list(de_df.index)
+
