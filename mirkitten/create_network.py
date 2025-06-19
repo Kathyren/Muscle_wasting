@@ -12,21 +12,25 @@ from mirkitten.DDS import DDS
 import json
 import pandas as pd
 import random
+import logging
+# Set up logging to mitkitten.log
+logging.basicConfig(filename='mirkitten.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class new_network:
     def __init__(self, dds_files_path, only_DE=False, threshold=None, pvalue=0.05, interest='stat', species='human', save_name='tf_network.csv'):
         """
         """
-
+        logging.info(f'Initializing new_network with dds_files_path: {dds_files_path}, only_DE: {only_DE}, \
+                     threshold: {threshold}, pvalue: {pvalue}, interest: {interest}, species: {species}, save_name: {save_name}')
         #self.dds_join = pd.read_csv(dds_join)
         self.only_DE = only_DE
         self.de_threshold = threshold
         self.nodes=None
         self.pvalue = pvalue
         self.interest = interest
-        dds = DDS(dds_files_path=dds_files_path, pvalue=pvalue, threshold=threshold, interest=interest)
+        self.dds = DDS(dds_files_path=dds_files_path, pvalue=pvalue, threshold=threshold, interest=interest)
         tf = TranFact(dds_files_path=dds_files_path, pvalue=pvalue, threshold=threshold, interest=interest, species=species)
-        self.dds_join = dds.combine_dds_interest_genes(interest=interest)
+        self.dds_join = self.dds.combine_dds_interest_genes(interest=interest)
         self.collectri = tf.colletri
         self.nodes_df = self.collect_genes()
         self.save_name = save_name
@@ -43,9 +47,15 @@ class new_network:
         get all (if only_DE is false) or only the differentially express genes
         :return:
         """
+        logging.info('Collecting genes from DDS')
         if self.only_DE:
-            de_genes_df = get_DE_genes_df(dds=self.dds_join, pvalue=self.pvalue, threshold=self.de_threshold, interest=self.interest)
-            nodes_df = de_genes_df
+            nodes_df = pd.DataFrame()
+            for combination, dds in self.dds.dds_dict.items():
+                logging.info(f'Collecting DE genes from {combination}') 
+                de_genes_df = get_DE_genes_df(dds=dds, pvalue=self.pvalue, threshold=self.de_threshold, interest=self.interest)
+                nodes_df = pd.concat([nodes_df, de_genes_df], axis=0)
+                logging.info(f'Found {len(de_genes_df)} DE genes in {combination}')
+            nodes_df = nodes_df.drop_duplicates()
         else:
             nodes_df = self.dds_join
         self.nodes = nodes_df.index.tolist()
