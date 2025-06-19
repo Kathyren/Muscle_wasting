@@ -22,7 +22,9 @@ if __name__ == '__main__':
     parser.add_argument('--pathway_pvalue', type=float, help="pvalue to determine when a pathway is significantly enrriched.", default=0.05)
     parser.add_argument('--interest', type=str, help="What is going to be the base of desicion. log2FoldChange or stat.", default='stat')
     parser.add_argument('--save_name', type=str, help='Path to save the results')
-    
+    parser.add_argument('--save_individual', type=str, help='Path to save the results of each comparison individually', default=None)
+    parser.add_argument('--top', type=int, help='number of top elements to show', default=None)
+
     args = parser.parse_args()
     if args.pvalue<=0 or args.pvalue>1:
             raise ValueError('Pvalue must be >0 and <=1')
@@ -39,3 +41,11 @@ if __name__ == '__main__':
            pathways.load_sel_df_from_file(args.pathways_dbs)
 
     pathways.save_enrriched_pathways_with_genes_ORA(args.save_name)
+
+    if args.save_individual is not None:
+        if args.top is None:
+            top = 10
+        else:
+             top = args.top
+        pathways.save_individual_pathway_results(args.save_individual, n_top=top, plots=True)
+    print('Done')

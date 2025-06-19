@@ -8,12 +8,15 @@ import pandas as pd
 import pytest
 import yaml
 import cytoscape as ct
-import network_processing as ntp
+import network.network_processing as ntp
 
 from os import path
 import py4cytoscape as py4
-import node_evaluation as ne
+import network.node_evaluation as ne
 import argparse
+import logging
+# Set up logging to mirkatNetwork.log
+logging.basicConfig(filename='mirkatNetwork.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Set base directory as the MUSCLE_WASTING/
 
@@ -114,12 +117,17 @@ def get_network(px1, px2, cytoscape_network, save_name, add_mirnas=True):
     """
     if not os.path.exists(f"{px1}{save_name}.pkl"):
         the_network = get_cytoscape_network(cytoscape_network)
+        logging.info(f"Network {px1}{save_name} created successfully.")
         ntp.save_graph(the_network, f"{px1}{save_name}.pkl")
     else:
         the_network = ntp.load_graph(f"{px1}{save_name}.pkl")
+        logging.info(f"Network {px1}{save_name} loaded successfully.")
+    logging.info(f"Network contains {the_network.number_of_nodes()} nodes and {the_network.number_of_edges()} edges.")
     if add_mirnas:
         if not os.path.exists(f"{px2}{save_name}.pkl"):
+            logging.info(f"Adding miRNAs to the network {px2}{save_name}.")
             ntp.add_mirna_relationships(the_network)
+            logging.info(f"The network added {the_network.number_of_nodes()} nodes and {the_network.number_of_edges()} edges after adding miRNAs.")
             ntp.save_graph(the_network, f"{px2}{save_name}.pkl")
         else:
             the_network = ntp.load_graph(f"{px2}{save_name}.pkl")
@@ -174,14 +182,17 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         px1 = px2 = ""
     network=None
     if not os.path.exists(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl"):
-
+        logging.info(f"Creating the network {px2}_{name} from {cytoscape_network}")
         network = get_network(px1, px2, cytoscape_network, save_name=name)
+        logging.info(f"Network {px2}_{name} created successfully.")
+        logging.info(f"Network contains {network.number_of_nodes()} nodes and {network.number_of_edges()} edges.")
         #ntp.add_pathways_to_nodes(graph=network,
         #                          pathway_file=pathway_file)
         #ntp.mark_TF_nodes_from_file(graph=network, TF_file=tf_file)
         #ntp.add_tissue_to_nodes(graph=network,
         #                        tissues_df=tissue_df)
         ntp.mark_miR_nodes(graph=network)
+        logging.info(f"Network {px2}_{name} marked miR nodes successfully. Addind other metadata.")
         if dds_df is not None:
             dds_df = dds_df.div(dds_df.sum(axis=1), axis=0)
             ntp.add_DDS_data(network, dds_df=dds_df)
@@ -203,10 +214,14 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
             ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
 
         print(f"Saving on {path}Networks_pkl/metadata_{px2}_{name}.pkl  reading it")
+        logging.info(f"Saving the network {px2}_{name} to {path}Networks_pkl/metadata_{px2}_{name}.pkl")
         ntp.save_graph(network, f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
     else:
         print(f"The nerwork is saved on {path}Networks_pkl/metadata_{px2}_{name}.pkl  reading it")
+        logging.info(f"Loading the network {px2}_{name} from {path}Networks_pkl/metadata_{px2}_{name}.pkl")
         network = ntp.load_graph(f"{path}Networks_pkl/metadata_{px2}_{name}.pkl")
+        logging.info(f"Network {px2}_{name} loaded successfully.")
+        logging.info(f"Network contains {network.number_of_nodes()} nodes and {network.number_of_edges()} edges.")
 
     #if dds_df is not None:
     #        ntp.add_DDS_data(network, dds_df=dds_df)
@@ -219,6 +234,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     #    ntp.add_pathways_to_nodes(graph=network, pathway_file=pathway_file)
     #if cell_type is not None:
     #    ntp.add_other_data(graph=network, data_df=cell_type, name='cell_type')
+    
     network = ntp.set_positions(network)
     ntp.weight_nodes(graph=network, coefficients=coefficients)
     if 'miR_enhancement' in coefficients.keys():
@@ -228,6 +244,8 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
         ntp.weight_edges(graph=network, node_weight='weigh')
 
     network = ntp.remove_nodes_low_centrality_pageRank(graph=network, weight='weightScore', cutoff=cutoff)
+    logging.info(f"Network {px2}_{name} filtered successfully with cutoff {cutoff}.")
+    logging.info(f"Network contains {network.number_of_nodes()} nodes and {network.number_of_edges()} edges after filtering.")
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
     ntp.save_graph(network, f"network/Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
@@ -237,7 +255,32 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     save_as_cjsn(network, cytoscape_file)
     cytoscape_file = f'{path}/{name}.cyjs'
     save_as_cjsn(network, cytoscape_file)
-
+    n_nodes = network.number_of_nodes()
+    n_edges = network.number_of_edges()
+    n_mirnas = ntp.get_n_mirs(network)
+    most_common_pathways = ntp.get_most_common_pathway(network)
+    density = n_nodes / n_edges if n_edges > 0 else 0
+    proportion_degs = ntp.get_proportion_DEG(network)
+    logging.info(f"Network {px2}_{name} saved successfully with {n_nodes} nodes, {n_edges} edges, "
+                 f"{n_mirnas} miRNAs, density {density}, "
+                 f"most common pathways: {most_common_pathways}, "
+                 f"proportion of DEGs: {proportion_degs}.")
+    # add the network details to path/network_details.csv
+    network_details = {
+        'name': name,
+        'nodes': n_nodes,
+        'edges': n_edges,
+        'miRNAs': n_mirnas,
+        'density': density,
+        'most_common_pathways': most_common_pathways,
+        'proportion_DEGs': proportion_degs
+    }
+    network_details_df = pd.DataFrame([network_details])
+    if not os.path.exists(f"{path}network_details.csv"):
+        network_details_df.to_csv(f"{path}network_details.csv", index=False)
+    else:
+        network_details_df.to_csv(f"{path}network_details.csv", mode='a', header=False, index=False)
+    logging.info(f"Network details saved to {path}network_details.csv.")
     return network, cytoscape_file
 
 
@@ -301,7 +344,7 @@ if __name__ == "__main__":
     parser.add_argument("--Tissue_expression_data", type=str, help="Path to the gene tissue data file.")
     parser.add_argument("--Cell_type_data", type=str, help="Path to the gene cell type data file.")
     parser.add_argument("--Pathway_enrichment", type=str, help="Path to the gene pathway enrichment data file.")
-    parser.add_argument("--TF_enrichment",  type=float, help="Path to the gene TF enrichment data file.")
+    parser.add_argument("--TF_enrichment",  type=str, help="Path to the gene TF enrichment data file.")
     parser.add_argument("--Cutoff", nargs='+', type=float, help="List of cutoff values for ranking separated by space.")
     parser.add_argument("--network_name", type=str, help="Name of the network.")
     parser.add_argument("--output", type=str, help="Path to the output directory.")
@@ -325,7 +368,7 @@ if __name__ == "__main__":
     coef = config_data.get("coefficients")
     name = args.network_name if args.network_name else os.path.basename(network)
     print(coef)
-    print(f"Running main pipeline with the following parameters:\n"
+    logging.info(f"Running main pipeline with the following parameters:\n"
           f"Network: {network}\n"
           f"DE_data: {DE_data}\n"
           f"Tissue_expression: {Tissue_expression}\n"
