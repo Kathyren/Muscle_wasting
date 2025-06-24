@@ -44,6 +44,8 @@ class DDS:
         """
         Combines statistical values of interest from DDS comparisons into a single DataFrame.
         """    
+        if not interest:
+            interest = self.interest
         interest_dict = {}
         for comparison, dds_sig in self.dds_dict.items():
             stat = dds_sig[interest]
@@ -89,6 +91,7 @@ class DDS:
         degs = {}
         for comparison, dds in self.dds_dict.items():
             de_genes_df = self.get_DE_genes(dds, pvalue=pvalue)
+            logging.info(f'Found {len(de_genes_df)} DE genes for comparison: {comparison}')
             de_genes_df.to_csv(os.path.join(path, f'{comparison}_DE_genes.csv'))
             degs[comparison] = de_genes_df.index.tolist()
         degs = self.get_intersections_dict(degs)
