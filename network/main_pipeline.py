@@ -248,7 +248,7 @@ def full_flow_genes_tf(cytoscape_network, name, use_prefix=True, dds_df=None,
     logging.info(f"Network contains {network.number_of_nodes()} nodes and {network.number_of_edges()} edges after filtering.")
     #n_mirnas = ntp.get_n_mirs(network)
     #network = nx.get_interest_genes_and_neighbors(n_neighbors=2, graph= network)
-    ntp.save_graph(network, f"network/Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
+    ntp.save_graph(network, f"{path}Networks_pkl/complete_n_tf_{px2}_{name}.pkl")
     ntp.save_graph(network, f"{path}/{name}.pkl")
     ntp.separate_metadata(graph=network )
     cytoscape_file = f'{path}Networks_CYJS(out)/complete_n_tf_{px2}_{name}.cyjs'
@@ -289,7 +289,7 @@ def open_cytoscape(file_name):
 
 
 def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
-          tf_file, cell_type_file, ranks, open_cytoscape_=False, name_output=None, path= "network/"):
+          tf_file, cell_type_file, ranks, open_cytoscape_=False, name_output=None, path= "network/", coefficients = None):
     
     if file is None:
         file = config_data.oNetwork
@@ -305,6 +305,8 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
         ranks = config_data.page_rank_cutoff
     if cell_type_file is None:
         cell_type_file = config_data.path_cell_type_data
+    if coefficients is None:
+        coefficients = config_data.get('coefficients')
 
     dds_df = pd.read_csv(path_dds_data, index_col=0).fillna(0)
     tissue_df = pd.read_csv(path_tissue_data, index_col=0).fillna(0)
@@ -325,7 +327,7 @@ def main(config_data, file, path_dds_data, path_tissue_data, pathway_file,
                            tf_file=tf_file, 
                            pathway_file=pathway_file,
                            cell_type= cell_type_df,
-                           coefficients=config_data.get('coefficients'),
+                           coefficients=coefficients,
                            cutoff=n, path=path)
         if open_cytoscape_:
             open_cytoscape(cytoscape_file)
@@ -377,11 +379,12 @@ if __name__ == "__main__":
           f"TF_enrichment: {TF_enrichment}\n"
           f"Cutoff: {Cutoff}\n"
           f"Output: {output}\n"
+          f"Coefficients: {coef}\n"
           f"Open Cytoscape: {open_cytoscape_}")
     main(config_data=config_data, file=network, path_dds_data=DE_data,
           path_tissue_data=Tissue_expression, pathway_file=Pathway_enrichment, 
           tf_file=TF_enrichment, cell_type_file=Cell_type, ranks=Cutoff,
-         open_cytoscape_=open_cytoscape_, name_output=name)
+         open_cytoscape_=open_cytoscape_, name_output=name, coefficients=coef, path=output)
 
 
     

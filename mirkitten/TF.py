@@ -46,16 +46,16 @@ class TranFact():
         logging.info(f'Getting matrix for comparison: {comparison} with interest: {interest}')
         if comparison in self.mats:
             mat = self.mats[comparison]
-        if f'mat_{comparison}.csv' in os.listdir('results'):
+        if f'mat_{comparison}_{interest}.csv' in os.listdir('results'):
             mat = pd.read_csv(f'results/mat_{comparison}.csv', index_col=0)
             mat = mat.T
         else:
             mat = dds[[interest]].T.rename(index={interest: comparison})
             
             try:
-                mat.T.to_csv(f'results/mat_{comparison}.csv')
+                mat.T.to_csv(f'results/mat_{comparison}_{interest}.csv')
             except OSError:
-                print(f"coudn't save at results/mat_{comparison}.csv. Currently at {os.system('pwd')}")
+                print(f"coudn't save at results/mat_{comparison}_{interest}.csv. Currently at {os.system('pwd')}")
         self.mats[comparison]= mat
         return mat
     def get_tf_df(self, mat, comparison='comparison'):
@@ -63,16 +63,16 @@ class TranFact():
         if comparison in self.tf_dfs and self.tf_dfs[comparison] is not None:
             tf_df = self.tf_dfs[comparison]
         elif f'tf_acts_{comparison}.csv' in os.listdir('results'):
-            tf_df = pd.read_csv(f'results/tf_acts_{comparison}.csv', index_col=0)
+            tf_df = pd.read_csv(f'results/tf_acts_{comparison}_{self.interest}.csv', index_col=0)
             self.tf_dfs[comparison] = tf_df
         else:
             tf_acts, tf_pvals = dc.run_ulm(mat=mat, net=self.collectri, verbose=True)
             tf_df = pd.DataFrame(tf_acts.T)
             tf_df['pvals']=tf_pvals.T
             try:
-                tf_df.to_csv(f'results/tf_acts_{comparison}.csv')
+                tf_df.to_csv(f'results/tf_acts_{comparison}_{self.interest}.csv')
             except OSError:
-                print(f"coudn't save at rresults/tf_acts_{comparison}.csv. Currently at {os.system('pwd')}")
+                print(f"coudn't save at rresults/tf_acts_{comparison}_{self.interest}.csv. Currently at {os.system('pwd')}")
             self.tf_dfs[comparison] = tf_df
         logging.info(f'Transcription factor dataframe for comparison: {comparison} has {len(tf_df)} genes')
         return tf_df
@@ -81,6 +81,7 @@ class TranFact():
         """
         This function will take a dataframe with the dds results and will return a dataframe with the DE genes
         """
+        logging.info(f'Getting transcription factor dataframe for comparison: {comparison} with interest: {interest}')
         mat = self.get_mat(dds=dds, interest=interest, comparison=comparison)
         tf_df = self.get_tf_df(mat=mat, comparison=comparison)
         return tf_df
