@@ -1,14 +1,15 @@
 #!/bin/bash
 
-FILE=$1
+USECASE=$1
+FILE=$2
 CSV_FILE="network_count.csv"
 
-if [[ ! -f "$FILE" ]]; then
-    echo "Usage: $0 file.cyj"
+if [[ -z "$USECASE" || -z "$FILE" || ! -f "$FILE" ]]; then
+    echo "Usage: $0 usecase file.cyj"
     exit 1
 fi
 
-echo "Analyzing file: $FILE"
+echo "Analyzing file: $FILE (Use case: $USECASE)"
 echo "--------------------------------"
 
 # Total nodes
@@ -50,9 +51,8 @@ echo "Top pathways: $top_pathways"
 
 # Add CSV header if it doesn't exist
 if [[ ! -f "$CSV_FILE" ]]; then
-    echo -e "Network Final size\tmiRNA amount\tGenes amount\tEdges\tDensity\tDEGs\tProportion of DEG\tMost common pathways" > "$CSV_FILE"
+    echo -e "Usecase\tFile\tNetwork Final size\tmiRNA amount\tGenes amount\tEdges\tDensity\tDEGs\tProportion of DEG\tMost common pathways" > "$CSV_FILE"
 fi
 
 # Append data
-echo -e "$num_nodes\t$num_mirnas\t$num_genes\t$num_edges\t$density\t$num_deg\t$deg_ratio\t$top_pathways" >> "$CSV_FILE"
-
+echo -e "$USECASE\t$(basename "$FILE")\t$num_nodes\t$num_mirnas\t$num_genes\t$num_edges\t$density\t$num_deg\t$deg_ratio\t$top_pathways" >> "$CSV_FILE"

@@ -1,9 +1,12 @@
 #!/bin/bash
 
-CSV_FILE="UseCases/UseCase0/configurations.csv"
-SCRIPT="network/main_pipeline.py" 
-CONFIG_DIR="UseCases/UseCase0/configurations_YML"
-mkdir -p $CONFIG_DIR
+# Accept UseCase name as a parameter
+USE_CASE=${1:-UseCase0}  # Default to UseCase0 if not provided
+
+CSV_FILE="UseCases/$USE_CASE/configurations.csv"
+SCRIPT="network/main_pipeline.py"
+CONFIG_DIR="UseCases/$USE_CASE/configurations_YML"
+mkdir -p "$CONFIG_DIR"
 
 # Read header
 read -r HEADER_LINE < "$CSV_FILE"
@@ -38,8 +41,7 @@ tail -n +2 "$CSV_FILE" | while IFS=',' read -r -a VALUES; do
                     CUT=($value)
                     YAML_CONTENT+="page_rank_cutoff: [${CUT[*]}]\n"
                     ;;
-                coeff_dds|coeff_tissue|coeff_cellular|coeff_pathway_svd|coeff_tf)
-                    # Extract base key
+                coeff_dds|coeff_tissue|coeff_cellular|coeff_pathways_svd|coeff_tf)
                     base_key="${key#coeff_}"
                     coeffs["$base_key"]="$value"
                     ;;
@@ -47,25 +49,21 @@ tail -n +2 "$CSV_FILE" | while IFS=',' read -r -a VALUES; do
         fi
     done
 
-    # Add coefficient block
     COEFF_YAML="coefficients: {"
     for key in dds tissue cellular pathway_svd tf; do
-        val="${coeffs[$key]:-1}"  # default to 1
+        val="${coeffs[$key]:-1}"
         COEFF_YAML+="'$key': $val, "
     done
-    COEFF_YAML="${COEFF_YAML%, }"  # remove trailing comma
+    COEFF_YAML="${COEFF_YAML%, }"
     COEFF_YAML+="}\n"
 
     YAML_CONTENT+="$COEFF_YAML"
 
-    # Save YAML
     echo -e "$YAML_CONTENT" > "$CONFIG_PATH"
     echo "[INFO] Saved config: $CONFIG_PATH"
 
-    # Add --config to command
     CMD+=" --config \"$CONFIG_PATH\""
 
-    # CLI arguments (network_name, Cutoff, output, open_cytoscape)
     for j in "${!HEADERS[@]}"; do
         key="${HEADERS[j]}"
         value="${VALUES[j]}"
@@ -87,8 +85,3 @@ tail -n +2 "$CSV_FILE" | while IFS=',' read -r -a VALUES; do
     echo "[INFO] Running: $CMD"
     eval $CMD
 done
-
-    echo "Running: $CMD"
-    eval $CMD
-done
-
