@@ -1229,6 +1229,43 @@ def separate_metadata(graph):
                 else:
                     graph.nodes[node]['data'][f'{key}'] = value
     pass
+def get_most_common_pathway(graph):
+    """
+    This function will get the most common pathway in the pathways column of the nodes
+    :return: A dictionary with the pathway and the number of times it appears
+    """
+    from collections import Counter
+    pathways = []
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'pathways' in data['data']:
+            pathways.extend(data['data']['pathways'])
+    return Counter(pathways).most_common(1)[0] if pathways else None
+def get_most_common_tissue(graph):
+    """
+    This function will get the most common tissue in the tissue_expr column of the nodes
+    :return: A dictionary with the tissue and the number of times it appears
+    """
+    from collections import Counter
+    tissues = []
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'tissue_expr' in data['data']['metadata']:
+            tissues.extend(data['data']['metadata']['tissue_expr'].keys())
+    return Counter(tissues).most_common(1)[0] if tissues else None
+def get_proportion_DEG(graph):
+    """
+    This function will get the proportion of nodes that are DEG in the graph.
+    A DEG node is a node that has the 'dds' metadata is present for at least one comparison.
+    :param graph:
+    :return: The proportion of DEG nodes in the graph
+    """
+    deg_nodes = 0
+    total_nodes = 0
+    for node, data in graph.nodes(data=True):
+        if 'data' in data and 'metadata' in data['data'] and 'dds' in data['data']['metadata']:
+            deg_nodes += 1
+        total_nodes += 1
+    return deg_nodes / total_nodes if total_nodes > 0 else 0
+
 
 DDS_w =1
 yo_w = 1

@@ -58,8 +58,11 @@ if __name__ == '__main__':
           f"Keywords: {args.keywords}\n"
           f"Samples: {args.samples}\n"
           f"Save Name: {args.save_name}")
+    save_path = os.path.dirname(args.save_name)
+    print(f"Results will be saved to: {save_path}")
     # Run the  scoring
-    scores = scoring.scoring(network_path=args.network_path, steps=args.steps, keywords=args.keywords, samples=args.samples, save_name=args.save_name)
+    scores = scoring.scoring(network_path=args.network_path, steps=args.steps, keywords=args.keywords, samples=args.samples, save_name=args.save_name, safe_path=save_path)
     evaluation_df = scores.score_mirnas()
     scores.save_results(evaluation_df)
+    scores.save_selected_mirnas()
 

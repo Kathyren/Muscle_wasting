@@ -18,6 +18,9 @@ class scoring:
         self.samples = samples
         self.save_name = save_name
         self.network = load_graph(network_path)
+        self.evaluation = None
+        self.mirna_network = None
+        self.save_path = safe_path
 
 
     
@@ -26,9 +29,29 @@ class scoring:
         Perform microRNA scoring on the network.
         """
         mirna_network=mis.mirna_network(self.network)
+        self.mirna_network = mirna_network
         evaluation = mis.mirna_evaluation(mirna_network=mirna_network, session_name=self.save_name)
         evaluation_df = evaluation.score(steps=self.steps, sample_size=self.samples, pathway_keywords=self.keywords)
+        self.evaluation = evaluation
         return evaluation_df
+    
+    def save_selected_mirnas(self):
+        aa=self.evaluation.select_mirnas()
+        dict_selected = dict(zip(list(aa),[list(aa).count(i) for i in list(aa)]))
+        save_name = f"{self.save_name}_selected_mirnas"
+        with open(f"{save_name}.txt", 'w') as f:
+            for key, value in dict_selected.items():
+                f.write(f"{key}: {value}\n")
+        print(f"Selected microRNAs saved to {save_name}.txt")
+
+    def set_clusters(self):
+        """
+        Set the clusters for the microRNA evaluation.
+        """
+        n_clusters = min(5, len(self.mirna_network.miR_nodes)//3)
+        self.evaluation.cluster_mirnas(n_clusters=n_clusters)
+        
+
     def save_results(self, evaluation_df):
         """
         Save the evaluation results to a CSV file.

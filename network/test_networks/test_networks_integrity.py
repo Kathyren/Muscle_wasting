@@ -306,6 +306,47 @@ def test_main(monkeypatch):
     hsa_node = network.nodes()['hsa-miR-122-5p']
     print(hsa_node)
 
+
+def test_main_pathways(monkeypatch):
+    graph = network_processing.load_graph("network/test_networks/dummy_data/metadata_mirnas__configuration24_cutoff_0.9.pkl")
+    monkeypatch.setattr(mp, "get_network", lambda *args, **kwargs: graph)
+    config_data_1 ={'coefficients':
+                        {'cellular': 0, 'dds': 0, 'miR_enhancement': 0, 'pathways_svd': 0, 'tf': 0, 'tissue': 0},
+                    'oNetwork': '/home/karen/Documents/GitHub/Muscle_wasting/network/Networks_CYJS/tf_network_ML_and_10_DE.cyjs',
+                    'page_rank_cutoff': [0.90],
+                    'path_DDS_data': '/home/karen/Documents/GitHub/Muscle_wasting/data/join_dds.csv',
+                    'path_cell_type_data': '/home/karen/Documents/GitHub/Muscle_wasting/data/proportion_cell_type_div_Sarcopenia_relevant.csv',
+                    'path_pathway_file': '/home/karen/Documents/GitHub/Muscle_wasting/data/join_pathway.csv',
+                    'path_tf_file': '/home/karen/Documents/GitHub/Muscle_wasting/data/join_tf.csv',
+                    'path_tissue_data': '/home/karen/Documents/GitHub/Muscle_wasting/data/gene_tissue_Sarcopenia_relevant.csv'}
+    config_data_2 = config_data_1
+    coeficients_2 = {'cellular': 0, 'dds': 0, 'miR_enhancement': 0, 'pathways_svd': 1, 'tf': 0, 'tissue':0}
+
+    network = "/home/karen/Documents/GitHub/Muscle_wasting/network/test_networks/ALDOA_LDHA.cyjs"
+
+
+    DE_data =config_data_1.get("path_DDS_data")
+    Tissue_expression = config_data_1.get(
+        "path_tissue_data")
+    Cell_type = config_data_1.get("path_cell_type_data")
+    Pathway_enrichment = config_data_1.get("path_pathway_file")
+    TF_enrichment = config_data_1.get("path_tf_file")
+    Cutoff = config_data_1.get("page_rank_cutoff", 0.5)
+    output = config_data_1.get("output")
+    open_cytoscape_ = config_data_1.get("open_cytoscape", False)
+
+    network_1 = mp.main(config_data=config_data_1,file=network, path_dds_data=DE_data,
+            path_tissue_data=Tissue_expression,
+            pathway_file=Pathway_enrichment,tf_file=TF_enrichment,
+            cell_type_file=Cell_type, ranks=Cutoff, open_cytoscape_=open_cytoscape_, coefficients=config_data_1['coefficients'])
+    network_2 = mp.main(config_data=config_data_1, file=network, path_dds_data=DE_data,
+                        path_tissue_data=Tissue_expression,
+                        pathway_file=Pathway_enrichment, tf_file=TF_enrichment,
+                        cell_type_file=Cell_type, ranks=Cutoff, open_cytoscape_=open_cytoscape_,
+                        coefficients=coeficients_2)
+    assert network_1 != network_2
+
+
 def test_separate_metadata():
     graph = network_processing.load_graph("network/Networks_pkl/complete_n_tf_mirnas__ALDOA_LDHA_cutoff_0.5.pkl")
 
